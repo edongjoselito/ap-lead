@@ -431,6 +431,10 @@ class Pages extends CI_Controller
 
     public function view()
     {
+        if (!$this->session->logged_in) {
+            redirect(base_url('homepage'));
+            return;
+        }
 
         if ($this->session->position == 'admin') {
             $page = "dashboard";
@@ -1842,7 +1846,7 @@ class Pages extends CI_Controller
                 show_404();
             }
 
-            $this->load->view($page, array('title' => 'Homepage'));
+            $this->load->view($page, $this->homepage_data());
         } else {
 
             $user_id = $this->Page_model->login();
@@ -1936,7 +1940,7 @@ class Pages extends CI_Controller
         $this->session->unset_userdata('office');
         $this->session->unset_userdata('logged_in');
 
-        $this->session->set_flashdata('failed', 'You are logged out.');
+        $this->session->set_flashdata('success', 'You have signed out securely.');
         redirect(base_url() . 'homepage');
     }
     public function lock()
@@ -4168,8 +4172,19 @@ class Pages extends CI_Controller
         if (!file_exists(APPPATH . 'views/' . $page . '.php')) {
             show_404();
         }
-        $data['title'] = "Homepage";
+        $data = $this->homepage_data();
         $this->load->view($page, $data);
+    }
+
+    private function homepage_data()
+    {
+        $region_id = 12;
+
+        return array(
+            'title' => 'AP-LEAD Region XI',
+            'region' => $this->Page_model->one_cond_row('region', 'id', $region_id),
+            'divisions' => $this->Page_model->homepage_divisions($region_id),
+        );
     }
 
     function authors()
@@ -4516,7 +4531,67 @@ class Pages extends CI_Controller
             return;
         }
 
-        $this->Page_model->update_division_setup($division_id);
+        $new_logo = null;
+        $old_logo = !empty($data['division']->homepage_logo)
+            ? (string) $data['division']->homepage_logo
+            : '';
+
+        if (!empty($_FILES['homepage_logo']['name'])) {
+            $upload_directory = FCPATH . 'uploads/division_logos/';
+
+            if (!is_dir($upload_directory) && !mkdir($upload_directory, 0755, true)) {
+                $data['upload_error'] = 'The division logo directory could not be created.';
+                $this->load->view('templates/header');
+                $this->load->view('templates/menu');
+                $this->load->view('pages/' . $page, $data);
+                $this->load->view('templates/footer');
+                $this->load->view('templates/footer_basic');
+                return;
+            }
+
+            $upload_config = array(
+                'upload_path' => $upload_directory,
+                'allowed_types' => 'jpg|jpeg|png',
+                'max_size' => 2048,
+                'max_width' => 2000,
+                'max_height' => 2000,
+                'encrypt_name' => true,
+                'file_ext_tolower' => true,
+            );
+            $this->load->library('upload');
+            $this->upload->initialize($upload_config);
+
+            if (!$this->upload->do_upload('homepage_logo')) {
+                $data['upload_error'] = strip_tags($this->upload->display_errors('', ''));
+                $this->load->view('templates/header');
+                $this->load->view('templates/menu');
+                $this->load->view('pages/' . $page, $data);
+                $this->load->view('templates/footer');
+                $this->load->view('templates/footer_basic');
+                return;
+            }
+
+            $uploaded_file = $this->upload->data();
+            $new_logo = 'uploads/division_logos/' . $uploaded_file['file_name'];
+        }
+
+        $updated = $this->Page_model->update_division_setup($division_id, $new_logo);
+
+        if (!$updated) {
+            if ($new_logo !== null && is_file(FCPATH . $new_logo)) {
+                unlink(FCPATH . $new_logo);
+            }
+            $this->session->set_flashdata('danger', 'The division setup could not be updated. Please try again.');
+            redirect(base_url() . 'pages/division_setup');
+            return;
+        }
+
+        if ($new_logo !== null
+            && strpos($old_logo, 'uploads/division_logos/') === 0
+            && is_file(FCPATH . $old_logo)) {
+            unlink(FCPATH . $old_logo);
+        }
+
         $this->session->set_flashdata('success', 'Division setup updated successfully.');
         redirect(base_url() . 'pages/division_setup');
     }

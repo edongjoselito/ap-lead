@@ -173,6 +173,11 @@ $signup_rate = !empty($encoded_total) ? ((int) $actual_school_count / (int) $enc
                 <?php endif; ?>
 
                 <?= validation_errors(); ?>
+                <?php if (!empty($upload_error)) : ?>
+                    <div class="alert alert-danger" role="alert">
+                        <?= html_escape($upload_error); ?>
+                    </div>
+                <?php endif; ?>
                 <div class="clearfix"></div>
             </div>
         </div>
@@ -214,7 +219,7 @@ $signup_rate = !empty($encoded_total) ? ((int) $actual_school_count / (int) $enc
                 Use the encoded total below when your official division total is different from the currently registered school accounts in the system.
             </div>
 
-            <?php echo form_open('pages/division_setup', array('class' => 'parsley-examples division-setup-form')); ?>
+            <?php echo form_open_multipart('pages/division_setup', array('class' => 'parsley-examples division-setup-form')); ?>
                 <div class="form-group mt-4">
                     <label for="division-name">Division Name <span class="text-danger">*</span></label>
                     <input
@@ -251,6 +256,31 @@ $signup_rate = !empty($encoded_total) ? ((int) $actual_school_count / (int) $enc
                         value="<?= html_escape($region_name); ?>"
                         readonly
                     >
+                </div>
+
+                <div class="form-group">
+                    <label for="homepage-logo">Official Division Logo</label>
+                    <div class="d-flex align-items-center flex-wrap" style="gap: 16px;">
+                        <div style="width: 88px; height: 88px; border: 1px solid #dce6ef; border-radius: 16px; display: grid; place-items: center; overflow: hidden; background: #f8fafc;">
+                            <?php if (!empty($division->homepage_logo)) : ?>
+                                <img src="<?= html_escape(base_url($division->homepage_logo)); ?>" alt="<?= html_escape($division->description); ?> logo" style="width: 100%; height: 100%; object-fit: contain; padding: 7px;">
+                            <?php else : ?>
+                                <span style="color: #164b73; font-size: 26px; font-weight: 800;"><?= html_escape(strtoupper(substr(trim($division->description), 0, 1))); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="min-width: min(100%, 320px); flex: 1;">
+                            <input
+                                type="file"
+                                id="homepage-logo"
+                                name="homepage_logo"
+                                class="form-control"
+                                accept="image/png,image/jpeg"
+                            >
+                            <div class="division-setup-help">
+                                PNG or JPG, up to 2 MB. Once saved, this logo appears automatically on the public homepage.
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="division-setup-actions">

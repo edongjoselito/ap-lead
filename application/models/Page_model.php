@@ -880,9 +880,37 @@ public function division_account_overview($division_id){
 }
 
 public function ensure_division_setup_schema(){
+    /*
+     * Keep lightweight application migrations in the database.  The metadata
+     * query runs when this feature is used, while the schema statements below
+     * are executed only once for each database.
+     */
+    if (!$this->db->table_exists('app_schema_migrations')) {
+        $this->db->query("CREATE TABLE `app_schema_migrations` (
+            `migration` VARCHAR(190) NOT NULL,
+            `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`migration`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    }
+
+    $migration = '20260907_division_homepage_fields';
+    $already_applied = $this->db
+        ->where('migration', $migration)
+        ->count_all_results('app_schema_migrations') > 0;
+
+    if ($already_applied) {
+        return;
+    }
+
     if (!$this->db->field_exists('total_schools', 'division')) {
         $this->db->query("ALTER TABLE division ADD COLUMN total_schools INT DEFAULT NULL AFTER region_id");
     }
+
+    if (!$this->db->field_exists('homepage_logo', 'division')) {
+        $this->db->query("ALTER TABLE division ADD COLUMN homepage_logo VARCHAR(255) DEFAULT NULL AFTER total_schools");
+    }
+
+    $this->db->insert('app_schema_migrations', array('migration' => $migration));
 }
 
 public function get_division_setup($division_id){
@@ -894,7 +922,7 @@ public function get_division_setup($division_id){
         ->row();
 }
 
-public function update_division_setup($division_id){
+public function update_division_setup($division_id, $homepage_logo = null){
     $this->ensure_division_setup_schema();
 
     $data = array(
@@ -902,8 +930,23 @@ public function update_division_setup($division_id){
         'total_schools' => (int) $this->input->post('total_schools')
     );
 
+    if ($homepage_logo !== null) {
+        $data['homepage_logo'] = $homepage_logo;
+    }
+
     $this->db->where('id', $division_id);
     return $this->db->update('division', $data);
+}
+
+public function homepage_divisions($region_id){
+    $this->ensure_division_setup_schema();
+
+    return $this->db
+        ->select('id, description, homepage_logo')
+        ->where('region_id', (int) $region_id)
+        ->order_by('id', 'ASC')
+        ->get('division')
+        ->result();
 }
 
 public function division_school_count($division_id){
