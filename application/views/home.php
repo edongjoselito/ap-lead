@@ -17,6 +17,122 @@ $division_initials = function ($name) {
     }
     return $initials !== '' ? $initials : 'SDO';
 };
+
+/*
+ * People directory (governance section).
+ * To add or change someone: drop the photo in assets/images/sdo/ (or /developers)
+ * and update the matching row below. Leave 'photo' blank — or point it at a file
+ * that does not exist yet — and the card automatically falls back to a placeholder.
+ */
+$sdo_consultants = array(
+    array('name' => 'Rosemarie T. Realino, PhD',  'division' => 'SDO Davao City',       'key' => 'Davao City',       'abbr' => 'DAVCITY',  'photo' => 'assets/images/sdo/SDO-DAVAO CITY-REALINO,-ROSEMARIE-T.,PhD.jpg'),
+    array('name' => 'Grace D. Pontillas, EdD',    'division' => 'SDO Davao de Oro',     'key' => 'Davao de Oro',     'abbr' => 'DAVDEORO', 'photo' => 'assets/images/sdo/SDO-DAVAO-DE-ORO- Grace-D.-Pontillas,Ed.png'),
+    array('name' => '',                           'division' => 'SDO Davao del Norte',  'key' => 'Davao del Norte',  'abbr' => 'DAVNOR',   'photo' => ''),
+    array('name' => 'Leonora Liza D. Dacillo',    'division' => 'SDO Davao del Sur',    'key' => 'Davao del Sur',    'abbr' => 'DAVSUR',   'photo' => 'assets/images/sdo/SDO-DAVAO-DEL-SUR-Leonora-Liza-D.Dacillo.jpg'),
+    array('name' => '',                           'division' => 'SDO Davao Occidental', 'key' => 'Davao Occidental', 'abbr' => 'DAVOCC',   'photo' => ''),
+    array('name' => 'Alan D. Limbadan, PhD',      'division' => 'SDO Davao Oriental',   'key' => 'Davao Oriental',   'abbr' => 'DAVOR',    'photo' => 'assets/images/sdo/SDO-DavOr-Alan-D.-Limbadan,PhD.png'),
+    array('name' => 'Atty. Rodel L. Pagayon, MT', 'division' => 'SDO Digos City',       'key' => 'Digos City',       'abbr' => 'DIGOS',    'photo' => 'assets/images/sdo/DIGOS-CITY-ATTY.RODEL-L.-PAGAYON,MT.jpg'),
+    array('name' => 'Marichu M. Celestial, EdD',  'division' => 'SDO IGaCoS',           'key' => 'IGACOS',           'abbr' => 'IGACOS',   'photo' => 'assets/images/sdo/SDO-IGaCoS-Marichu-M.-Celestial,-EdD.png'),
+    array('name' => '',                           'division' => 'SDO City of Mati',     'key' => 'City of Mati',     'abbr' => 'MATI',     'photo' => ''),
+    array('name' => 'John Visillas',              'division' => 'SDO Panabo City',      'key' => 'Panabo City',      'abbr' => 'PANABO',   'photo' => 'assets/images/sdo/SDO-PANABOCITY-JohnVisillas.jpg'),
+    array('name' => '',                           'division' => 'SDO Tagum City',       'key' => 'Tagum City',       'abbr' => 'TAGUM',    'photo' => ''),
+);
+
+$ap_developers = array(
+    array('name' => 'Alan D. Limbadan, PhD', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png'),
+    array('name' => 'Joselito Q. Edong',     'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png'),
+    array('name' => 'Clark Steven T. Edong', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,CLARK-STEVEN-T.png'),
+    array('name' => 'Tyrone T. Edong',       'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,TYRONE-T.png'),
+);
+
+// Optional per-person crop nudge: source photos are framed differently (tight square headshots
+// vs wider three-quarter portraits), so allow tuning without editing the image files.
+$person_focus = function ($person) { return !empty($person['focus']) ? (string) $person['focus'] : 'center 12%'; };
+
+// Filenames contain spaces and commas, so every path segment is encoded before it becomes a URL.
+$person_photo_url = function ($relative_path) {
+    $relative_path = trim((string) $relative_path);
+    if ($relative_path === '' || !is_file(FCPATH . $relative_path)) {
+        return '';
+    }
+    return base_url(implode('/', array_map('rawurlencode', explode('/', $relative_path))));
+};
+
+/*
+ * The supplied portraits are full resolution - several over 1.5MB at ~1250px wide - but they display
+ * at roughly 190px, so the browser was decoding a multi-megabyte bitmap per card only to shrink it.
+ * This caches a display-sized copy under assets/images/sdo/thumbs/ and serves that instead.
+ *
+ * The cache key includes the source file's modification time, so replacing a photo regenerates its
+ * thumbnail on the next request - dropping in a new file still just works. Anything that cannot be
+ * resized (GD missing, unreadable file, already small enough) falls back to the original URL.
+ */
+$person_display_url = function ($relative_path, $target_width = 440) use ($person_photo_url) {
+    $original_url = $person_photo_url($relative_path);
+    if ($original_url === '') {
+        return '';
+    }
+
+    $source = FCPATH . trim((string) $relative_path);
+    $size = @getimagesize($source);
+    if (!$size || !function_exists('imagecreatetruecolor')) {
+        return $original_url;
+    }
+
+    list($source_width, $source_height) = $size;
+    if ($source_width <= $target_width * 1.4) {
+        return $original_url;
+    }
+
+    $cache_relative = 'assets/images/sdo/thumbs/';
+    $cache_dir = FCPATH . $cache_relative;
+    if (!is_dir($cache_dir) && !@mkdir($cache_dir, 0755, true) && !is_dir($cache_dir)) {
+        return $original_url;
+    }
+
+    // Keyed as <path+width>-<mtime> so a replaced photo misses the cache, and so the superseded
+    // thumbnails for that same photo can be found and cleared instead of accumulating.
+    $cache_stem = md5($relative_path . '|' . $target_width);
+    $cache_name = $cache_stem . '-' . filemtime($source) . '.jpg';
+    $cache_path = $cache_dir . $cache_name;
+
+    if (!is_file($cache_path)) {
+        foreach ((array) glob($cache_dir . $cache_stem . '-*.jpg') as $stale) {
+            @unlink($stale);
+        }
+
+        switch ($size[2]) {
+            case IMAGETYPE_JPEG: $source_image = @imagecreatefromjpeg($source); break;
+            case IMAGETYPE_PNG:  $source_image = @imagecreatefrompng($source);  break;
+            default: return $original_url;
+        }
+        if (!$source_image) {
+            return $original_url;
+        }
+
+        $target_height = (int) round($source_height * ($target_width / $source_width));
+        $thumb = imagecreatetruecolor($target_width, $target_height);
+        // These are portraits, so flattening any PNG transparency onto white matches the card.
+        imagefilledrectangle($thumb, 0, 0, $target_width, $target_height, imagecolorallocate($thumb, 255, 255, 255));
+        imagecopyresampled($thumb, $source_image, 0, 0, 0, 0, $target_width, $target_height, $source_width, $source_height);
+        $written = @imagejpeg($thumb, $cache_path, 82);
+        imagedestroy($thumb);
+        imagedestroy($source_image);
+        if (!$written) {
+            return $original_url;
+        }
+    }
+
+    return base_url($cache_relative . $cache_name);
+};
+
+// Consultant badges reuse the division's own logo once one is uploaded, and fall back to its initials.
+$division_logo_lookup = array();
+foreach ($division_list as $division_row) {
+    $division_logo_lookup[strtolower(trim((string) $division_row->description))] = !empty($division_row->homepage_logo)
+        ? (string) $division_row->homepage_logo
+        : '';
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -198,6 +314,56 @@ $division_initials = function ($name) {
         .network-card strong { display: block; font-size: 15px; }
         .network-card span { display: block; margin-top: 5px; opacity: .72; font-size: 11px; }
 
+        .people-directory { margin-top: 64px; }
+        .people-block + .people-block { margin-top: 54px; }
+        .people-block-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 26px; }
+        .people-title { display: flex; align-items: center; gap: 12px; }
+        .people-title-icon { flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-items: center; color: #fff; border-radius: 9px; background: linear-gradient(145deg, var(--blue-800), var(--blue-950)); box-shadow: 0 6px 16px rgba(8,43,76,.22); }
+        .developers-block .people-title-icon { background: linear-gradient(145deg, #d9930f, var(--gold-500)); box-shadow: 0 6px 16px rgba(240,170,32,.32); }
+        .people-title h3 { margin: 0; color: var(--blue-950); font-family: Georgia, "Times New Roman", serif; font-size: 24px; line-height: 1.2; letter-spacing: -.015em; }
+        .people-title h3::after { content: ""; display: block; width: 42px; height: 3px; margin-top: 8px; border-radius: 3px; background: var(--gold-500); }
+        .people-rule { flex: 1 1 auto; height: 1px; margin-bottom: 9px; background: linear-gradient(90deg, #c7dae8, rgba(199,218,232,0)); }
+        .people-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+        .people-grid.developers-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(100%, 830px); margin-inline: auto; }
+
+        /* The card is the reveal target; the frame inside carries hover, so the two never fight
+           over `transform` and the entrance can safely replay every time the card re-enters view. */
+        .person-card { position: relative; }
+        .person-frame { position: relative; height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: center; box-shadow: 0 2px 8px rgba(8,43,76,.05); transition: transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease, border-color .3s ease; }
+        .person-card:hover .person-frame { transform: translateY(-6px); border-color: #a9c4d9; box-shadow: 0 18px 38px rgba(8,43,76,.16); }
+        .person-photo { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: linear-gradient(165deg, var(--blue-100), #f7fbfd); }
+        .person-photo img { width: 100%; height: 100%; display: block; object-fit: cover; filter: saturate(.86) contrast(1.05); transition: transform .55s cubic-bezier(.22,.61,.36,1), filter .45s ease; }
+        .person-card:hover .person-photo img { transform: scale(1.06); filter: saturate(1) contrast(1); }
+        /* Portraits arrive with very different backdrops, so a shared scrim grounds every card the same way. */
+        .person-photo::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(175deg, rgba(8,43,76,.05) 0 42%, rgba(8,43,76,.34) 100%); pointer-events: none; transition: opacity .35s ease; }
+        .person-card:hover .person-photo::before { opacity: .55; }
+        .person-badge { position: absolute; z-index: 2; left: 8px; bottom: 8px; max-width: calc(100% - 16px); height: 22px; display: grid; place-items: center; padding: 0 8px; overflow: hidden; color: var(--blue-900); border-radius: 6px; background: rgba(255,255,255,.93); box-shadow: 0 3px 10px rgba(8,43,76,.26); font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+        .developers-grid .person-badge { width: 26px; padding: 0; color: #b07c07; }
+        .person-badge img { width: 100%; height: 100%; object-fit: contain; }
+        .person-placeholder { position: relative; z-index: 0; width: 100%; height: 100%; display: grid; place-items: center; color: #adc0cf; background: repeating-linear-gradient(135deg, #f5f9fc 0 9px, #eef4f9 9px 18px); }
+        .person-info { position: relative; flex: 1 1 auto; padding: 14px 10px 16px; }
+        .person-info::before { content: ""; position: absolute; top: 0; left: 50%; width: 0; height: 3px; background: var(--gold-500); transform: translateX(-50%); transition: width .35s cubic-bezier(.22,.61,.36,1); }
+        .person-card:hover .person-info::before { width: 100%; }
+        .person-info strong { display: flex; min-height: 2.7em; align-items: center; justify-content: center; color: var(--blue-950); font-size: 13px; line-height: 1.35; }
+        .person-info span { display: block; margin-top: 6px; color: #8392a1; font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+        .person-card.is-vacant .person-frame { border-style: dashed; box-shadow: none; background: #fcfdfe; }
+        .person-card.is-vacant:hover .person-frame { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(8,43,76,.08); }
+        .person-card.is-vacant .person-photo::before { display: none; }
+        .person-card.is-vacant .person-badge { color: #94a5b3; background: rgba(255,255,255,.9); box-shadow: 0 2px 6px rgba(8,43,76,.12); }
+        .person-card.is-vacant .person-info strong { color: #93a3b1; font-weight: 700; font-style: italic; }
+        .developers-grid .person-frame::after { content: ""; position: absolute; z-index: 3; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--gold-500), #f6c65f); }
+
+        /* Entrance in three beats: the card frame fades up, the portrait develops in behind it, then
+           the name plate follows. Every beat is opacity-only apart from a 16px lift on the card itself:
+           no zoom, blur, or clip wipe. Scaling a grid of faces was what caused motion discomfort, and
+           a hard clip edge slices the portrait mid-reveal. Delays come from JS (--reveal-delay). */
+        .has-js .reveal { transition: opacity .8s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0ms), transform .8s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0ms); }
+        .has-js .reveal:not(.is-visible) { opacity: 0; transform: translateY(16px); }
+        .has-js .reveal .person-photo img, .has-js .reveal .person-placeholder, .has-js .reveal .person-badge { transition: opacity .9s ease calc(var(--reveal-delay, 0ms) + 120ms), transform .55s cubic-bezier(.22,.61,.36,1) 0s, filter .45s ease 0s; }
+        .has-js .reveal:not(.is-visible) .person-photo img, .has-js .reveal:not(.is-visible) .person-placeholder, .has-js .reveal:not(.is-visible) .person-badge { opacity: 0; }
+        .has-js .reveal .person-info { transition: opacity .6s ease calc(var(--reveal-delay, 0ms) + 230ms), transform .6s cubic-bezier(.16,1,.3,1) calc(var(--reveal-delay, 0ms) + 230ms); }
+        .has-js .reveal:not(.is-visible) .person-info { opacity: 0; transform: translateY(8px); }
+
         .cta { padding-block: 56px; color: #fff; background: var(--blue-900); }
         .cta .container { display: flex; align-items: center; justify-content: space-between; gap: 35px; }
         .cta h2 { margin: 0; color: #fff; font-family: Georgia, serif; font-size: 30px; }
@@ -220,6 +386,7 @@ $division_initials = function ($name) {
             .brand-copy small { display: none; } .site-nav a { padding-inline: 9px; }
             .hero-grid { grid-template-columns: 1fr .76fr; gap: 36px; }
             .division-grid { grid-template-columns: repeat(4, 1fr); }
+            .people-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
         @media (max-width: 820px) {
             .container { width: min(100% - 30px, 680px); }
@@ -232,6 +399,8 @@ $division_initials = function ($name) {
             .stat-grid { grid-template-columns: 1fr; } .stat { min-height: 96px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.15); } .stat:last-child { border-bottom: 0; }
             .mission-grid { grid-template-columns: 1fr; gap: 38px; } .steps { grid-template-columns: 1fr; }
             .division-grid { grid-template-columns: repeat(3, 1fr); } .management-row, .network-row { grid-template-columns: 1fr; }
+            .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .people-block-head { align-items: flex-start; flex-direction: column; gap: 7px; }
             .cta .container { flex-direction: column; align-items: flex-start; } .footer-grid { grid-template-columns: 1fr; gap: 30px; }
         }
         @media (max-width: 540px) {
@@ -244,10 +413,19 @@ $division_initials = function ($name) {
             .division-heading-row { align-items: flex-start; flex-direction: column; } .division-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .division-card { min-height: 160px; padding-inline: 8px; } .division-logo { width: 70px; height: 70px; }
             .management-group { padding: 18px; } .mission-quote { padding: 26px; } .mission-quote blockquote { font-size: 21px; }
+            .people-directory { margin-top: 46px; } .people-block + .people-block { margin-top: 40px; } .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
             .copyright { flex-direction: column; }
         }
-        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; } }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { transition-duration: .01ms !important; }
+            .has-js .reveal, .has-js .reveal:not(.is-visible), .has-js .reveal:not(.is-visible) .person-photo img,
+            .has-js .reveal:not(.is-visible) .person-placeholder, .has-js .reveal:not(.is-visible) .person-badge,
+            .has-js .reveal:not(.is-visible) .person-info { opacity: 1; transform: none; transition: none; }
+            .person-card:hover .person-photo img { transform: none; }
+        }
     </style>
+    <script>document.documentElement.className += ' has-js';</script>
 </head>
 <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -321,7 +499,74 @@ $division_initials = function ($name) {
             <div class="governance-map" aria-label="AP-LEAD organizational structure">
                 <div class="management-group"><p class="map-title">Top Management</p><div class="management-row"><div class="management-role"><div><strong>Regional Director</strong><span>Regional stewardship</span></div></div><div class="management-role"><div><strong>Assistant Regional Director</strong><span>Executive support</span></div></div><div class="management-role"><div><strong>Chief, CLMD</strong><span>Curriculum and Learning Management Division</span></div></div></div></div>
                 <div class="map-line" aria-hidden="true"></div><div class="lead-role">Lead Consultant</div><div class="map-line" aria-hidden="true"></div>
-                <div class="network-row"><div class="network-card consultants"><div class="network-number">11</div><div><strong>SDO Consultants</strong><span>Division-level learning support and coordination</span></div></div><div class="network-card developers"><div class="network-number">4</div><div><strong>Developers</strong><span>Platform development and support</span></div></div></div>
+                <div class="network-row"><div class="network-card consultants reveal"><div class="network-number"><?= count($sdo_consultants); ?></div><div><strong>SDO Consultants</strong><span>Division-level learning support and coordination</span></div></div><div class="network-card developers reveal"><div class="network-number"><?= count($ap_developers); ?></div><div><strong>Developers</strong><span>Platform development and support</span></div></div></div>
+            </div>
+
+            <div class="people-directory">
+                <div class="people-block consultants-block">
+                    <div class="people-block-head reveal">
+                        <div class="people-title">
+                            <span class="people-title-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M17 20a5 5 0 0 0-10 0"/><circle cx="12" cy="8" r="3.4"/><path d="M3 20a4 4 0 0 1 3.2-3.9M21 20a4 4 0 0 0-3.2-3.9"/></svg></span>
+                            <h3>SDO Consultants</h3>
+                        </div>
+                        <span class="people-rule" aria-hidden="true"></span>
+                    </div>
+                    <div class="people-grid">
+                        <?php foreach ($sdo_consultants as $consultant_index => $consultant) : ?>
+                            <?php
+                            $consultant_photo = $person_display_url($consultant['photo']);
+                            $consultant_name = trim((string) $consultant['name']);
+                            $consultant_vacant = ($consultant_name === '' || $consultant_photo === '');
+                            $badge_logo_path = isset($division_logo_lookup[strtolower($consultant['key'])]) ? $division_logo_lookup[strtolower($consultant['key'])] : '';
+                            $badge_logo = $person_photo_url($badge_logo_path);
+                            ?>
+                            <article class="person-card reveal<?= $consultant_vacant ? ' is-vacant' : ''; ?>">
+                                <div class="person-frame">
+                                    <div class="person-photo">
+                                    <?php if ($consultant_photo !== '') : ?>
+                                        <img style="object-position: <?= html_escape($person_focus($consultant)); ?>;" src="<?= html_escape($consultant_photo); ?>" alt="<?= html_escape($consultant_name); ?>, AP-LEAD consultant for <?= html_escape($consultant['division']); ?>" loading="lazy" decoding="async">
+                                    <?php else : ?>
+                                        <span class="person-placeholder" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>
+                                    <?php endif; ?>
+                                    <span class="person-badge" aria-hidden="true"><?php if ($badge_logo !== '') : ?><img src="<?= html_escape($badge_logo); ?>" alt="" loading="lazy"><?php else : ?><?= html_escape($consultant['abbr']); ?><?php endif; ?></span>
+                                    </div>
+                                    <div class="person-info"><strong><?= $consultant_name !== '' ? html_escape($consultant_name) : 'To be announced'; ?></strong><span><?= html_escape($consultant['division']); ?></span></div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="people-block developers-block">
+                    <div class="people-block-head reveal">
+                        <div class="people-title">
+                            <span class="people-title-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 17-5-5 5-5m8 10 5-5-5-5m-2-3-4 16"/></svg></span>
+                            <h3>Development Team</h3>
+                        </div>
+                        <span class="people-rule" aria-hidden="true"></span>
+                    </div>
+                    <div class="people-grid developers-grid">
+                        <?php foreach ($ap_developers as $developer_index => $developer) : ?>
+                            <?php
+                            $developer_photo = $person_display_url($developer['photo']);
+                            $developer_name = trim((string) $developer['name']);
+                            ?>
+                            <article class="person-card reveal<?= ($developer_name === '' || $developer_photo === '') ? ' is-vacant' : ''; ?>">
+                                <div class="person-frame">
+                                    <div class="person-photo">
+                                    <?php if ($developer_photo !== '') : ?>
+                                        <img style="object-position: <?= html_escape($person_focus($developer)); ?>;" src="<?= html_escape($developer_photo); ?>" alt="<?= html_escape($developer_name); ?>, AP-LEAD system developer" loading="lazy" decoding="async">
+                                    <?php else : ?>
+                                        <span class="person-placeholder" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>
+                                    <?php endif; ?>
+                                    <span class="person-badge" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m8 17-5-5 5-5m8 10 5-5-5-5"/></svg></span>
+                                    </div>
+                                    <div class="person-info"><strong><?= $developer_name !== '' ? html_escape($developer_name) : 'To be announced'; ?></strong><span><?= html_escape($developer['division']); ?></span></div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
         </div></section>
 
@@ -382,6 +627,44 @@ $division_initials = function ($name) {
             if (loginForm && loginSubmit) loginForm.addEventListener('submit', function () { loginSubmit.classList.add('is-loading'); loginSubmit.disabled = true; loginSubmit.setAttribute('aria-busy', 'true'); });
             if (modal && modal.getAttribute('aria-hidden') === 'false') { document.body.classList.add('modal-open'); window.setTimeout(function () { document.getElementById('username').focus(); }, 100); }
             if (window.location.hash === '#portal') openPortal(null);
+
+            var revealItems = [].slice.call(document.querySelectorAll('.reveal'));
+            if (!revealItems.length) return;
+            var motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+            function showAllReveals() { revealItems.forEach(function (element) { element.classList.add('is-visible'); }); }
+            if (!('IntersectionObserver' in window) || (motionQuery && motionQuery.matches)) {
+                showAllReveals();
+            } else {
+                // Two thresholds give the toggle hysteresis: an item appears once it is meaningfully on
+                // screen and only resets after it has left completely, so edge-of-viewport scrolling
+                // cannot make it flicker. Items stay observed so the reveal repeats in both directions.
+                var revealObserver = new IntersectionObserver(function (entries) {
+                    var entering = [], minTop = Infinity, minLeft = Infinity;
+                    entries.forEach(function (entry) {
+                        if (entry.intersectionRatio >= .12) {
+                            entering.push(entry);
+                            if (entry.boundingClientRect.top < minTop) minTop = entry.boundingClientRect.top;
+                            if (entry.boundingClientRect.left < minLeft) minLeft = entry.boundingClientRect.left;
+                        } else if (!entry.isIntersecting) {
+                            entry.target.classList.remove('is-visible');
+                            entry.target.style.removeProperty('--reveal-delay');
+                        }
+                    });
+                    // Stagger is measured from live layout rather than a baked-in index, so the cascade
+                    // runs diagonally from the top-left of whatever actually came into view. A card that
+                    // enters on its own starts at 0ms instead of inheriting a stale grid position.
+                    entering.forEach(function (entry) {
+                        var box = entry.boundingClientRect;
+                        var delay = Math.min((box.top - minTop) * .3 + (box.left - minLeft) * .28, 620);
+                        entry.target.style.setProperty('--reveal-delay', Math.round(delay) + 'ms');
+                        entry.target.classList.add('is-visible');
+                    });
+                }, { threshold: [0, .12], rootMargin: '0px 0px -6% 0px' });
+                revealItems.forEach(function (element) { revealObserver.observe(element); });
+                if (motionQuery && motionQuery.addEventListener) {
+                    motionQuery.addEventListener('change', function (event) { if (event.matches) { revealObserver.disconnect(); showAllReveals(); } });
+                }
+            }
         }());
     </script>
 </body>
