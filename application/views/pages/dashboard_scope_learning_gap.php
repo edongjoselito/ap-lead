@@ -20,21 +20,12 @@ $div_setup_name = isset($division) && !empty($division->description) ? html_esca
 $div_encoded_total = isset($encoded_total_schools) ? (int) $encoded_total_schools : 0;
 $div_registered = isset($registered_school_count) ? (int) $registered_school_count : 0;
 $div_signup_pct = isset($signup_percentage) ? (float) $signup_percentage : 0;
-$div_checklist_completed = isset($completed_checklist_count) ? (int) $completed_checklist_count : 0;
-$div_checklist_pct = isset($checklist_completion_percentage) ? (float) $checklist_completion_percentage : 0;
 $div_district_count = isset($district_count) ? (int) $district_count : 0;
-$div_sgc = isset($sgc_counts) && is_array($sgc_counts) ? $sgc_counts : array(1 => 0, 2 => 0, 3 => 0);
-$div_sgc_total = (int) $div_sgc[1] + (int) $div_sgc[2] + (int) $div_sgc[3];
-$div_sbm_indicators = isset($sbm) && is_array($sbm) ? $sbm : array();
-$div_sbm_rates = isset($sbm_rate_counts) && is_array($sbm_rate_counts) ? $sbm_rate_counts : array();
-$div_sbm_has_data = false;
-foreach ($div_sbm_rates as $indicator_rates) { if (is_array($indicator_rates)) { foreach ($indicator_rates as $rate_count) { if ((int) $rate_count > 0) { $div_sbm_has_data = true; break 2; } } } }
 $div_fy = isset($this->session->fy) ? (int) $this->session->fy : (int) date('Y');
 $div_submission_url = base_url('Pages/school_submission_monitoring');
 $div_setup_url = base_url('Pages/division_setup');
 $div_districts_url = base_url('pages/district_account/' . (int) $this->session->division);
 $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->division);
-$sgc_url_base = base_url('Pages/division_sgc_details');
 ?>
 <style>
     .scope-lg { --navy:#123f63; --blue:#217dac; --sky:#eaf6fb; --line:#dce8ef; --ink:#243447; --muted:#6d7e8e; --amber:#c98616; --green:#21815c; }
@@ -52,10 +43,8 @@ $sgc_url_base = base_url('Pages/division_sgc_details');
     .scope-lg .summary-table { min-width:780px; margin:0; }.scope-lg .summary-table th { padding:12px 15px; border-top:0; color:var(--muted); font-size:10px; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }.scope-lg .summary-table td { padding:14px 15px; vertical-align:middle; color:#435467; }.scope-lg .summary-table tbody tr:hover { background:#f8fcfe; }.scope-lg .summary-table a { color:var(--blue); font-weight:700; text-decoration:none; }.scope-lg .summary-table a:hover { text-decoration:underline; }.scope-lg .status-pill { display:inline-block; padding:4px 8px; border-radius:999px; color:var(--green); background:#e9f7f0; font-size:10px; font-weight:700; }.scope-lg .status-pill.muted { color:#788692; background:#f0f3f5; }.scope-lg .empty-state { padding:25px; color:var(--muted); text-align:center; }
     .scope-lg .lg-progress-card-body { padding:24px 22px; }.scope-lg .lg-progress-card-body .coverage-number { font-size:32px; }.scope-lg .lg-progress-card-body .coverage-label { margin:8px 0 16px; font-size:13px; }.scope-lg .lg-progress-card-body .lg-progress { height:11px; }.scope-lg .lg-progress-foot { display:flex; justify-content:space-between; gap:10px; margin-top:12px; color:var(--muted); font-size:12px; }.scope-lg .lg-progress-foot strong { color:var(--navy); }
     .scope-lg .lg-glance-stat { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-glance-stat:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-glance-stat:first-child { padding-top:0; }.scope-lg .lg-glance-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 48px; width:48px; height:48px; border-radius:13px; font-size:22px; }.scope-lg .lg-glance-icon.navy { color:var(--navy); background:var(--sky); }.scope-lg .lg-glance-icon.green { color:var(--green); background:#e9f7f0; }.scope-lg .lg-glance-text { flex:1; min-width:0; }.scope-lg .lg-glance-text strong { display:block; color:var(--navy); font-size:22px; line-height:1.1; }.scope-lg .lg-glance-text small { color:var(--muted); font-size:12px; }.scope-lg .lg-glance-link { color:var(--blue); font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap; }.scope-lg .lg-glance-link:hover { text-decoration:underline; }
-    .scope-lg .lg-sgc-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-sgc-row:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-sgc-row:first-child { padding-top:0; }.scope-lg .lg-sgc-dot { flex:0 0 10px; width:10px; height:10px; border-radius:50%; }.scope-lg .lg-sgc-dot.red { background:#e25c4f; }.scope-lg .lg-sgc-dot.amber { background:#e8a23c; }.scope-lg .lg-sgc-dot.green { background:#21815c; }.scope-lg .lg-sgc-label { flex:1; min-width:0; color:var(--ink); font-size:12px; font-weight:600; }.scope-lg .lg-sgc-label small { display:block; color:var(--muted); font-size:11px; font-weight:400; }.scope-lg .lg-sgc-count { color:var(--navy); font-size:18px; font-weight:700; }.scope-lg .lg-sgc-bar { display:flex; height:7px; margin-top:14px; border-radius:99px; overflow:hidden; background:#eef3f6; }.scope-lg .lg-sgc-bar span { display:block; height:100%; }.scope-lg .lg-sgc-bar .sgc-red { background:#e25c4f; }.scope-lg .lg-sgc-bar .sgc-amber { background:#e8a23c; }.scope-lg .lg-sgc-bar .sgc-green { background:#21815c; }.scope-lg .lg-sgc-legend { display:flex; gap:14px; margin-top:10px; color:var(--muted); font-size:11px; }.scope-lg .lg-sgc-legend span { display:inline-flex; align-items:center; gap:5px; }.scope-lg .lg-sgc-legend i { width:8px; height:8px; border-radius:50%; }
     .scope-lg .lg-quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.scope-lg .lg-quick-action { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:16px; border:1px solid var(--line); border-radius:12px; background:#fbfdfe; color:var(--ink); text-decoration:none; transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease; }.scope-lg .lg-quick-action:hover { border-color:var(--blue); box-shadow:0 6px 16px rgba(18,63,99,.10); transform:translateY(-2px); text-decoration:none; }.scope-lg .lg-quick-action i { color:var(--blue); font-size:22px; }.scope-lg .lg-quick-action strong { color:var(--navy); font-size:13px; font-weight:700; }.scope-lg .lg-quick-action small { color:var(--muted); font-size:11px; }
-    .scope-lg .lg-sbm-legend { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px; }.scope-lg .lg-sbm-legend span { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:11px; font-weight:600; }.scope-lg .lg-sbm-legend i { width:10px; height:10px; border-radius:3px; }.scope-lg .lg-sbm-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-sbm-row:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-sbm-row:first-child { padding-top:0; }.scope-lg .lg-sbm-name { flex:0 0 200px; min-width:0; color:var(--ink); font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.scope-lg .lg-sbm-bar { flex:1; display:flex; height:24px; border-radius:6px; overflow:hidden; background:#eef3f6; }.scope-lg .lg-sbm-bar span { display:block; height:100%; transition:width .3s ease; }.scope-lg .lg-sbm-bar .sbm-r1 { background:#e25c4f; }.scope-lg .lg-sbm-bar .sbm-r2 { background:#e8a23c; }.scope-lg .lg-sbm-bar .sbm-r3 { background:#3fa8d0; }.scope-lg .lg-sbm-bar .sbm-r4 { background:#21815c; }.scope-lg .lg-sbm-total { flex:0 0 50px; text-align:right; color:var(--navy); font-size:14px; font-weight:700; }.scope-lg .lg-sbm-total small { display:block; color:var(--muted); font-size:10px; font-weight:400; }
-    @media (max-width:767.98px) { .scope-lg .lg-hero { align-items:flex-start; flex-direction:column; padding:24px; }.scope-lg .lg-hero-actions,.scope-lg .lg-hero .btn { width:100%; }.scope-lg .lg-card-head { padding:18px; }.scope-lg .lg-card-body { padding:18px; }.scope-lg .lg-quick-grid { grid-template-columns:1fr; }.scope-lg .lg-sbm-name { flex:0 0 120px; } }
+    @media (max-width:767.98px) { .scope-lg .lg-hero { align-items:flex-start; flex-direction:column; padding:24px; }.scope-lg .lg-hero-actions,.scope-lg .lg-hero .btn { width:100%; }.scope-lg .lg-card-head { padding:18px; }.scope-lg .lg-card-body { padding:18px; }.scope-lg .lg-quick-grid { grid-template-columns:1fr; } }
 </style>
 <div class="scope-lg">
     <section class="lg-hero"><div class="lg-hero-copy"><span class="lg-eyebrow">Least Learned Competencies Monitoring<?= $is_division && $div_setup_name !== '' ? ' · ' . $div_setup_name : ''; ?></span><h1><?= $is_division ? 'Division Learning Gap Summary' : 'Regional Learning Gap Overview'; ?></h1><p><?= $is_division ? 'Track submitted assessment results and learning needs across your division.' : 'Welcome, ' . html_escape($display_name) . '. Monitor reporting coverage and the learning needs emerging across every division.'; ?></p></div><div class="lg-hero-actions"><a class="btn btn-light" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar mr-1"></i> Learning Gap Summary</a><a class="btn btn-outline-light" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted mr-1"></i> View Records</a></div></section>
@@ -80,17 +69,6 @@ $sgc_url_base = base_url('Pages/division_sgc_details');
                     </div>
                 </section>
             </div>
-            <div class="col-lg-6">
-                <section class="lg-card">
-                    <div class="lg-card-head"><div><h4>SBM checklist completion</h4><p>Schools that have submitted a finalized SBM assessment this fiscal year.</p></div><small>FY <?= html_escape($div_fy); ?></small></div>
-                    <div class="lg-card-body lg-progress-card-body">
-                        <div class="coverage-number"><?= number_format($div_checklist_pct, 1); ?>%</div>
-                        <p class="coverage-label">of encoded schools have completed the SBM checklist</p>
-                        <div class="lg-progress"><span style="width:<?= min(100, max(0, $div_checklist_pct)); ?>%"></span></div>
-                        <div class="lg-progress-foot"><span><strong><?= number_format($div_checklist_completed); ?></strong> completed</span><span><strong><?= number_format(max(0, $div_encoded_total - $div_checklist_completed)); ?></strong> pending</span></div>
-                    </div>
-                </section>
-            </div>
         </div>
         <div class="row">
             <div class="col-lg-4">
@@ -112,30 +90,6 @@ $sgc_url_base = base_url('Pages/division_sgc_details');
             </div>
             <div class="col-lg-4">
                 <section class="lg-card">
-                    <div class="lg-card-head"><div><h4>SGC status</h4><p>School Governance Council organization across your schools.</p></div></div>
-                    <div class="lg-card-body">
-                        <div class="lg-sgc-row"><span class="lg-sgc-dot red"></span><div class="lg-sgc-label">Not Yet Organized<small>No SGC formed</small></div><span class="lg-sgc-count"><?= number_format((int) $div_sgc[1]); ?></span></div>
-                        <div class="lg-sgc-row"><span class="lg-sgc-dot amber"></span><div class="lg-sgc-label">Organized, Not Functional<small>SGC exists but inactive</small></div><span class="lg-sgc-count"><?= number_format((int) $div_sgc[2]); ?></span></div>
-                        <div class="lg-sgc-row"><span class="lg-sgc-dot green"></span><div class="lg-sgc-label">Functional<small>Actively operating</small></div><span class="lg-sgc-count"><?= number_format((int) $div_sgc[3]); ?></span></div>
-                        <?php if ($div_sgc_total > 0) : ?>
-                            <div class="lg-sgc-bar">
-                                <span class="sgc-red" style="width:<?= ($div_sgc[1] / $div_sgc_total) * 100; ?>%"></span>
-                                <span class="sgc-amber" style="width:<?= ($div_sgc[2] / $div_sgc_total) * 100; ?>%"></span>
-                                <span class="sgc-green" style="width:<?= ($div_sgc[3] / $div_sgc_total) * 100; ?>%"></span>
-                            </div>
-                            <div class="lg-sgc-legend">
-                                <span><i style="background:#e25c4f;"></i> <?= number_format($div_sgc[1]); ?></span>
-                                <span><i style="background:#e8a23c;"></i> <?= number_format($div_sgc[2]); ?></span>
-                                <span><i style="background:#21815c;"></i> <?= number_format($div_sgc[3]); ?></span>
-                            </div>
-                        <?php else : ?>
-                            <p class="empty-state" style="padding:16px;">No SGC data recorded yet.</p>
-                        <?php endif; ?>
-                    </div>
-                </section>
-            </div>
-            <div class="col-lg-4">
-                <section class="lg-card">
                     <div class="lg-card-head"><div><h4>Quick actions</h4><p>Jump to your key division tasks.</p></div></div>
                     <div class="lg-card-body">
                         <div class="lg-quick-grid">
@@ -148,40 +102,5 @@ $sgc_url_base = base_url('Pages/division_sgc_details');
                 </section>
             </div>
         </div>
-        <?php if ($div_sbm_has_data && !empty($div_sbm_indicators)) : ?>
-        <section class="lg-card">
-            <div class="lg-card-head"><div><h4>SBM assessment snapshot</h4><p>Distribution of SBM practice levels across assessed schools · FY <?= html_escape($div_fy); ?></p></div><small><?= number_format($div_checklist_completed); ?> school<?= $div_checklist_completed === 1 ? '' : 's'; ?> assessed</small></div>
-            <div class="lg-card-body">
-                <div class="lg-sbm-legend">
-                    <span><i style="background:#e25c4f;"></i> Not Yet Manifested</span>
-                    <span><i style="background:#e8a23c;"></i> Rarely Manifested</span>
-                    <span><i style="background:#3fa8d0;"></i> Frequently Manifested</span>
-                    <span><i style="background:#21815c;"></i> Always Manifested</span>
-                </div>
-                <?php foreach ($div_sbm_indicators as $sbm_indicator) :
-                    $indicator_no = (int) $sbm_indicator->id;
-                    $indicator_name = isset($sbm_indicator->indicator) ? html_escape($sbm_indicator->indicator) : '';
-                    $rates = isset($div_sbm_rates[$indicator_no]) ? $div_sbm_rates[$indicator_no] : array(1 => 0, 2 => 0, 3 => 0, 4 => 0);
-                    $r1 = (int) ($rates[1] ?? 0);
-                    $r2 = (int) ($rates[2] ?? 0);
-                    $r3 = (int) ($rates[3] ?? 0);
-                    $r4 = (int) ($rates[4] ?? 0);
-                    $sbm_total = $r1 + $r2 + $r3 + $r4;
-                    if ($sbm_total === 0) { continue; }
-                ?>
-                    <div class="lg-sbm-row">
-                        <div class="lg-sbm-name" title="<?= $indicator_name; ?>"><?= $indicator_name; ?></div>
-                        <div class="lg-sbm-bar">
-                            <span class="sbm-r1" style="width:<?= ($r1 / $sbm_total) * 100; ?>%"></span>
-                            <span class="sbm-r2" style="width:<?= ($r2 / $sbm_total) * 100; ?>%"></span>
-                            <span class="sbm-r3" style="width:<?= ($r3 / $sbm_total) * 100; ?>%"></span>
-                            <span class="sbm-r4" style="width:<?= ($r4 / $sbm_total) * 100; ?>%"></span>
-                        </div>
-                        <div class="lg-sbm-total"><?= number_format($sbm_total); ?><small>school<?= $sbm_total === 1 ? '' : 's'; ?></small></div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
-        <?php endif; ?>
     <?php endif; ?>
 </div>
