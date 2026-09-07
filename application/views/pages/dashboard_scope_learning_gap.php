@@ -16,6 +16,25 @@ foreach ($division_rows as $division_row) { if ((int) $division_row->record_coun
 $division_count = count($division_rows);
 $reporting_rate = $division_count > 0 ? ($active_division_count / $division_count) * 100 : 0;
 $priority_rows = array_slice(array_filter($division_rows, function ($row) { return (int) $row->record_count > 0; }), 0, 3);
+$div_setup_name = isset($division) && !empty($division->description) ? html_escape($division->description) : '';
+$div_encoded_total = isset($encoded_total_schools) ? (int) $encoded_total_schools : 0;
+$div_registered = isset($registered_school_count) ? (int) $registered_school_count : 0;
+$div_signup_pct = isset($signup_percentage) ? (float) $signup_percentage : 0;
+$div_checklist_completed = isset($completed_checklist_count) ? (int) $completed_checklist_count : 0;
+$div_checklist_pct = isset($checklist_completion_percentage) ? (float) $checklist_completion_percentage : 0;
+$div_district_count = isset($district_count) ? (int) $district_count : 0;
+$div_sgc = isset($sgc_counts) && is_array($sgc_counts) ? $sgc_counts : array(1 => 0, 2 => 0, 3 => 0);
+$div_sgc_total = (int) $div_sgc[1] + (int) $div_sgc[2] + (int) $div_sgc[3];
+$div_sbm_indicators = isset($sbm) && is_array($sbm) ? $sbm : array();
+$div_sbm_rates = isset($sbm_rate_counts) && is_array($sbm_rate_counts) ? $sbm_rate_counts : array();
+$div_sbm_has_data = false;
+foreach ($div_sbm_rates as $indicator_rates) { if (is_array($indicator_rates)) { foreach ($indicator_rates as $rate_count) { if ((int) $rate_count > 0) { $div_sbm_has_data = true; break 2; } } } }
+$div_fy = isset($this->session->fy) ? (int) $this->session->fy : (int) date('Y');
+$div_submission_url = base_url('Pages/school_submission_monitoring');
+$div_setup_url = base_url('Pages/division_setup');
+$div_districts_url = base_url('pages/district_account/' . (int) $this->session->division);
+$div_schools_url = base_url('pages/schools_division/' . (int) $this->session->division);
+$sgc_url_base = base_url('Pages/division_sgc_details');
 ?>
 <style>
     .scope-lg { --navy:#123f63; --blue:#217dac; --sky:#eaf6fb; --line:#dce8ef; --ink:#243447; --muted:#6d7e8e; --amber:#c98616; --green:#21815c; }
@@ -31,10 +50,15 @@ $priority_rows = array_slice(array_filter($division_rows, function ($row) { retu
     .scope-lg .coverage-number { color:var(--navy); font-size:28px; font-weight:700; line-height:1; }.scope-lg .coverage-label { margin:7px 0 13px; color:var(--muted); font-size:12px; }.scope-lg .lg-progress { height:9px; border-radius:999px; background:#e9f0f4; overflow:hidden; }.scope-lg .lg-progress span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#1d709e,#3fa8d0); }.scope-lg .coverage-foot { display:flex; justify-content:space-between; gap:10px; margin-top:10px; color:var(--muted); font-size:12px; }
     .scope-lg .priority-list { list-style:none; margin:0; padding:0; }.scope-lg .priority-list li { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #edf2f5; }.scope-lg .priority-list li:first-child { padding-top:0; }.scope-lg .priority-list li:last-child { padding-bottom:0; border-bottom:0; }.scope-lg .priority-rank { display:inline-flex; align-items:center; justify-content:center; flex:0 0 28px; width:28px; height:28px; border-radius:50%; color:#9b6410; background:#fff2d9; font-size:12px; font-weight:700; }.scope-lg .priority-name { flex:1; min-width:0; color:var(--ink); font-size:13px; font-weight:700; }.scope-lg .priority-name a { color:inherit; }.scope-lg .priority-name small { display:block; overflow:hidden; color:var(--muted); font-size:11px; font-weight:400; text-overflow:ellipsis; white-space:nowrap; }.scope-lg .priority-count { color:var(--amber); font-size:14px; font-weight:700; text-align:right; }.scope-lg .priority-count small { display:block; color:var(--muted); font-size:10px; font-weight:400; }
     .scope-lg .summary-table { min-width:780px; margin:0; }.scope-lg .summary-table th { padding:12px 15px; border-top:0; color:var(--muted); font-size:10px; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }.scope-lg .summary-table td { padding:14px 15px; vertical-align:middle; color:#435467; }.scope-lg .summary-table tbody tr:hover { background:#f8fcfe; }.scope-lg .summary-table a { color:var(--blue); font-weight:700; text-decoration:none; }.scope-lg .summary-table a:hover { text-decoration:underline; }.scope-lg .status-pill { display:inline-block; padding:4px 8px; border-radius:999px; color:var(--green); background:#e9f7f0; font-size:10px; font-weight:700; }.scope-lg .status-pill.muted { color:#788692; background:#f0f3f5; }.scope-lg .empty-state { padding:25px; color:var(--muted); text-align:center; }
-    @media (max-width:767.98px) { .scope-lg .lg-hero { align-items:flex-start; flex-direction:column; padding:24px; }.scope-lg .lg-hero-actions,.scope-lg .lg-hero .btn { width:100%; }.scope-lg .lg-card-head { padding:18px; }.scope-lg .lg-card-body { padding:18px; } }
+    .scope-lg .lg-progress-card-body { padding:24px 22px; }.scope-lg .lg-progress-card-body .coverage-number { font-size:32px; }.scope-lg .lg-progress-card-body .coverage-label { margin:8px 0 16px; font-size:13px; }.scope-lg .lg-progress-card-body .lg-progress { height:11px; }.scope-lg .lg-progress-foot { display:flex; justify-content:space-between; gap:10px; margin-top:12px; color:var(--muted); font-size:12px; }.scope-lg .lg-progress-foot strong { color:var(--navy); }
+    .scope-lg .lg-glance-stat { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-glance-stat:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-glance-stat:first-child { padding-top:0; }.scope-lg .lg-glance-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 48px; width:48px; height:48px; border-radius:13px; font-size:22px; }.scope-lg .lg-glance-icon.navy { color:var(--navy); background:var(--sky); }.scope-lg .lg-glance-icon.green { color:var(--green); background:#e9f7f0; }.scope-lg .lg-glance-text { flex:1; min-width:0; }.scope-lg .lg-glance-text strong { display:block; color:var(--navy); font-size:22px; line-height:1.1; }.scope-lg .lg-glance-text small { color:var(--muted); font-size:12px; }.scope-lg .lg-glance-link { color:var(--blue); font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap; }.scope-lg .lg-glance-link:hover { text-decoration:underline; }
+    .scope-lg .lg-sgc-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-sgc-row:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-sgc-row:first-child { padding-top:0; }.scope-lg .lg-sgc-dot { flex:0 0 10px; width:10px; height:10px; border-radius:50%; }.scope-lg .lg-sgc-dot.red { background:#e25c4f; }.scope-lg .lg-sgc-dot.amber { background:#e8a23c; }.scope-lg .lg-sgc-dot.green { background:#21815c; }.scope-lg .lg-sgc-label { flex:1; min-width:0; color:var(--ink); font-size:12px; font-weight:600; }.scope-lg .lg-sgc-label small { display:block; color:var(--muted); font-size:11px; font-weight:400; }.scope-lg .lg-sgc-count { color:var(--navy); font-size:18px; font-weight:700; }.scope-lg .lg-sgc-bar { display:flex; height:7px; margin-top:14px; border-radius:99px; overflow:hidden; background:#eef3f6; }.scope-lg .lg-sgc-bar span { display:block; height:100%; }.scope-lg .lg-sgc-bar .sgc-red { background:#e25c4f; }.scope-lg .lg-sgc-bar .sgc-amber { background:#e8a23c; }.scope-lg .lg-sgc-bar .sgc-green { background:#21815c; }.scope-lg .lg-sgc-legend { display:flex; gap:14px; margin-top:10px; color:var(--muted); font-size:11px; }.scope-lg .lg-sgc-legend span { display:inline-flex; align-items:center; gap:5px; }.scope-lg .lg-sgc-legend i { width:8px; height:8px; border-radius:50%; }
+    .scope-lg .lg-quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.scope-lg .lg-quick-action { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:16px; border:1px solid var(--line); border-radius:12px; background:#fbfdfe; color:var(--ink); text-decoration:none; transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease; }.scope-lg .lg-quick-action:hover { border-color:var(--blue); box-shadow:0 6px 16px rgba(18,63,99,.10); transform:translateY(-2px); text-decoration:none; }.scope-lg .lg-quick-action i { color:var(--blue); font-size:22px; }.scope-lg .lg-quick-action strong { color:var(--navy); font-size:13px; font-weight:700; }.scope-lg .lg-quick-action small { color:var(--muted); font-size:11px; }
+    .scope-lg .lg-sbm-legend { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px; }.scope-lg .lg-sbm-legend span { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:11px; font-weight:600; }.scope-lg .lg-sbm-legend i { width:10px; height:10px; border-radius:3px; }.scope-lg .lg-sbm-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-sbm-row:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-sbm-row:first-child { padding-top:0; }.scope-lg .lg-sbm-name { flex:0 0 200px; min-width:0; color:var(--ink); font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.scope-lg .lg-sbm-bar { flex:1; display:flex; height:24px; border-radius:6px; overflow:hidden; background:#eef3f6; }.scope-lg .lg-sbm-bar span { display:block; height:100%; transition:width .3s ease; }.scope-lg .lg-sbm-bar .sbm-r1 { background:#e25c4f; }.scope-lg .lg-sbm-bar .sbm-r2 { background:#e8a23c; }.scope-lg .lg-sbm-bar .sbm-r3 { background:#3fa8d0; }.scope-lg .lg-sbm-bar .sbm-r4 { background:#21815c; }.scope-lg .lg-sbm-total { flex:0 0 50px; text-align:right; color:var(--navy); font-size:14px; font-weight:700; }.scope-lg .lg-sbm-total small { display:block; color:var(--muted); font-size:10px; font-weight:400; }
+    @media (max-width:767.98px) { .scope-lg .lg-hero { align-items:flex-start; flex-direction:column; padding:24px; }.scope-lg .lg-hero-actions,.scope-lg .lg-hero .btn { width:100%; }.scope-lg .lg-card-head { padding:18px; }.scope-lg .lg-card-body { padding:18px; }.scope-lg .lg-quick-grid { grid-template-columns:1fr; }.scope-lg .lg-sbm-name { flex:0 0 120px; } }
 </style>
 <div class="scope-lg">
-    <section class="lg-hero"><div class="lg-hero-copy"><span class="lg-eyebrow">Least Learned Competencies Monitoring</span><h1><?= $is_division ? 'Division Learning Gap Summary' : 'Regional Learning Gap Overview'; ?></h1><p><?= $is_division ? 'Track submitted assessment results and learning needs across your division.' : 'Welcome, ' . html_escape($display_name) . '. Monitor reporting coverage and the learning needs emerging across every division.'; ?></p></div><div class="lg-hero-actions"><a class="btn btn-light" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar mr-1"></i> Learning Gap Summary</a><a class="btn btn-outline-light" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted mr-1"></i> View Records</a></div></section>
+    <section class="lg-hero"><div class="lg-hero-copy"><span class="lg-eyebrow">Least Learned Competencies Monitoring<?= $is_division && $div_setup_name !== '' ? ' · ' . $div_setup_name : ''; ?></span><h1><?= $is_division ? 'Division Learning Gap Summary' : 'Regional Learning Gap Overview'; ?></h1><p><?= $is_division ? 'Track submitted assessment results and learning needs across your division.' : 'Welcome, ' . html_escape($display_name) . '. Monitor reporting coverage and the learning needs emerging across every division.'; ?></p></div><div class="lg-hero-actions"><a class="btn btn-light" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar mr-1"></i> Learning Gap Summary</a><a class="btn btn-outline-light" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted mr-1"></i> View Records</a></div></section>
     <div class="row">
         <div class="col-sm-6 col-xl-3"><a class="lg-stat-link" href="<?= $records_url; ?>"><div class="lg-stat"><div class="lg-stat-top"><span>Reporting schools</span><span class="lg-stat-icon"><i class="mdi mdi-school-outline"></i></span></div><small>Schools with submissions</small><strong><?= number_format($school_count); ?></strong><span class="lg-stat-hint">Review submitted records <i class="mdi mdi-arrow-right"></i></span></div></a></div>
         <div class="col-sm-6 col-xl-3"><a class="lg-stat-link" href="<?= $records_url; ?>"><div class="lg-stat"><div class="lg-stat-top"><span>Encoded records</span><span class="lg-stat-icon"><i class="mdi mdi-file-document-outline"></i></span></div><small>Competency gap entries</small><strong><?= number_format($record_count); ?></strong><span class="lg-stat-hint">View all entries <i class="mdi mdi-arrow-right"></i></span></div></a></div>
@@ -43,5 +67,121 @@ $priority_rows = array_slice(array_filter($division_rows, function ($row) { retu
     </div>
     <?php if (!$is_division) : ?><div class="row"><div class="col-lg-5"><section class="lg-card"><div class="lg-card-head"><div><h4>Division reporting coverage</h4><p>Divisions with at least one submitted learning-gap record.</p></div><small><?= $active_division_count; ?> / <?= $division_count; ?></small></div><div class="lg-card-body"><div class="coverage-number"><?= number_format($reporting_rate, 1); ?>%</div><p class="coverage-label">of divisions are represented in the regional overview</p><div class="lg-progress"><span style="width:<?= min(100, max(0, $reporting_rate)); ?>%"></span></div><div class="coverage-foot"><span><?= $active_division_count; ?> reporting divisions</span><span><?= max(0, $division_count - $active_division_count); ?> without records</span></div></div></section></div><div class="col-lg-7"><section class="lg-card"><div class="lg-card-head"><div><h4>Priority attention</h4><p>Divisions with the highest recorded number of learners with gaps.</p></div><a href="<?= $records_url; ?>">View records</a></div><div class="lg-card-body"><?php if (empty($priority_rows)) : ?><div class="empty-state">No division has submitted learning-gap data yet.</div><?php else : ?><ol class="priority-list"><?php foreach ($priority_rows as $index => $row) : $row_url = $records_url . '?division_id=' . (int) $row->division_id; ?><li><span class="priority-rank"><?= $index + 1; ?></span><div class="priority-name"><a href="<?= $row_url; ?>"><?= html_escape($row->division_name); ?></a><small><?= number_format((int) $row->school_count); ?> reporting school<?= (int) $row->school_count === 1 ? '' : 's'; ?> · <?= number_format((int) $row->record_count); ?> records</small></div><div class="priority-count"><?= number_format((int) $row->learners_with_gap); ?><small>learners with gap</small></div></li><?php endforeach; ?></ol><?php endif; ?></div></section></div></div>
         <section class="lg-card"><div class="lg-card-head"><div><h4>Regional performance by division</h4><p>Use the linked figures to open the submitted records for a division.</p></div><small><?= number_format($division_count); ?> divisions</small></div><div class="table-responsive"><table class="table summary-table mb-0"><thead><tr><th>Division</th><th>Reporting status</th><th>School submissions</th><th>Submission rate</th><th>Records</th><th>Learners assessed</th><th>Learners with gap</th><th>Gap rate</th></tr></thead><tbody><?php if (empty($division_rows)) : ?><tr><td colspan="8" class="empty-state">No divisions are configured for this regional account.</td></tr><?php else : foreach ($division_rows as $row) : $record_link = $records_url . '?division_id=' . (int) $row->division_id; $row_assessed = (int) $row->learners_assessed; $row_gap_rate = $row_assessed > 0 ? ((int) $row->learners_with_gap / $row_assessed) * 100 : 0; $row_school_total = (int) $row->total_school_count; $row_submission_rate = $row_school_total > 0 ? ((int) $row->school_count / $row_school_total) * 100 : 0; ?><tr><td><strong><?= html_escape($row->division_name); ?></strong></td><td><span class="status-pill<?= (int) $row->record_count > 0 ? '' : ' muted'; ?>"><?= (int) $row->record_count > 0 ? 'Reporting' : 'No records'; ?></span></td><td><a href="<?= $record_link; ?>"><?= number_format((int) $row->school_count); ?> / <?= number_format($row_school_total); ?></a></td><td><?= number_format($row_submission_rate, 1); ?>%</td><td><a href="<?= $record_link; ?>"><?= number_format((int) $row->record_count); ?></a></td><td><a href="<?= $record_link; ?>"><?= number_format($row_assessed); ?></a></td><td><a href="<?= $record_link; ?>"><?= number_format((int) $row->learners_with_gap); ?></a></td><td><?= number_format($row_gap_rate, 1); ?>%</td></tr><?php endforeach; endif; ?></tbody></table></div></section>
-    <?php else : ?><?php endif; ?>
+    <?php else : ?>
+        <div class="row">
+            <div class="col-lg-6">
+                <section class="lg-card">
+                    <div class="lg-card-head"><div><h4>School registration progress</h4><p>Registered schools out of the total encoded in Division Setup.</p></div><small>FY <?= html_escape($div_fy); ?></small></div>
+                    <div class="lg-card-body lg-progress-card-body">
+                        <div class="coverage-number"><?= number_format($div_signup_pct, 1); ?>%</div>
+                        <p class="coverage-label">of encoded schools are registered in the system</p>
+                        <div class="lg-progress"><span style="width:<?= min(100, max(0, $div_signup_pct)); ?>%"></span></div>
+                        <div class="lg-progress-foot"><span><strong><?= number_format($div_registered); ?></strong> registered</span><span><strong><?= number_format($div_encoded_total); ?></strong> encoded total</span></div>
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-6">
+                <section class="lg-card">
+                    <div class="lg-card-head"><div><h4>SBM checklist completion</h4><p>Schools that have submitted a finalized SBM assessment this fiscal year.</p></div><small>FY <?= html_escape($div_fy); ?></small></div>
+                    <div class="lg-card-body lg-progress-card-body">
+                        <div class="coverage-number"><?= number_format($div_checklist_pct, 1); ?>%</div>
+                        <p class="coverage-label">of encoded schools have completed the SBM checklist</p>
+                        <div class="lg-progress"><span style="width:<?= min(100, max(0, $div_checklist_pct)); ?>%"></span></div>
+                        <div class="lg-progress-foot"><span><strong><?= number_format($div_checklist_completed); ?></strong> completed</span><span><strong><?= number_format(max(0, $div_encoded_total - $div_checklist_completed)); ?></strong> pending</span></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                <section class="lg-card">
+                    <div class="lg-card-head"><div><h4>Division network</h4><p>Districts and schools under your division.</p></div></div>
+                    <div class="lg-card-body">
+                        <div class="lg-glance-stat">
+                            <span class="lg-glance-icon navy"><i class="mdi mdi-map-marker-multiple-outline"></i></span>
+                            <div class="lg-glance-text"><strong><?= number_format($div_district_count); ?></strong><small>District<?= $div_district_count === 1 ? '' : 's'; ?></small></div>
+                            <a class="lg-glance-link" href="<?= $div_districts_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
+                        </div>
+                        <div class="lg-glance-stat">
+                            <span class="lg-glance-icon green"><i class="mdi mdi-school-outline"></i></span>
+                            <div class="lg-glance-text"><strong><?= number_format($div_registered); ?></strong><small>Registered school<?= $div_registered === 1 ? '' : 's'; ?></small></div>
+                            <a class="lg-glance-link" href="<?= $div_schools_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-4">
+                <section class="lg-card">
+                    <div class="lg-card-head"><div><h4>SGC status</h4><p>School Governance Council organization across your schools.</p></div></div>
+                    <div class="lg-card-body">
+                        <div class="lg-sgc-row"><span class="lg-sgc-dot red"></span><div class="lg-sgc-label">Not Yet Organized<small>No SGC formed</small></div><span class="lg-sgc-count"><?= number_format((int) $div_sgc[1]); ?></span></div>
+                        <div class="lg-sgc-row"><span class="lg-sgc-dot amber"></span><div class="lg-sgc-label">Organized, Not Functional<small>SGC exists but inactive</small></div><span class="lg-sgc-count"><?= number_format((int) $div_sgc[2]); ?></span></div>
+                        <div class="lg-sgc-row"><span class="lg-sgc-dot green"></span><div class="lg-sgc-label">Functional<small>Actively operating</small></div><span class="lg-sgc-count"><?= number_format((int) $div_sgc[3]); ?></span></div>
+                        <?php if ($div_sgc_total > 0) : ?>
+                            <div class="lg-sgc-bar">
+                                <span class="sgc-red" style="width:<?= ($div_sgc[1] / $div_sgc_total) * 100; ?>%"></span>
+                                <span class="sgc-amber" style="width:<?= ($div_sgc[2] / $div_sgc_total) * 100; ?>%"></span>
+                                <span class="sgc-green" style="width:<?= ($div_sgc[3] / $div_sgc_total) * 100; ?>%"></span>
+                            </div>
+                            <div class="lg-sgc-legend">
+                                <span><i style="background:#e25c4f;"></i> <?= number_format($div_sgc[1]); ?></span>
+                                <span><i style="background:#e8a23c;"></i> <?= number_format($div_sgc[2]); ?></span>
+                                <span><i style="background:#21815c;"></i> <?= number_format($div_sgc[3]); ?></span>
+                            </div>
+                        <?php else : ?>
+                            <p class="empty-state" style="padding:16px;">No SGC data recorded yet.</p>
+                        <?php endif; ?>
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-4">
+                <section class="lg-card">
+                    <div class="lg-card-head"><div><h4>Quick actions</h4><p>Jump to your key division tasks.</p></div></div>
+                    <div class="lg-card-body">
+                        <div class="lg-quick-grid">
+                            <a class="lg-quick-action" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar"></i><strong>Learning Gap Summary</strong><small>Review competency gaps</small></a>
+                            <a class="lg-quick-action" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted"></i><strong>Submitted Records</strong><small>View all entries</small></a>
+                            <a class="lg-quick-action" href="<?= $div_submission_url; ?>"><i class="mdi mdi-clipboard-check-outline"></i><strong>School Submissions</strong><small>Monitor reporting</small></a>
+                            <a class="lg-quick-action" href="<?= $div_setup_url; ?>"><i class="mdi mdi-cogs"></i><strong>Division Setup</strong><small>Configure details</small></a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <?php if ($div_sbm_has_data && !empty($div_sbm_indicators)) : ?>
+        <section class="lg-card">
+            <div class="lg-card-head"><div><h4>SBM assessment snapshot</h4><p>Distribution of SBM practice levels across assessed schools · FY <?= html_escape($div_fy); ?></p></div><small><?= number_format($div_checklist_completed); ?> school<?= $div_checklist_completed === 1 ? '' : 's'; ?> assessed</small></div>
+            <div class="lg-card-body">
+                <div class="lg-sbm-legend">
+                    <span><i style="background:#e25c4f;"></i> Not Yet Manifested</span>
+                    <span><i style="background:#e8a23c;"></i> Rarely Manifested</span>
+                    <span><i style="background:#3fa8d0;"></i> Frequently Manifested</span>
+                    <span><i style="background:#21815c;"></i> Always Manifested</span>
+                </div>
+                <?php foreach ($div_sbm_indicators as $sbm_indicator) :
+                    $indicator_no = (int) $sbm_indicator->id;
+                    $indicator_name = isset($sbm_indicator->indicator) ? html_escape($sbm_indicator->indicator) : '';
+                    $rates = isset($div_sbm_rates[$indicator_no]) ? $div_sbm_rates[$indicator_no] : array(1 => 0, 2 => 0, 3 => 0, 4 => 0);
+                    $r1 = (int) ($rates[1] ?? 0);
+                    $r2 = (int) ($rates[2] ?? 0);
+                    $r3 = (int) ($rates[3] ?? 0);
+                    $r4 = (int) ($rates[4] ?? 0);
+                    $sbm_total = $r1 + $r2 + $r3 + $r4;
+                    if ($sbm_total === 0) { continue; }
+                ?>
+                    <div class="lg-sbm-row">
+                        <div class="lg-sbm-name" title="<?= $indicator_name; ?>"><?= $indicator_name; ?></div>
+                        <div class="lg-sbm-bar">
+                            <span class="sbm-r1" style="width:<?= ($r1 / $sbm_total) * 100; ?>%"></span>
+                            <span class="sbm-r2" style="width:<?= ($r2 / $sbm_total) * 100; ?>%"></span>
+                            <span class="sbm-r3" style="width:<?= ($r3 / $sbm_total) * 100; ?>%"></span>
+                            <span class="sbm-r4" style="width:<?= ($r4 / $sbm_total) * 100; ?>%"></span>
+                        </div>
+                        <div class="lg-sbm-total"><?= number_format($sbm_total); ?><small>school<?= $sbm_total === 1 ? '' : 's'; ?></small></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+    <?php endif; ?>
 </div>
