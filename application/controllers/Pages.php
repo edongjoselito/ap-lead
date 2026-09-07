@@ -755,6 +755,20 @@ class Pages extends CI_Controller
             || $data['term_filter'] !== ''
             || $data['competency_filter'] !== '';
         $data['records'] = $this->Page_model->learning_gap_records($scope);
+        // Build filter choices from this user's authorized scope before applying filters.
+        $data['record_filter_options'] = array('grade_level' => array(), 'learning_area' => array(), 'term' => array());
+        foreach ($data['records'] as $record) {
+            foreach ($data['record_filter_options'] as $field => $options) {
+                $value = trim((string) $record->$field);
+                if ($value !== '') {
+                    $data['record_filter_options'][$field][$value] = $value;
+                }
+            }
+        }
+        foreach ($data['record_filter_options'] as &$options) {
+            natcasesort($options);
+        }
+        unset($options);
         if ($data['division_filter'] > 0) {
             $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
                 return (int) $record->division_id === $data['division_filter'];
