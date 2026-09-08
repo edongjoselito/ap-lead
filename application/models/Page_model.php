@@ -1841,6 +1841,45 @@ public function learning_gap_records($scope)
     return $this->db->order_by('lgr.created_at', 'DESC')->get()->result();
 }
 
+public function learning_gap_school_competency_summary($scope, $grade = '')
+{
+    $competencies = array();
+    $grades = array();
+    $school_ids = array();
+    foreach ($this->learning_gap_records($scope) as $record) {
+        $record_grade = trim((string) $record->grade_level);
+        if ($record_grade !== '') $grades[$record_grade] = $record_grade;
+        if ($grade !== '' && $record_grade !== $grade) continue;
+        foreach (preg_split('/\r\n|\r|\n/', (string) $record->least_learned_competency) as $text) {
+            $text = trim($text);
+            if ($text === '') continue;
+            $key = json_encode(array($record_grade, trim((string) $record->learning_area), $text));
+            if (!isset($competencies[$key])) {
+                $competencies[$key] = array('text' => $text, 'grade' => $record_grade,
+                    'area' => $record->learning_area, 'schools' => array());
+            }
+            // One school contributes one count, even across repeated records or trimesters.
+            $school_id = (string) $record->school_id;
+            $competencies[$key]['schools'][$school_id] = true;
+            $school_ids[$school_id] = true;
+        }
+    }
+    foreach ($competencies as &$competency) {
+        $competency['school_count'] = count($competency['schools']);
+        unset($competency['schools']);
+    }
+    unset($competency);
+    $competencies = array_values($competencies);
+    usort($competencies, function ($a, $b) {
+        return $b['school_count'] <=> $a['school_count']
+            ?: strnatcasecmp($a['grade'], $b['grade'])
+            ?: strnatcasecmp($a['text'], $b['text']);
+    });
+    natcasesort($grades);
+    return array('competency_rows' => $competencies, 'grade_options' => array_values($grades),
+        'reporting_school_count' => count($school_ids));
+}
+
 public function learning_gap_summary($scope)
 {
     $this->db->select('COUNT(*) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')

@@ -38,6 +38,14 @@ $sdo_consultants = array(
     array('name' => '',                           'division' => 'SDO Tagum City',       'key' => 'Tagum City',       'abbr' => 'TAGUM',    'photo' => ''),
 );
 
+// Leadership portraits reuse the role assignments in the site's existing authors directory.
+$top_management = array(
+    array('name' => 'Dr. Maria Ines C. Asuncion', 'role' => 'Regional Director', 'abbr' => 'RD', 'photo' => ''),
+    array('name' => 'Rebonfamil R. Baguio', 'role' => 'Assistant Regional Director', 'abbr' => 'ARD', 'photo' => 'assets/images/authors/ard.jpg'),
+    array('name' => '', 'role' => 'CLMD Chief', 'abbr' => 'CLMD', 'photo' => ''),
+    array('name' => '', 'role' => 'Lead Consultant', 'abbr' => 'LEAD', 'photo' => ''),
+);
+
 $ap_developers = array(
     array('name' => 'Alan D. Limbadan, PhD', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png'),
     array('name' => 'Joselito Q. Edong',     'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png'),
@@ -297,23 +305,6 @@ foreach ($division_list as $division_row) {
         .division-card small { margin-top: 5px; color: #8392a1; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
         .division-note { margin: 24px 0 0; color: var(--muted); text-align: center; font-size: 12px; }
 
-        .governance-map { max-width: 980px; margin: 0 auto; }
-        .management-group { padding: 25px; border: 1px solid #bcd4e6; border-radius: 9px; background: #e9f4fb; }
-        .map-title { margin: 0 0 18px; color: var(--blue-950); text-align: center; font-size: 15px; font-weight: 800; }
-        .management-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .management-role { min-height: 105px; display: grid; place-items: center; padding: 17px; color: #fff; border-radius: 7px; background: var(--blue-900); text-align: center; }
-        .management-role strong { display: block; font-size: 14px; }
-        .management-role span { display: block; margin-top: 4px; color: rgba(255,255,255,.73); font-size: 10px; line-height: 1.4; }
-        .map-line { width: 2px; height: 34px; margin: 0 auto; background: #91a8b9; }
-        .lead-role { width: min(290px, 90%); margin: 0 auto; padding: 19px; color: #fff; border-radius: 7px; background: var(--green-700); text-align: center; font-weight: 800; }
-        .network-row { display: grid; grid-template-columns: 2.1fr .9fr; gap: 20px; }
-        .network-card { min-height: 130px; display: flex; align-items: center; gap: 18px; padding: 24px; border: 1px solid; border-radius: 8px; }
-        .network-card.consultants { color: #6d4b05; border-color: #efcf7a; background: #fff6d8; }
-        .network-card.developers { color: #71305b; border-color: #e6bed7; background: #fbedf6; }
-        .network-number { font-family: Georgia, serif; font-size: 45px; font-weight: 800; line-height: 1; }
-        .network-card strong { display: block; font-size: 15px; }
-        .network-card span { display: block; margin-top: 5px; opacity: .72; font-size: 11px; }
-
         .people-directory { margin-top: 64px; }
         .people-block + .people-block { margin-top: 54px; }
         .people-block-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 26px; }
@@ -398,7 +389,7 @@ foreach ($division_list as $division_row) {
             .impact-panel { width: min(100%, 470px); margin-inline: auto; }
             .stat-grid { grid-template-columns: 1fr; } .stat { min-height: 96px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.15); } .stat:last-child { border-bottom: 0; }
             .mission-grid { grid-template-columns: 1fr; gap: 38px; } .steps { grid-template-columns: 1fr; }
-            .division-grid { grid-template-columns: repeat(3, 1fr); } .management-row, .network-row { grid-template-columns: 1fr; }
+            .division-grid { grid-template-columns: repeat(3, 1fr); }
             .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .people-block-head { align-items: flex-start; flex-direction: column; gap: 7px; }
             .cta .container { flex-direction: column; align-items: flex-start; } .footer-grid { grid-template-columns: 1fr; gap: 30px; }
@@ -412,7 +403,7 @@ foreach ($division_list as $division_row) {
             .login-card { padding: 25px 20px; } .login-card::after { display: none; } .portal-close { top: 13px; right: 13px; } .section { padding-block: 70px; }
             .division-heading-row { align-items: flex-start; flex-direction: column; } .division-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .division-card { min-height: 160px; padding-inline: 8px; } .division-logo { width: 70px; height: 70px; }
-            .management-group { padding: 18px; } .mission-quote { padding: 26px; } .mission-quote blockquote { font-size: 21px; }
+            .mission-quote { padding: 26px; } .mission-quote blockquote { font-size: 21px; }
             .people-directory { margin-top: 46px; } .people-block + .people-block { margin-top: 40px; } .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
             .copyright { flex-direction: column; }
         }
@@ -429,7 +420,7 @@ foreach ($division_list as $division_row) {
 </head>
 <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <div class="government-bar"><div class="container"><p><span>GOVPH</span> &nbsp; Republic of the Philippines</p><p class="utility-text">Department of Education · Regional Office XI</p></div></div>
+    <div class="government-bar"><div class="container"><p class="utility-text">Department of Education · Regional Office XI</p></div></div>
     <header class="site-header">
         <div class="container masthead">
             <a class="brand" href="<?= base_url('homepage'); ?>" aria-label="AP-LEAD Region XI home">
@@ -491,18 +482,38 @@ foreach ($division_list as $division_row) {
                     <article class="division-card"><div class="division-logo"><?php if ($has_logo) : ?><img src="<?= html_escape(base_url($logo_path)); ?>" alt="<?= html_escape($division_item->description); ?> official logo"><?php else : ?><span aria-hidden="true"><?= html_escape($division_initials($division_item->description)); ?></span><?php endif; ?></div><h3><?= html_escape($division_item->description); ?></h3><small>Schools Division Office</small></article>
                 <?php endforeach; ?>
             </div>
-            <?php if (empty($division_list)) : ?><p class="division-note">Division entries will appear here once they have been added to the Region XI directory.</p><?php else : ?><p class="division-note">Official logos appear automatically after an authorized division user uploads one in Division Setup.</p><?php endif; ?>
+            <?php if (empty($division_list)) : ?><p class="division-note">Division entries will appear here once they have been added to the Region XI directory.</p><?php endif; ?>
         </div></section>
 
         <section class="section section-soft" id="governance"><div class="container">
-            <div class="section-heading center"><p class="kicker">Program governance</p><h2>Regional leadership with division-level support</h2><p>A clear support structure connects regional stewardship, technical leadership, SDO consultants, and system development.</p></div>
-            <div class="governance-map" aria-label="AP-LEAD organizational structure">
-                <div class="management-group"><p class="map-title">Top Management</p><div class="management-row"><div class="management-role"><div><strong>Regional Director</strong><span>Regional stewardship</span></div></div><div class="management-role"><div><strong>Assistant Regional Director</strong><span>Executive support</span></div></div><div class="management-role"><div><strong>Chief, CLMD</strong><span>Curriculum and Learning Management Division</span></div></div></div></div>
-                <div class="map-line" aria-hidden="true"></div><div class="lead-role">Lead Consultant</div><div class="map-line" aria-hidden="true"></div>
-                <div class="network-row"><div class="network-card consultants reveal"><div class="network-number"><?= count($sdo_consultants); ?></div><div><strong>SDO Consultants</strong><span>Division-level learning support and coordination</span></div></div><div class="network-card developers reveal"><div class="network-number"><?= count($ap_developers); ?></div><div><strong>Developers</strong><span>Platform development and support</span></div></div></div>
-            </div>
-
+            <div class="section-heading center"><p class="kicker">Program governance</p><h2>Regional leadership with division-level support</h2><p>Meet the regional leaders, division consultants, and developers supporting AP-LEAD.</p></div>
             <div class="people-directory">
+                <section class="people-block top-management-block" aria-labelledby="top-management-title">
+                    <div class="people-block-head">
+                        <div class="people-title">
+                            <span class="people-title-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M17 20a5 5 0 0 0-10 0"/><circle cx="12" cy="8" r="3.4"/><path d="M3 20a4 4 0 0 1 3.2-3.9M21 20a4 4 0 0 0-3.2-3.9"/></svg></span>
+                            <h3 id="top-management-title">Top Management</h3>
+                        </div>
+                        <span class="people-rule" aria-hidden="true"></span>
+                    </div>
+                    <div class="people-grid">
+                        <?php foreach ($top_management as $leader): $leader_photo = $person_display_url($leader['photo']); ?>
+                            <article class="person-card reveal<?= ($leader['name'] === '' || $leader_photo === '') ? ' is-vacant' : ''; ?>">
+                                <div class="person-frame">
+                                    <div class="person-photo">
+                                        <?php if ($leader_photo !== ''): ?>
+                                            <img src="<?= html_escape($leader_photo); ?>" alt="<?= html_escape($leader['name']); ?>" style="object-position: center 12%;" loading="lazy" decoding="async">
+                                        <?php else: ?>
+                                            <span class="person-placeholder" role="img" aria-label="<?= html_escape($leader['role']); ?> photo pending"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>
+                                        <?php endif; ?>
+                                        <span class="person-badge" aria-hidden="true"><?= html_escape($leader['abbr']); ?></span>
+                                    </div>
+                                    <div class="person-info"><strong><?= $leader['name'] !== '' ? html_escape($leader['name']) : 'To be announced'; ?></strong><span><?= html_escape($leader['role']); ?></span></div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
                 <div class="people-block consultants-block">
                     <div class="people-block-head reveal">
                         <div class="people-title">

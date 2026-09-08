@@ -721,6 +721,36 @@ class Pages extends CI_Controller
         $this->learning_gap(true);
     }
 
+    public function learning_gap_school_summary()
+    {
+        if (!$this->session->logged_in) {
+            redirect(base_url('log_in'));
+            return;
+        }
+        $position = (string) $this->session->position;
+        if (!in_array($position, array('division', 'division_head', 'region'), true)) {
+            show_error('You are not authorized to access this summary.', 403);
+            return;
+        }
+        $is_region = $position === 'region';
+        $scope = array('type' => $is_region ? 'region' : 'division',
+            'id' => (int) ($is_region ? $this->session->region : $this->session->division));
+        if ($scope['id'] <= 0) {
+            show_error('Your account has no assigned reporting scope.', 403);
+            return;
+        }
+        $grade = trim((string) $this->input->get('grade_level', true));
+        $data = $this->Page_model->learning_gap_school_competency_summary($scope, $grade);
+        $data['title'] = 'Learning Gap Summary';
+        $data['grade_filter'] = $grade;
+        $data['is_region'] = $is_region;
+        $this->load->view('templates/header');
+        $this->load->view('templates/menu');
+        $this->load->view('pages/learning_gap_school_summary', $data);
+        $this->load->view('templates/footer');
+        $this->load->view('templates/footer_basic');
+    }
+
     /** Display submitted learning-gap records separately from the summary page. */
     public function learning_gap_records()
     {
