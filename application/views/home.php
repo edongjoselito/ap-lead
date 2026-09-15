@@ -6,17 +6,6 @@ $login_failed = $this->session->flashdata('failed');
 $page_success = $this->session->flashdata('success');
 $login_validation_errors = validation_errors();
 $open_login_modal = !empty($login_failed) || !empty($login_validation_errors);
-$division_initials = function ($name) {
-    $words = preg_split('/\s+/', trim((string) $name));
-    $initials = '';
-    foreach ($words as $word) {
-        if ($word !== '' && !in_array(strtolower($word), array('of', 'del', 'de'), true)) {
-            $initials .= strtoupper(substr($word, 0, 1));
-        }
-        if (strlen($initials) >= 3) break;
-    }
-    return $initials !== '' ? $initials : 'SDO';
-};
 
 /*
  * People directory (governance section).
@@ -25,32 +14,32 @@ $division_initials = function ($name) {
  * that does not exist yet — and the card automatically falls back to a placeholder.
  */
 $sdo_consultants = array(
-    array('name' => 'Rosemarie T. Realino, PhD',  'division' => 'SDO Davao City',       'key' => 'Davao City',       'abbr' => 'DAVCITY',  'photo' => 'assets/images/sdo/SDO-DAVAO CITY-REALINO,-ROSEMARIE-T.,PhD.jpg'),
-    array('name' => 'Grace D. Pontillas, EdD',    'division' => 'SDO Davao de Oro',     'key' => 'Davao de Oro',     'abbr' => 'DAVDEORO', 'photo' => 'assets/images/sdo/SDO-DAVAO-DE-ORO- Grace-D.-Pontillas,Ed.png'),
-    array('name' => '',                           'division' => 'SDO Davao del Norte',  'key' => 'Davao del Norte',  'abbr' => 'DAVNOR',   'photo' => ''),
-    array('name' => 'Leonora Liza D. Dacillo',    'division' => 'SDO Davao del Sur',    'key' => 'Davao del Sur',    'abbr' => 'DAVSUR',   'photo' => 'assets/images/sdo/SDO-DAVAO-DEL-SUR-Leonora-Liza-D.Dacillo.jpg'),
-    array('name' => '',                           'division' => 'SDO Davao Occidental', 'key' => 'Davao Occidental', 'abbr' => 'DAVOCC',   'photo' => ''),
-    array('name' => 'Alan D. Limbadan, PhD',      'division' => 'SDO Davao Oriental',   'key' => 'Davao Oriental',   'abbr' => 'DAVOR',    'photo' => 'assets/images/sdo/SDO-DavOr-Alan-D.-Limbadan,PhD.png'),
-    array('name' => 'Atty. Rodel L. Pagayon, MT', 'division' => 'SDO Digos City',       'key' => 'Digos City',       'abbr' => 'DIGOS',    'photo' => 'assets/images/sdo/DIGOS-CITY-ATTY.RODEL-L.-PAGAYON,MT.jpg'),
-    array('name' => 'Marichu M. Celestial, EdD',  'division' => 'SDO IGaCoS',           'key' => 'IGACOS',           'abbr' => 'IGACOS',   'photo' => 'assets/images/sdo/SDO-IGaCoS-Marichu-M.-Celestial,-EdD.png'),
-    array('name' => '',                           'division' => 'SDO City of Mati',     'key' => 'City of Mati',     'abbr' => 'MATI',     'photo' => ''),
-    array('name' => 'John Visillas',              'division' => 'SDO Panabo City',      'key' => 'Panabo City',      'abbr' => 'PANABO',   'photo' => 'assets/images/sdo/SDO-PANABOCITY-JohnVisillas.jpg'),
-    array('name' => '',                           'division' => 'SDO Tagum City',       'key' => 'Tagum City',       'abbr' => 'TAGUM',    'photo' => ''),
+    array('name' => 'Rosemarie T. Realino, PhD',  'division' => 'SDO Davao City',       'key' => 'Davao City',       'abbr' => 'DAVAO CITY',       'photo' => 'assets/images/sdo/SDO-DAVAO CITY-REALINO,-ROSEMARIE-T.,PhD.jpg'),
+    array('name' => 'Grace D. Pontillas, EdD',    'division' => 'SDO Davao de Oro',     'key' => 'Davao de Oro',     'abbr' => 'DAVAO DE ORO',     'photo' => 'assets/images/sdo/SDO-DAVAO-DE-ORO- Grace-D.-Pontillas,Ed.png'),
+    array('name' => 'Grace Santa T. Daclan',      'division' => 'SDO Davao del Norte',  'key' => 'Davao del Norte',  'abbr' => 'DAVAO DEL NORTE',  'photo' => 'assets/images/sdo/sdo-davao-del-norte.jpg'),
+    array('name' => 'Leonora Liza D. Dacillo',    'division' => 'SDO Davao del Sur',    'key' => 'Davao del Sur',    'abbr' => 'DAVAO DEL SUR',    'photo' => 'assets/images/sdo/SDO-DAVAO-DEL-SUR-Leonora-Liza-D.Dacillo.jpg'),
+    array('name' => '',                           'division' => 'SDO Davao Occidental', 'key' => 'Davao Occidental', 'abbr' => 'DAVAO OCCIDENTAL', 'photo' => ''),
+    array('name' => 'Alan D. Limbadan, PhD',      'division' => 'SDO Davao Oriental',   'key' => 'Davao Oriental',   'abbr' => 'DAVAO ORIENTAL',   'photo' => 'assets/images/sdo/SDO-DavOr-Alan-D.-Limbadan,PhD.png'),
+    array('name' => 'Atty. Rodel L. Pagayon, MT', 'division' => 'SDO Digos City',       'key' => 'Digos City',       'abbr' => 'DIGOS CITY',       'photo' => 'assets/images/sdo/DIGOS-CITY-ATTY.RODEL-L.-PAGAYON,MT.jpg'),
+    array('name' => 'Marichu M. Celestial, EdD',  'division' => 'SDO IGaCoS',           'key' => 'IGACOS',           'abbr' => 'IGACOS',           'photo' => 'assets/images/sdo/SDO-IGaCoS-Marichu-M.-Celestial,-EdD.png'),
+    array('name' => 'Marilyn G. Pajaro',          'division' => 'SDO City of Mati',     'key' => 'City of Mati',     'abbr' => 'CITY OF MATI',     'photo' => 'assets/images/sdo/sdo-mati-city.png'),
+    array('name' => 'John Visillas',              'division' => 'SDO Panabo City',      'key' => 'Panabo City',      'abbr' => 'PANABO CITY',      'photo' => 'assets/images/sdo/SDO-PANABOCITY-JohnVisillas.jpg'),
+    array('name' => 'Leila L. Ibita',             'division' => 'SDO Tagum City',       'key' => 'Tagum City',       'abbr' => 'TAGUM CITY',       'photo' => 'assets/images/sdo/sdo-tagum.png'),
 );
 
 // Leadership portraits reuse the role assignments in the site's existing authors directory.
 $top_management = array(
-    array('name' => 'Dr. Maria Ines C. Asuncion', 'role' => 'Regional Director', 'abbr' => 'RD', 'photo' => ''),
+    array('name' => 'Dr. Maria Ines C. Asuncion', 'role' => 'Regional Director', 'abbr' => 'RD', 'photo' => 'assets/images/sdo/regional-director.png'),
     array('name' => 'Rebonfamil R. Baguio', 'role' => 'Assistant Regional Director', 'abbr' => 'ARD', 'photo' => 'assets/images/authors/ard.jpg'),
-    array('name' => '', 'role' => 'CLMD Chief', 'abbr' => 'CLMD', 'photo' => ''),
-    array('name' => '', 'role' => 'Lead Consultant', 'abbr' => 'LEAD', 'photo' => ''),
+    array('name' => 'Mary Jeanne B. Aldeguer', 'role' => 'CLMD Chief', 'abbr' => 'CLMD', 'photo' => 'assets/images/sdo/Mary-Jeanne-B-Aldeguer-CLMD.jpeg'),
+    array('name' => 'Danilo R. Dohinog, EdD', 'role' => 'Regional Supervisor · Lead Consultant', 'abbr' => 'LEAD', 'photo' => 'assets/images/sdo/regional-supervisor.png'),
 );
 
 $ap_developers = array(
-    array('name' => 'Alan D. Limbadan, PhD', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png'),
-    array('name' => 'Joselito Q. Edong',     'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png'),
-    array('name' => 'Clark Steven T. Edong', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,CLARK-STEVEN-T.png'),
-    array('name' => 'Tyrone T. Edong',       'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,TYRONE-T.png'),
+    array('name' => 'Alan D. Limbadan, PhD',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png'),
+    array('name' => 'Joselito Q. Edong, MIT', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png'),
+    array('name' => 'Clark Steven T. Edong',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,CLARK-STEVEN-T.png'),
+    array('name' => 'Tyrone T. Edong',        'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,TYRONE-T.png'),
 );
 
 // Optional per-person crop nudge: source photos are framed differently (tight square headshots
@@ -134,7 +123,7 @@ $person_display_url = function ($relative_path, $target_width = 440) use ($perso
     return base_url($cache_relative . $cache_name);
 };
 
-// Consultant badges reuse the division's own logo once one is uploaded, and fall back to its initials.
+// Consultant badges reuse the division's own logo once one is uploaded, and fall back to its name.
 $division_logo_lookup = array();
 foreach ($division_list as $division_row) {
     $division_logo_lookup[strtolower(trim((string) $division_row->description))] = !empty($division_row->homepage_logo)
@@ -291,19 +280,6 @@ foreach ($division_list as $division_row) {
         .step h3 { margin: 0 0 8px; color: var(--blue-950); font-size: 19px; }
         .step p { margin: 0; color: var(--muted); font-size: 14px; }
 
-        .division-section { position: relative; }
-        .division-section::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg, var(--blue-900) 0 47%, var(--gold-500) 47% 58%, #c93131 58%); }
-        .division-heading-row { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 38px; }
-        .division-heading-row .section-heading { margin-bottom: 0; }
-        .division-count { flex: 0 0 auto; padding: 12px 16px; color: var(--blue-900); border: 1px solid #bfd2e2; border-radius: 6px; background: #fff; font-size: 12px; font-weight: 800; }
-        .division-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
-        .division-card { min-height: 176px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; text-align: center; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-        .division-card:hover { transform: translateY(-3px); border-color: #afc7d9; box-shadow: 0 12px 30px rgba(8,43,76,.09); }
-        .division-logo { width: 82px; height: 82px; display: grid; place-items: center; margin-bottom: 13px; overflow: hidden; color: var(--blue-800); border: 1px solid #d8e4ed; border-radius: 50%; background: var(--blue-50); font-family: Georgia, serif; font-size: 23px; font-weight: 800; }
-        .division-logo img { width: 100%; height: 100%; padding: 5px; object-fit: contain; background: #fff; }
-        .division-card h3 { margin: 0; color: #253c51; font-size: 12px; line-height: 1.35; }
-        .division-card small { margin-top: 5px; color: #8392a1; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-        .division-note { margin: 24px 0 0; color: var(--muted); text-align: center; font-size: 12px; }
 
         .people-directory { margin-top: 64px; }
         .people-block + .people-block { margin-top: 54px; }
@@ -328,7 +304,7 @@ foreach ($division_list as $division_row) {
         /* Portraits arrive with very different backdrops, so a shared scrim grounds every card the same way. */
         .person-photo::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(175deg, rgba(8,43,76,.05) 0 42%, rgba(8,43,76,.34) 100%); pointer-events: none; transition: opacity .35s ease; }
         .person-card:hover .person-photo::before { opacity: .55; }
-        .person-badge { position: absolute; z-index: 2; left: 8px; bottom: 8px; max-width: calc(100% - 16px); height: 22px; display: grid; place-items: center; padding: 0 8px; overflow: hidden; color: var(--blue-900); border-radius: 6px; background: rgba(255,255,255,.93); box-shadow: 0 3px 10px rgba(8,43,76,.26); font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+        .person-badge { position: absolute; z-index: 2; left: 8px; bottom: 8px; max-width: calc(100% - 16px); height: 22px; display: grid; place-items: center; padding: 0 8px; overflow: hidden; white-space: nowrap; color: var(--blue-900); border-radius: 6px; background: rgba(255,255,255,.93); box-shadow: 0 3px 10px rgba(8,43,76,.26); font-size: 9px; font-weight: 800; letter-spacing: .06em; }
         .developers-grid .person-badge { width: 26px; padding: 0; color: #b07c07; }
         .person-badge img { width: 100%; height: 100%; object-fit: contain; }
         .person-placeholder { position: relative; z-index: 0; width: 100%; height: 100%; display: grid; place-items: center; color: #adc0cf; background: repeating-linear-gradient(135deg, #f5f9fc 0 9px, #eef4f9 9px 18px); }
@@ -376,7 +352,6 @@ foreach ($division_list as $division_row) {
         @media (max-width: 1040px) {
             .brand-copy small { display: none; } .site-nav a { padding-inline: 9px; }
             .hero-grid { grid-template-columns: 1fr .76fr; gap: 36px; }
-            .division-grid { grid-template-columns: repeat(4, 1fr); }
             .people-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
         @media (max-width: 820px) {
@@ -389,7 +364,6 @@ foreach ($division_list as $division_row) {
             .impact-panel { width: min(100%, 470px); margin-inline: auto; }
             .stat-grid { grid-template-columns: 1fr; } .stat { min-height: 96px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.15); } .stat:last-child { border-bottom: 0; }
             .mission-grid { grid-template-columns: 1fr; gap: 38px; } .steps { grid-template-columns: 1fr; }
-            .division-grid { grid-template-columns: repeat(3, 1fr); }
             .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .people-block-head { align-items: flex-start; flex-direction: column; gap: 7px; }
             .cta .container { flex-direction: column; align-items: flex-start; } .footer-grid { grid-template-columns: 1fr; gap: 30px; }
@@ -401,8 +375,6 @@ foreach ($division_list as $division_row) {
             .hero h1 { font-size: 38px; overflow-wrap: anywhere; } .hero-lead { font-size: 16px; } .hero-actions .button { width: 100%; }
             .impact-panel { min-height: 410px; padding: 24px 20px; } .impact-flow { gap: 5px; } .impact-stage { padding-inline: 5px; }
             .login-card { padding: 25px 20px; } .login-card::after { display: none; } .portal-close { top: 13px; right: 13px; } .section { padding-block: 70px; }
-            .division-heading-row { align-items: flex-start; flex-direction: column; } .division-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .division-card { min-height: 160px; padding-inline: 8px; } .division-logo { width: 70px; height: 70px; }
             .mission-quote { padding: 26px; } .mission-quote blockquote { font-size: 21px; }
             .people-directory { margin-top: 46px; } .people-block + .people-block { margin-top: 40px; } .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
             .copyright { flex-direction: column; }
@@ -428,7 +400,7 @@ foreach ($division_list as $division_row) {
                 <span class="brand-copy"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · Regional Office XI</span></span>
             </a>
             <button class="menu-toggle" id="menuToggle" type="button" aria-controls="siteNav" aria-expanded="false" aria-label="Open navigation menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-            <nav class="site-nav" id="siteNav" aria-label="Main navigation"><a href="#about">About</a><a href="#process">Data-to-action</a><a href="#divisions">Divisions</a><a href="#governance">Governance</a><a class="nav-login" href="#portal" data-open-login>Sign in</a></nav>
+            <nav class="site-nav" id="siteNav" aria-label="Main navigation"><a href="#about">About</a><a href="#process">Data-to-action</a><a href="#governance">Governance</a><a class="nav-login" href="#portal" data-open-login>Sign in</a></nav>
         </div>
     </header>
     <?php if (!empty($page_success)) : ?><div class="page-message" role="status"><?= html_escape($page_success); ?></div><?php endif; ?>
@@ -440,7 +412,7 @@ foreach ($division_list as $division_row) {
                     <div class="eyebrow">Araling Panlipunan · Region XI</div>
                     <h1 id="hero-title">AP-LEAD REGION XI<span>Turning Learning Data into Targeted Action for Better AP Outcomes.</span></h1>
                     <p class="hero-lead">An online system that tracks learners’ progress, identifies least learned competencies, and turns the evidence into timely, targeted instructional support in Araling Panlipunan.</p>
-                    <div class="hero-actions"><a class="button button-primary" href="#about">Explore AP-LEAD <span aria-hidden="true">→</span></a><a class="button button-secondary" href="#divisions">View the 11 divisions</a></div>
+                    <div class="hero-actions"><a class="button button-primary" href="#about">Explore AP-LEAD <span aria-hidden="true">→</span></a></div>
                     <p class="public-note"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>An official learning monitoring initiative of DepEd Regional Office XI</p>
                 </div>
                 <aside class="impact-panel" aria-label="AP-LEAD data-to-action overview">
@@ -472,17 +444,6 @@ foreach ($division_list as $division_row) {
         <section class="section section-soft" id="process"><div class="container">
             <div class="section-heading center"><p class="kicker">The data-to-action cycle</p><h2>A simple path from learning gaps to better outcomes</h2><p>The platform supports a repeatable cycle of evidence gathering, collaborative analysis, and targeted response.</p></div>
             <div class="steps"><article class="step"><h3>Collect learning evidence</h3><p>Schools record least learned competencies through a common and structured monitoring process.</p></article><article class="step"><h3>Understand the pattern</h3><p>Division and regional views help leaders identify shared needs, local differences, and areas of priority.</p></article><article class="step"><h3>Act and improve</h3><p>Findings inform responsive interventions, technical assistance, and follow-through for better AP outcomes.</p></article></div>
-        </div></section>
-
-        <section class="section division-section" id="divisions"><div class="container">
-            <div class="division-heading-row"><div class="section-heading"><p class="kicker">Regional network</p><h2>The Schools Division Offices of Region XI</h2><p>Working as one regional learning network while responding to the distinct needs of every local community.</p></div><div class="division-count"><?= (int) $division_count; ?> participating divisions</div></div>
-            <div class="division-grid">
-                <?php foreach ($division_list as $division_item) : ?>
-                    <?php $logo_path = !empty($division_item->homepage_logo) ? (string) $division_item->homepage_logo : ''; $has_logo = $logo_path !== '' && is_file(FCPATH . $logo_path); ?>
-                    <article class="division-card"><div class="division-logo"><?php if ($has_logo) : ?><img src="<?= html_escape(base_url($logo_path)); ?>" alt="<?= html_escape($division_item->description); ?> official logo"><?php else : ?><span aria-hidden="true"><?= html_escape($division_initials($division_item->description)); ?></span><?php endif; ?></div><h3><?= html_escape($division_item->description); ?></h3><small>Schools Division Office</small></article>
-                <?php endforeach; ?>
-            </div>
-            <?php if (empty($division_list)) : ?><p class="division-note">Division entries will appear here once they have been added to the Region XI directory.</p><?php endif; ?>
         </div></section>
 
         <section class="section section-soft" id="governance"><div class="container">
@@ -585,7 +546,7 @@ foreach ($division_list as $division_row) {
     </main>
 
     <footer class="site-footer"><div class="container">
-        <div class="footer-grid"><div><div class="footer-brand"><img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal"><div><strong>AP-LEAD Region XI</strong><span>Department of Education · Regional Office XI</span></div></div><p class="footer-copy">AP-LEAD supports the responsible use of Araling Panlipunan learning data for informed decisions, focused assistance, and improved learner outcomes across the Davao Region.</p></div><nav class="footer-links" aria-label="Footer navigation"><strong>Quick links</strong><a href="#about">About AP-LEAD</a><a href="#divisions">Schools Division Offices</a><a href="#governance">Program governance</a><a href="#portal" data-open-login>Portal access</a></nav></div>
+        <div class="footer-grid"><div><div class="footer-brand"><img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal"><div><strong>AP-LEAD Region XI</strong><span>Department of Education · Regional Office XI</span></div></div><p class="footer-copy">AP-LEAD supports the responsible use of Araling Panlipunan learning data for informed decisions, focused assistance, and improved learner outcomes across the Davao Region.</p></div><nav class="footer-links" aria-label="Footer navigation"><strong>Quick links</strong><a href="#about">About AP-LEAD</a><a href="#governance">Program governance</a><a href="#portal" data-open-login>Portal access</a></nav></div>
         <div class="copyright"><span>© <?= date('Y'); ?> Department of Education Regional Office XI. All rights reserved.</span><span><?= html_escape($region_name); ?></span></div>
     </div></footer>
 
