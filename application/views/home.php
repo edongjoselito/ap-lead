@@ -172,7 +172,6 @@ if ($seal_url === '') {
             --gold-300: #f8cf6a;
             --red-600: #ce1126;
             --flag-blue: #0038a8;
-            --flag-stripe: linear-gradient(90deg, var(--flag-blue) 0 33.4%, #fcd116 33.4% 66.7%, var(--red-600) 66.7%);
             --ease-out: cubic-bezier(.16, 1, .3, 1);
         }
 
@@ -186,17 +185,6 @@ if ($seal_url === '') {
 
         main section[id] {
             scroll-margin-top: 96px;
-        }
-
-        .scroll-progress {
-            position: fixed;
-            inset: 0 0 auto;
-            z-index: 300;
-            height: 3px;
-            background: linear-gradient(90deg, var(--gold-500), var(--gold-300));
-            transform: scaleX(0);
-            transform-origin: 0 50%;
-            pointer-events: none;
         }
 
         .to-top {
@@ -230,6 +218,8 @@ if ($seal_url === '') {
         .to-top:hover {
             background: var(--blue-700);
         }
+
+        .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
         body {
             margin: 0;
@@ -439,282 +429,67 @@ if ($seal_url === '') {
             cursor: pointer;
         }
 
-        .hero {
-            position: relative;
-            overflow: hidden;
-            background: radial-gradient(circle at 85% 20%, rgba(240, 170, 32, .18), transparent 24%), linear-gradient(120deg, #f9fcfe 0%, #edf5fb 100%);
-        }
-
-        .hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            opacity: .32;
-            background-image: linear-gradient(rgba(16, 63, 110, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 63, 110, .08) 1px, transparent 1px);
-            background-size: 48px 48px;
-            mask-image: linear-gradient(to right, transparent, #000 55%);
-        }
-
-        .hero-grid {
-            position: relative;
-            min-height: 650px;
-            display: grid;
-            grid-template-columns: minmax(0, 1.18fr) minmax(330px, .72fr);
-            align-items: center;
-            gap: 70px;
-            padding-block: 72px 80px;
-        }
-
-        .hero-grid>* {
-            min-width: 0;
-        }
-
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 9px;
-            margin-bottom: 20px;
-            color: var(--blue-800);
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-        }
-
-        .eyebrow::before {
-            content: "";
-            width: 28px;
-            height: 3px;
-            background: var(--gold-500);
-        }
-
-        .hero h1 {
-            max-width: 760px;
-            margin: 0;
-            color: var(--blue-950);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(42px, 4.7vw, 64px);
-            line-height: 1.04;
-            letter-spacing: -.035em;
-        }
-
-        .hero h1 span {
-            display: block;
-            margin-top: 10px;
-            color: var(--blue-700);
-            font-family: Inter, "Segoe UI", Arial, sans-serif;
-            font-size: .32em;
-            line-height: 1.35;
-            letter-spacing: .01em;
-            text-transform: uppercase;
-        }
-
-        .hero-lead {
-            max-width: 670px;
-            margin: 25px 0 0;
-            color: #455a6d;
-            font-size: 18px;
-            line-height: 1.75;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 32px;
-        }
-
-        .button {
-            min-height: 48px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            padding: 0 20px;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 800;
-            text-decoration: none;
-            cursor: pointer;
-            transition: transform .18s ease, background .18s ease, border-color .18s ease;
-        }
-
-        .button:hover {
-            transform: translateY(-1px);
-        }
-
-        .button-primary {
-            color: #fff;
-            background: var(--blue-900);
-        }
-
-        .button-primary:hover {
-            background: var(--blue-700);
-        }
-
-        .button-secondary {
-            color: var(--blue-900);
-            border-color: #b9cddd;
-            background: rgba(255, 255, 255, .72);
-        }
-
-        .button-secondary:hover {
-            border-color: var(--blue-700);
-            background: #fff;
-        }
-
-        .public-note {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin: 25px 0 0;
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .public-note svg {
-            flex: 0 0 auto;
-            color: var(--green-700);
-        }
-
-        .impact-panel {
-            position: relative;
-            min-height: 438px;
-            padding: 30px;
-            overflow: hidden;
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, .16);
-            border-radius: 12px;
-            background: linear-gradient(145deg, var(--blue-950), var(--blue-800));
-            box-shadow: var(--shadow);
-        }
-
-        .impact-panel::before {
-            content: "";
-            position: absolute;
-            width: 270px;
-            height: 270px;
-            top: -105px;
-            right: -105px;
-            border: 58px solid rgba(240, 170, 32, .12);
-            border-radius: 50%;
-        }
-
-        .impact-panel::after {
-            content: "";
-            position: absolute;
-            inset: auto -60px -90px auto;
-            width: 220px;
-            height: 220px;
-            border: 1px solid rgba(255, 255, 255, .12);
-            border-radius: 50%;
-        }
-
-        .impact-top,
-        .impact-flow,
-        .impact-footer {
-            position: relative;
-            z-index: 1;
-        }
-
-        .impact-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .impact-top span {
-            color: var(--gold-500);
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-        }
-
-        .impact-seal {
-            width: 62px;
-            height: 62px;
-            padding: 3px;
-            border: 1px solid rgba(255, 255, 255, .28);
-            border-radius: 50%;
-            background: #fff;
-        }
-
-        .impact-panel h2 {
-            position: relative;
-            z-index: 1;
-            max-width: 300px;
-            margin: 34px 0 8px;
-            color: #fff;
-            font-family: Georgia, serif;
-            font-size: 29px;
-            line-height: 1.2;
-        }
-
-        .impact-panel>p {
-            position: relative;
-            z-index: 1;
-            margin: 0;
-            color: rgba(255, 255, 255, .67);
-            font-size: 12px;
-        }
-
-        .impact-flow {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr auto 1fr;
-            align-items: center;
-            gap: 9px;
-            margin-top: 31px;
-        }
-
-        .impact-stage {
-            min-height: 82px;
-            display: grid;
-            place-items: center;
-            padding: 12px 8px;
-            border: 1px solid rgba(255, 255, 255, .16);
-            border-radius: 7px;
-            background: rgba(255, 255, 255, .08);
-            text-align: center;
-        }
-
-        .impact-stage strong {
-            display: block;
-            color: var(--gold-500);
-            font-size: 10px;
-        }
-
-        .impact-stage span {
-            display: block;
-            margin-top: 4px;
-            color: #fff;
-            font-size: 10px;
-            font-weight: 800;
-        }
-
-        .impact-arrow {
-            color: rgba(255, 255, 255, .44);
-            font-size: 15px;
-        }
-
-        .impact-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            margin-top: 28px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, .13);
-            color: rgba(255, 255, 255, .68);
-            font-size: 10px;
-        }
-
-        .impact-footer strong {
-            color: #fff;
-            font-size: 13px;
-        }
+        .hero { position: relative; overflow: hidden; isolation: isolate; color: #fff; background: radial-gradient(900px 540px at 88% 0%, rgba(240,170,32,.22), transparent 62%), radial-gradient(800px 560px at 0% 100%, rgba(30,103,159,.6), transparent 62%), linear-gradient(135deg, #061e36 0%, #0b3560 52%, #114a7e 100%); }
+        .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgba(255,255,255,.16) 1px, transparent 1.5px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 72% 40%, #000 10%, transparent 72%); mask-image: radial-gradient(ellipse 70% 80% at 72% 40%, #000 10%, transparent 72%); }
+        .hero-orb { position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; will-change: transform; }
+        .hero-orb-a { width: 460px; height: 460px; top: -140px; left: 38%; background: radial-gradient(circle, rgba(240,170,32,.2), transparent 68%); animation: orbDrift 18s ease-in-out infinite alternate; }
+        .hero-orb-b { width: 520px; height: 520px; bottom: -220px; right: -120px; background: radial-gradient(circle, rgba(94,170,235,.24), transparent 68%); animation: orbDrift 22s ease-in-out infinite alternate-reverse; }
+        @keyframes orbDrift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-60px, 40px, 0); } }
+        .hero-grid { position: relative; min-height: 640px; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(340px, .78fr); align-items: center; gap: 64px; padding-block: 84px 140px; }
+        .hero-grid > * { min-width: 0; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 22px; padding: 7px 15px 7px 11px; color: var(--gold-300); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: rgba(255,255,255,.06); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+        .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-500); animation: pulseDot 2.4s ease-out infinite; }
+        @keyframes pulseDot { 0% { box-shadow: 0 0 0 0 rgba(240,170,32,.55); } 80%, 100% { box-shadow: 0 0 0 10px rgba(240,170,32,0); } }
+        .hero h1 { max-width: 760px; margin: 0; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: clamp(44px, 5.2vw, 72px); line-height: 1.02; letter-spacing: -.035em; }
+        .hero-accent { white-space: nowrap; color: transparent; background: linear-gradient(100deg, #ffe39a 0%, var(--gold-500) 45%, #ffd06b 100%); -webkit-background-clip: text; background-clip: text; }
+        .hero-tagline { max-width: 640px; margin: 18px 0 0; color: #9ccdf5; font-size: 15px; font-weight: 800; line-height: 1.45; letter-spacing: .04em; text-transform: uppercase; }
+        .hero-lead { max-width: 640px; margin: 20px 0 0; color: rgba(255,255,255,.76); font-size: 18px; line-height: 1.75; }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+        .button { position: relative; overflow: hidden; min-height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 22px; border: 1px solid transparent; border-radius: 10px; font-size: 14px; font-weight: 800; text-decoration: none; cursor: pointer; transition: transform .2s var(--ease-out), background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+        .button:hover { transform: translateY(-2px); }
+        .button-arrow { display: inline-block; transition: transform .25s var(--ease-out); }
+        .button:hover .button-arrow { transform: translateX(4px); }
+        .button-primary { color: #fff; background: var(--blue-900); }
+        .button-primary:hover { background: var(--blue-700); }
+        .button-gold { color: var(--blue-950); background: linear-gradient(135deg, var(--gold-300), var(--gold-500)); box-shadow: 0 10px 28px rgba(240,170,32,.3); }
+        .button-gold:hover { box-shadow: 0 14px 34px rgba(240,170,32,.45); }
+        .button-gold::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); transform: translateX(-120%); transition: transform .7s ease; }
+        .button-gold:hover::after { transform: translateX(120%); }
+        .button-ghost { color: #fff; border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.06); }
+        .button-ghost:hover { border-color: rgba(255,255,255,.6); background: rgba(255,255,255,.12); }
+        .public-note { display: flex; align-items: center; gap: 9px; margin: 26px 0 0; color: rgba(255,255,255,.62); font-size: 12px; }
+        .public-note svg { flex: 0 0 auto; color: #6fdca0; }
+        .hero-copy > * { animation: heroRise .9s var(--ease-out) both; }
+        .hero-copy > :nth-child(2) { animation-delay: .08s; } .hero-copy > :nth-child(3) { animation-delay: .16s; } .hero-copy > :nth-child(4) { animation-delay: .24s; } .hero-copy > :nth-child(5) { animation-delay: .32s; } .hero-copy > :nth-child(6) { animation-delay: .4s; }
+        .hero-visual { position: relative; animation: heroRise 1s var(--ease-out) .25s both; }
+        @keyframes heroRise { from { opacity: 0; transform: translate3d(0, 22px, 0); } to { opacity: 1; transform: none; } }
+        .impact-panel { position: relative; padding: 30px; overflow: hidden; color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 20px; background: linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,.04)); box-shadow: 0 40px 90px rgba(2,16,31,.45), inset 0 1px 0 rgba(255,255,255,.18); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+        .impact-panel::before { content: ""; position: absolute; width: 280px; height: 280px; top: -120px; right: -110px; border: 56px solid rgba(240,170,32,.1); border-radius: 50%; }
+        .impact-top, .impact-flow, .impact-footer { position: relative; z-index: 1; }
+        .impact-top { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .impact-top span { color: var(--gold-300); font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+        .impact-seal { width: 58px; height: 58px; padding: 3px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 5px rgba(255,255,255,.08); }
+        .impact-panel h2 { position: relative; z-index: 1; max-width: 320px; margin: 24px 0 8px; color: #fff; font-family: Georgia, serif; font-size: 30px; line-height: 1.18; }
+        .impact-panel > p { position: relative; z-index: 1; margin: 0; color: rgba(255,255,255,.68); font-size: 13px; }
+        .impact-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 28px; }
+        .impact-stage { min-height: 66px; display: grid; place-items: center; padding: 10px 6px; border: 1px solid rgba(255,255,255,.16); border-radius: 10px; background: rgba(255,255,255,.07); text-align: center; animation: stageGlow 6s ease-in-out infinite; }
+        .impact-flow > :nth-child(3) { animation-delay: 2s; } .impact-flow > :nth-child(5) { animation-delay: 4s; }
+        @keyframes stageGlow { 0%, 40%, 100% { border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.07); box-shadow: none; } 12%, 28% { border-color: rgba(240,170,32,.75); background: rgba(240,170,32,.14); box-shadow: 0 0 22px rgba(240,170,32,.25); } }
+        .impact-stage strong { display: block; color: var(--gold-300); font-size: 10px; letter-spacing: .08em; }
+        .impact-stage span { display: block; margin-top: 3px; color: #fff; font-size: 11px; font-weight: 800; }
+        .impact-arrow { color: rgba(255,255,255,.4); font-size: 15px; }
+        .impact-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.13); color: rgba(255,255,255,.68); font-size: 11px; }
+        .impact-footer span { display: inline-flex; align-items: center; gap: 8px; }
+        .impact-footer span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6fdca0; animation: pulseLive 2s ease-out infinite; }
+        @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(111,220,160,.6); } 80%, 100% { box-shadow: 0 0 0 8px rgba(111,220,160,0); } }
+        .impact-footer strong { color: #fff; font-size: 14px; }
+        .hero-chip { position: absolute; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 10px; color: var(--blue-950); border-radius: 12px; background: #fff; box-shadow: 0 18px 40px rgba(2,16,31,.3); font-size: 12px; font-weight: 800; line-height: 1.25; animation: chipFloat 6s ease-in-out infinite; }
+        .hero-chip small { display: block; color: var(--muted); font-size: 10px; font-weight: 700; }
+        .hero-chip-icon { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; color: #fff; border-radius: 9px; background: var(--blue-800); }
+        .hero-chip-a { top: -24px; left: -36px; }
+        .hero-chip-b { right: 32px; bottom: -26px; animation-delay: -3s; }
+        .hero-chip-b .hero-chip-icon { color: var(--blue-950); background: var(--gold-500); }
+        @keyframes chipFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
         .login-card {
             position: relative;
@@ -959,49 +734,17 @@ if ($seal_url === '') {
             }
         }
 
-        .stat-band {
-            color: #fff;
-            background: var(--blue-900);
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-        }
-
-        .stat {
-            min-height: 115px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 24px 30px;
-            border-right: 1px solid rgba(255, 255, 255, .15);
-        }
-
-        .stat:last-child {
-            border-right: 0;
-        }
-
-        .stat strong {
-            display: block;
-            color: #fff;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 30px;
-            line-height: 1;
-        }
-
-        .stat span {
-            display: block;
-            margin-top: 7px;
-            color: rgba(255, 255, 255, .72);
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .stat svg {
-            flex: 0 0 auto;
-            color: var(--gold-500);
-        }
+        .stat-band { position: relative; z-index: 3; margin-top: -76px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 24px 60px rgba(8,43,76,.14); }
+        .stat { position: relative; min-height: 124px; display: flex; align-items: center; gap: 16px; padding: 26px 30px; border-right: 1px solid var(--line); transition: background .25s ease; }
+        .stat:last-child { border-right: 0; }
+        .stat::after { content: ""; position: absolute; inset: auto 30px 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--gold-500); transform: scaleX(0); transition: transform .35s var(--ease-out); }
+        .stat:hover { background: var(--blue-50); }
+        .stat:hover::after { transform: scaleX(1); }
+        .stat-icon { width: 54px; height: 54px; flex: 0 0 auto; display: grid; place-items: center; color: var(--blue-800); border-radius: 14px; background: linear-gradient(145deg, var(--blue-100), #fff); box-shadow: inset 0 0 0 1px #d3e3f0; transition: transform .35s var(--ease-out), color .25s ease, background .25s ease; }
+        .stat:hover .stat-icon { color: #fff; background: linear-gradient(145deg, var(--blue-700), var(--blue-950)); transform: rotate(-6deg) scale(1.05); }
+        .stat strong { display: block; color: var(--blue-950); font-family: Georgia, "Times New Roman", serif; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+        .stat strong + span { display: block; margin-top: 7px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 
         .section {
             padding-block: 92px;
@@ -1045,141 +788,39 @@ if ($seal_url === '') {
             font-size: 16px;
         }
 
-        .mission-grid {
-            display: grid;
-            grid-template-columns: .82fr 1.18fr;
-            gap: 75px;
-            align-items: start;
-        }
+        .mission-grid { display: grid; grid-template-columns: .82fr 1.18fr; gap: 72px; align-items: start; }
+        .mission-quote { position: sticky; top: 120px; padding: 40px 36px 34px; color: #fff; border-radius: 20px; background: radial-gradient(420px 260px at 100% 0%, rgba(240,170,32,.2), transparent 60%), linear-gradient(150deg, var(--blue-950), var(--blue-800)); box-shadow: 0 30px 60px rgba(8,43,76,.22); overflow: hidden; }
+        .mission-quote::before { content: "\201C"; position: absolute; top: -14px; left: 24px; color: var(--gold-500); font-family: Georgia, serif; font-size: 140px; line-height: 1; opacity: .4; }
+        .mission-quote::after { content: "AP"; position: absolute; right: -8px; bottom: -35px; color: rgba(255,255,255,.05); font-family: Georgia, serif; font-size: 150px; font-weight: 800; line-height: 1; }
+        .mission-quote blockquote { position: relative; z-index: 1; margin: 34px 0 0; font-family: Georgia, serif; font-size: 26px; line-height: 1.5; }
+        .mission-quote p { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; margin: 24px 0 0; color: var(--gold-300); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .mission-quote p::before { content: ""; width: 26px; height: 2px; background: var(--gold-500); }
+        .principles { display: grid; gap: 14px; }
+        .principle { display: grid; grid-template-columns: 52px 1fr; gap: 18px; padding: 20px 22px; border: 1px solid var(--line); border-radius: 16px; background: #fff; transition: transform .3s var(--ease-out), box-shadow .3s ease, border-color .3s ease; }
+        .principle:hover { transform: translateY(-3px); border-color: #b9d0e2; box-shadow: 0 16px 36px rgba(8,43,76,.1); }
+        .principle-icon { width: 52px; height: 52px; display: grid; place-items: center; color: var(--blue-800); border-radius: 14px; background: var(--blue-100); transition: color .25s ease, background .25s ease, transform .35s var(--ease-out); }
+        .principle:hover .principle-icon { color: var(--blue-950); background: var(--gold-500); transform: rotate(-6deg); }
+        .principle h3 { margin: 2px 0 5px; color: var(--blue-950); font-size: 17px; }
+        .principle p { margin: 0; color: var(--muted); font-size: 14px; }
 
-        .mission-quote {
-            position: relative;
-            padding: 32px;
-            color: #fff;
-            border-radius: 9px;
-            background: var(--blue-950);
-            overflow: hidden;
-        }
-
-        .mission-quote::after {
-            content: "AP";
-            position: absolute;
-            right: -8px;
-            bottom: -35px;
-            color: rgba(255, 255, 255, .05);
-            font-family: Georgia, serif;
-            font-size: 150px;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .mission-quote blockquote {
-            position: relative;
-            z-index: 1;
-            margin: 0;
-            font-family: Georgia, serif;
-            font-size: 25px;
-            line-height: 1.5;
-        }
-
-        .mission-quote p {
-            position: relative;
-            z-index: 1;
-            margin: 22px 0 0;
-            color: var(--gold-500);
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-        }
-
-        .principles {
-            display: grid;
-            gap: 22px;
-        }
-
-        .principle {
-            display: grid;
-            grid-template-columns: 48px 1fr;
-            gap: 17px;
-            padding-bottom: 22px;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .principle:last-child {
-            padding-bottom: 0;
-            border-bottom: 0;
-        }
-
-        .principle-icon {
-            width: 48px;
-            height: 48px;
-            display: grid;
-            place-items: center;
-            color: var(--blue-800);
-            border-radius: 7px;
-            background: var(--blue-100);
-        }
-
-        .principle h3 {
-            margin: 0 0 5px;
-            color: var(--blue-950);
-            font-size: 17px;
-        }
-
-        .principle p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            counter-reset: workflow;
-        }
-
-        .step {
-            position: relative;
-            padding: 28px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: #fff;
-            counter-increment: workflow;
-        }
-
-        .step::before {
-            content: "0" counter(workflow);
-            display: block;
-            margin-bottom: 34px;
-            color: var(--gold-500);
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: .08em;
-        }
-
-        .step::after {
-            content: "";
-            position: absolute;
-            top: 35px;
-            left: 60px;
-            right: 28px;
-            height: 1px;
-            background: var(--line);
-        }
-
-        .step h3 {
-            margin: 0 0 8px;
-            color: var(--blue-950);
-            font-size: 19px;
-        }
-
-        .step p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-        }
+        .steps { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .steps::before, .steps::after { content: ""; position: absolute; top: 31px; left: calc(100% / 6); right: calc(100% / 6); height: 2px; }
+        .steps::before { background: #d3e1ec; }
+        .steps::after { background: linear-gradient(90deg, var(--blue-700), var(--gold-500)); transform: scaleX(0); transform-origin: 0 50%; transition: transform 1.4s var(--ease-out) .25s; }
+        .steps.is-visible::after, html:not(.has-js) .steps::after { transform: scaleX(1); }
+        .step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .step-marker { width: 64px; height: 64px; flex: 0 0 auto; display: grid; place-items: center; margin-bottom: 22px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 6px var(--blue-50), 0 12px 26px rgba(8,43,76,.14); }
+        .step-icon { width: 48px; height: 48px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: linear-gradient(145deg, var(--blue-700), var(--blue-950)); transition: transform .35s var(--ease-out), color .25s ease, background .25s ease; }
+        .step:hover .step-icon { color: var(--blue-950); background: linear-gradient(145deg, var(--gold-300), var(--gold-500)); transform: scale(1.08) rotate(-6deg); }
+        .step-card { width: 100%; flex: 1 1 auto; padding: 26px 26px 28px; border: 1px solid var(--line); border-radius: 18px; background: #fff; transition: transform .3s var(--ease-out), box-shadow .3s ease, border-color .3s ease; }
+        .step:hover .step-card { transform: translateY(-4px); border-color: #b9d0e2; box-shadow: 0 18px 40px rgba(8,43,76,.1); }
+        .step-label { margin: 0 0 8px; color: #a8740a; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .step h3 { margin: 0 0 8px; color: var(--blue-950); font-size: 19px; }
+        .step-card p:last-child { margin: 0; color: var(--muted); font-size: 14px; }
+        .has-js .steps.reveal .step { transition: opacity .7s var(--ease-out), transform .7s var(--ease-out); }
+        .has-js .steps.reveal:not(.is-visible) .step { opacity: 0; transform: translateY(22px); }
+        .has-js .steps.reveal .step:nth-child(2) { transition-delay: .15s; }
+        .has-js .steps.reveal .step:nth-child(3) { transition-delay: .3s; }
 
 
         .people-directory {
@@ -1477,371 +1118,127 @@ if ($seal_url === '') {
             transform: translateY(8px);
         }
 
-        .cta {
-            padding-block: 56px;
-            color: #fff;
-            background: var(--blue-900);
-        }
-
-        .cta .container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 35px;
-        }
-
-        .cta h2 {
-            margin: 0;
-            color: #fff;
-            font-family: Georgia, serif;
-            font-size: 30px;
-        }
-
-        .cta p {
-            margin: 6px 0 0;
-            color: rgba(255, 255, 255, .72);
-            font-size: 13px;
-        }
-
-        .cta .button {
-            color: var(--blue-950);
-            background: var(--gold-500);
-        }
-
-        .site-footer {
-            padding-block: 45px 25px;
-            color: rgba(255, 255, 255, .74);
-            background: #071f36;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 1.35fr .65fr;
-            gap: 50px;
-            padding-bottom: 34px;
-        }
-
-        .footer-brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .footer-brand img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-        }
-
-        .footer-brand strong {
-            display: block;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .footer-brand span {
-            display: block;
-            margin-top: 4px;
-            font-size: 11px;
-        }
-
-        .footer-copy {
-            max-width: 560px;
-            margin: 18px 0 0;
-            font-size: 12px;
-        }
-
-        .footer-links strong {
-            display: block;
-            margin-bottom: 12px;
-            color: #fff;
-            font-size: 12px;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-        }
-
-        .footer-links a {
-            display: block;
-            width: max-content;
-            margin: 7px 0;
-            color: rgba(255, 255, 255, .72);
-            font-size: 12px;
-            text-decoration: none;
-        }
-
-        .footer-links a:hover {
-            color: var(--gold-500);
-        }
-
-        .copyright {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            padding-top: 22px;
-            border-top: 1px solid rgba(255, 255, 255, .12);
-            font-size: 10px;
-        }
+        .cta { position: relative; padding-block: 0 92px; background: var(--blue-50); }
+        .cta-card { position: relative; overflow: hidden; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 35px; padding: 50px 54px; color: #fff; border-radius: 24px; background: radial-gradient(520px 300px at 100% 0%, rgba(240,170,32,.28), transparent 60%), radial-gradient(420px 300px at 0% 100%, rgba(94,170,235,.3), transparent 60%), linear-gradient(135deg, var(--blue-950), var(--blue-800)); box-shadow: 0 30px 70px rgba(8,43,76,.25); }
+        .cta-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgba(255,255,255,.14) 1px, transparent 1.5px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(90deg, transparent, #000); mask-image: linear-gradient(90deg, transparent, #000); }
+        .cta h2 { margin: 0; color: #fff; font-family: Georgia, serif; font-size: clamp(26px, 3vw, 34px); line-height: 1.2; }
+        .cta p { max-width: 560px; margin: 10px 0 0; color: rgba(255,255,255,.74); font-size: 14px; }
+        .cta .button { flex: 0 0 auto; }
+        .site-footer { position: relative; padding-block: 56px 25px; color: rgba(255,255,255,.74); background: #071f36; }
+        .footer-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 50px; padding-bottom: 34px; }
+        .footer-brand { display: flex; align-items: center; gap: 15px; }
+        .footer-brand img { width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,.08); }
+        .footer-brand strong { display: block; color: #fff; font-size: 16px; }
+        .footer-brand span { display: block; margin-top: 4px; font-size: 11px; }
+        .footer-copy { max-width: 560px; margin: 18px 0 0; font-size: 13px; }
+        .footer-links strong { display: block; margin-bottom: 12px; color: #fff; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+        .footer-links a { display: block; width: max-content; margin: 9px 0; color: rgba(255,255,255,.72); font-size: 13px; text-decoration: none; transition: color .2s ease, transform .2s var(--ease-out); }
+        .footer-links a:hover { color: var(--gold-500); transform: translateX(4px); }
+        .copyright { display: flex; justify-content: space-between; gap: 20px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.12); font-size: 11px; }
 
         :focus-visible {
             outline: 3px solid rgba(240, 170, 32, .6);
             outline-offset: 3px;
         }
 
-        @media (max-width: 1040px) {
-            .brand-copy small {
-                display: none;
-            }
+        /* Leadership gets larger cards for hierarchy; consultants wrap as a centred flex row so the
+           11-card grid never leaves a lopsided last row. */
+        .top-management-block .people-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; width: min(100%, 1000px); margin-inline: auto; }
+        .top-management-block .person-info strong { font-size: 15px; }
+        .top-management-block .person-info span { font-size: 10px; }
+        .consultants-block .people-grid { display: flex; flex-wrap: wrap; justify-content: center; }
+        .consultants-block .person-card { flex: 0 0 calc((100% - 80px) / 6); }
+        .person-info span { color: #66788a; font-size: 9.5px; }
 
-            .site-nav a {
-                padding-inline: 9px;
-            }
-
-            .hero-grid {
-                grid-template-columns: 1fr .76fr;
-                gap: 36px;
-            }
-
-            .people-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 820px) {
-            .container {
-                width: min(100% - 30px, 680px);
-            }
-
-            .menu-toggle {
-                display: grid;
-            }
-
-            .site-nav {
-                position: fixed;
-                inset: 122px 0 auto;
-                display: none;
-                flex-direction: column;
-                align-items: stretch;
-                padding: 18px 20px 24px;
-                border-bottom: 1px solid var(--line);
-                background: #fff;
-                box-shadow: 0 20px 30px rgba(8, 43, 76, .12);
-            }
-
-            .site-nav.open {
-                display: flex;
-            }
-
-            .site-nav a {
-                padding: 12px;
-            }
-
-            .site-nav .nav-login {
-                margin: 5px 0 0;
-                text-align: center;
-            }
-
-            .hero-grid {
-                grid-template-columns: minmax(0, 1fr);
-                gap: 45px;
-                padding-block: 62px;
-            }
-
-            .hero-copy {
-                text-align: center;
-            }
-
-            .eyebrow,
-            .hero-actions,
-            .public-note {
-                justify-content: center;
-            }
-
-            .hero-lead {
-                margin-inline: auto;
-            }
-
-            .impact-panel {
-                width: min(100%, 470px);
-                margin-inline: auto;
-            }
-
-            .stat-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat {
-                min-height: 96px;
-                border-right: 0;
-                border-bottom: 1px solid rgba(255, 255, 255, .15);
-            }
-
-            .stat:last-child {
-                border-bottom: 0;
-            }
-
-            .mission-grid {
-                grid-template-columns: 1fr;
-                gap: 38px;
-            }
-
-            .steps {
-                grid-template-columns: 1fr;
-            }
-
-            .people-grid,
-            .people-grid.developers-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .people-block-head {
-                align-items: flex-start;
-                flex-direction: column;
-                gap: 7px;
-            }
-
-            .cta .container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-        }
-
+        /* Portrait viewer: card photos open a larger copy with name, role, and previous/next controls. */
+        .person-photo[role="button"] { cursor: zoom-in; }
+        .person-photo[role="button"]:focus-visible { outline: 3px solid var(--gold-500); outline-offset: -3px; }
+        .person-zoom { position: absolute; z-index: 2; top: 8px; right: 8px; width: 30px; height: 30px; display: grid; place-items: center; color: var(--blue-900); border-radius: 50%; background: rgba(255,255,255,.93); box-shadow: 0 3px 10px rgba(8,43,76,.26); opacity: 0; transform: scale(.8); transition: opacity .25s ease, transform .25s var(--ease-out); pointer-events: none; }
+        .person-card:hover .person-zoom, .person-photo:focus-visible .person-zoom { opacity: 1; transform: none; }
+        @media (hover: none) { .person-zoom { opacity: .95; transform: none; } }
+        .photo-viewer { position: fixed; inset: 0; z-index: 600; display: grid; place-items: center; padding: 72px 84px; background: rgba(4,20,36,.88); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .25s ease, visibility .25s; }
+        .photo-viewer[aria-hidden="false"] { opacity: 1; visibility: visible; pointer-events: auto; }
+        .photo-viewer-dialog { width: 100%; display: grid; place-items: center; }
+        .photo-viewer-figure { width: min(460px, 100%); margin: 0; overflow: hidden; border-radius: 18px; background: #fff; box-shadow: 0 40px 90px rgba(0,0,0,.45); transform: translateY(16px) scale(.97); transition: transform .3s var(--ease-out); }
+        .photo-viewer[aria-hidden="false"] .photo-viewer-figure { transform: none; }
+        .photo-viewer-figure img { width: 100%; height: auto; max-height: calc(100vh - 250px); display: block; object-fit: contain; background: var(--blue-100); }
+        .photo-viewer-figure figcaption { padding: 16px 20px 18px; text-align: center; }
+        .photo-viewer-figure strong { display: block; color: var(--blue-950); font-size: 18px; line-height: 1.3; }
+        .photo-viewer-figure span { display: block; margin-top: 5px; color: #66788a; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .photo-viewer-btn { position: fixed; z-index: 1; width: 46px; height: 46px; display: grid; place-items: center; padding: 0; color: #fff; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; background: rgba(255,255,255,.1); cursor: pointer; transition: background .2s ease, transform .2s var(--ease-out); }
+        .photo-viewer-btn:hover { background: rgba(255,255,255,.22); }
+        .photo-viewer-close { top: 18px; right: 18px; }
+        .photo-viewer-prev, .photo-viewer-next { top: 50%; margin-top: -23px; }
+        .photo-viewer-prev { left: 20px; }
+        .photo-viewer-next { right: 20px; }
+        .photo-viewer-prev:hover { transform: translateX(-3px); }
+        .photo-viewer-next:hover { transform: translateX(3px); }
+        .photo-viewer-count { position: fixed; top: 30px; left: 50%; margin: 0; color: rgba(255,255,255,.75); font-size: 12px; font-weight: 700; letter-spacing: .08em; transform: translateX(-50%); }
         @media (max-width: 540px) {
-            .government-bar .container {
-                justify-content: center;
-            }
-
-            .government-bar .utility-text {
-                display: none;
-            }
-
-            .masthead {
-                min-height: 78px;
-                gap: 10px;
-            }
-
-            .brand {
-                gap: 8px;
-            }
-
-            .brand img {
-                width: 52px;
-                height: 52px;
-            }
-
-            .brand-copy strong {
-                max-width: 185px;
-                font-size: 14px;
-            }
-
-            .brand-copy span {
-                max-width: 185px;
-                font-size: 9px;
-            }
-
-            .site-nav {
-                top: 112px;
-            }
-
-            .hero h1 {
-                font-size: 38px;
-                overflow-wrap: anywhere;
-            }
-
-            .hero-lead {
-                font-size: 16px;
-            }
-
-            .hero-actions .button {
-                width: 100%;
-            }
-
-            .impact-panel {
-                min-height: 410px;
-                padding: 24px 20px;
-            }
-
-            .impact-flow {
-                gap: 5px;
-            }
-
-            .impact-stage {
-                padding-inline: 5px;
-            }
-
-            .login-card {
-                padding: 25px 20px;
-            }
-
-            .login-card::after {
-                display: none;
-            }
-
-            .portal-close {
-                top: 13px;
-                right: 13px;
-            }
-
-            .section {
-                padding-block: 70px;
-            }
-
-            .mission-quote {
-                padding: 26px;
-            }
-
-            .mission-quote blockquote {
-                font-size: 21px;
-            }
-
-            .people-directory {
-                margin-top: 46px;
-            }
-
-            .people-block+.people-block {
-                margin-top: 40px;
-            }
-
-            .people-grid,
-            .people-grid.developers-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 11px;
-            }
-
-            .copyright {
-                flex-direction: column;
-            }
+            .photo-viewer { padding: 70px 16px 92px; }
+            .photo-viewer-figure img { max-height: calc(100vh - 262px); }
+            .photo-viewer-prev, .photo-viewer-next { top: auto; bottom: 24px; margin-top: 0; }
+            .photo-viewer-prev { left: calc(50% - 58px); }
+            .photo-viewer-next { right: calc(50% - 58px); }
         }
 
+        @media (max-width: 1040px) {
+            .brand-copy small { display: none; } .site-nav a { padding-inline: 9px; } .site-nav a:not(.nav-login)::after { left: 9px; right: 9px; }
+            .hero-grid { grid-template-columns: 1fr .84fr; gap: 40px; }
+            .hero-chip-a { left: -10px; } .hero-chip-b { right: -8px; }
+            .stat { padding-inline: 22px; }
+            .people-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .consultants-block .person-card { flex-basis: calc((100% - 48px) / 4); }
+        }
+        @media (max-width: 820px) {
+            .container { width: min(100% - 30px, 680px); }
+            main section[id] { scroll-margin-top: 84px; }
+            .menu-toggle { display: grid; }
+            .site-nav { position: fixed; inset: 122px 0 auto; display: none; flex-direction: column; align-items: stretch; padding: 18px 20px 24px; border-bottom: 1px solid var(--line); background: #fff; box-shadow: 0 20px 30px rgba(8,43,76,.12); }
+            .site-nav.open { display: flex; } .site-nav a { padding: 12px; } .site-nav .nav-login { margin: 5px 0 0; text-align: center; } .site-nav a:not(.nav-login)::after { display: none; }
+            .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 56px; padding-block: 64px 128px; }
+            .hero-copy { text-align: center; } .hero-actions, .public-note { justify-content: center; } .hero-tagline, .hero-lead { margin-inline: auto; }
+            .hero-visual { width: min(100%, 480px); margin-inline: auto; }
+            .stat-grid { grid-template-columns: 1fr; } .stat { min-height: 96px; border-right: 0; border-bottom: 1px solid var(--line); } .stat:last-child { border-bottom: 0; }
+            .mission-grid { grid-template-columns: 1fr; gap: 38px; } .mission-quote { position: relative; top: auto; }
+            .steps { grid-template-columns: 1fr; gap: 18px; }
+            .steps::before, .steps::after { top: 32px; bottom: 32px; left: 31px; right: auto; width: 2px; height: auto; }
+            .steps::after { transform: scaleY(0); transform-origin: 50% 0; }
+            .steps.is-visible::after, html:not(.has-js) .steps::after { transform: scaleY(1); }
+            .step { flex-direction: row; align-items: flex-start; gap: 16px; text-align: left; } .step-marker { margin-bottom: 0; }
+            .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .top-management-block .people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 520px); }
+            .consultants-block .person-card { flex-basis: calc((100% - 32px) / 3); }
+            .people-block-head { align-items: flex-start; flex-direction: column; gap: 7px; }
+            .cta-card { flex-direction: column; align-items: flex-start; } .footer-grid { grid-template-columns: 1fr; gap: 30px; }
+        }
+        @media (max-width: 540px) {
+            .government-bar .container { justify-content: center; } .government-bar { font-size: 11px; }
+            .masthead { min-height: 78px; gap: 10px; } .brand { gap: 8px; } .brand img { width: 52px; height: 52px; }
+            .brand-copy strong { max-width: 185px; font-size: 14px; } .brand-copy span { max-width: 185px; font-size: 9px; } .site-nav { top: 112px; }
+            .hero-grid { gap: 44px; padding-block: 48px 124px; }
+            .hero h1 { font-size: clamp(38px, 11vw, 46px); } .hero-tagline { font-size: 13px; } .hero-lead { font-size: 16px; } .hero-actions .button { width: 100%; }
+            .impact-panel { padding: 24px 18px; } .impact-panel h2 { font-size: 25px; } .impact-flow { gap: 4px; } .impact-stage { padding-inline: 4px; }
+            .hero-chip { display: none; }
+            .login-card { padding: 25px 20px; } .login-card::after { display: none; } .portal-close { top: 13px; right: 13px; } .section { padding-block: 70px; }
+            .stat-band { margin-top: -88px; } .stat { padding: 20px; } .stat strong { font-size: 28px; }
+            .mission-quote { padding: 34px 24px 26px; } .mission-quote blockquote { font-size: 21px; }
+            .principle { grid-template-columns: 44px 1fr; gap: 14px; padding: 18px; } .principle-icon { width: 44px; height: 44px; }
+            .step-card { padding: 20px; }
+            .people-directory { margin-top: 46px; } .people-block + .people-block { margin-top: 40px; } .people-grid, .people-grid.developers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+            .consultants-block .person-card { flex-basis: calc((100% - 11px) / 2); }
+            .cta { padding-bottom: 70px; } .cta-card { padding: 36px 22px 26px; } .cta .button { width: 100%; }
+            .copyright { flex-direction: column; }
+            .to-top { right: 14px; bottom: 14px; }
+        }
         @media (prefers-reduced-motion: reduce) {
-            html {
-                scroll-behavior: auto;
-            }
-
-            *,
-            *::before,
-            *::after {
-                transition-duration: .01ms !important;
-            }
-
-            .has-js .reveal,
-            .has-js .reveal:not(.is-visible),
-            .has-js .reveal:not(.is-visible) .person-photo img,
-            .has-js .reveal:not(.is-visible) .person-placeholder,
-            .has-js .reveal:not(.is-visible) .person-badge,
-            .has-js .reveal:not(.is-visible) .person-info {
-                opacity: 1;
-                transform: none;
-                transition: none;
-            }
-
-            .person-card:hover .person-photo img {
-                transform: none;
-            }
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; }
+            .has-js .reveal, .has-js .reveal:not(.is-visible), .has-js .reveal:not(.is-visible) .person-photo img,
+            .has-js .reveal:not(.is-visible) .person-placeholder, .has-js .reveal:not(.is-visible) .person-badge,
+            .has-js .reveal:not(.is-visible) .person-info, .has-js .steps.reveal:not(.is-visible) .step { opacity: 1; transform: none; transition: none; }
+            .steps::after { transform: none !important; }
+            .person-card:hover .person-photo img { transform: none; }
         }
     </style>
     <script>
@@ -1859,7 +1256,7 @@ if ($seal_url === '') {
     <header class="site-header">
         <div class="container masthead">
             <a class="brand" href="<?= base_url('homepage'); ?>" aria-label="AP-LEAD Region XI home">
-                <img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal">
+                <img src="<?= html_escape($seal_url); ?>" alt="Department of Education Region XI seal" width="62" height="62" decoding="async">
                 <span class="brand-copy"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · Regional Office XI</span></span>
             </a>
             <button class="menu-toggle" id="menuToggle" type="button" aria-controls="siteNav" aria-expanded="false" aria-label="Open navigation menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -1872,73 +1269,94 @@ if ($seal_url === '') {
 
     <main id="main-content">
         <section class="hero" aria-labelledby="hero-title">
+            <span class="hero-orb hero-orb-a" aria-hidden="true"></span>
+            <span class="hero-orb hero-orb-b" aria-hidden="true"></span>
             <div class="container hero-grid">
                 <div class="hero-copy">
                     <div class="eyebrow">Araling Panlipunan · Region XI</div>
-                    <h1 id="hero-title">AP-LEAD REGION XI<span>Turning Learning Data into Targeted Action for Better AP Outcomes.</span></h1>
+                    <h1 id="hero-title">AP-LEAD <span class="hero-accent">REGION XI</span></h1>
+                    <p class="hero-tagline">Turning learning data into targeted action for better AP outcomes.</p>
                     <p class="hero-lead">An online system that tracks learners’ progress, identifies least learned competencies, and turns the evidence into timely, targeted instructional support in Araling Panlipunan.</p>
-                    <div class="hero-actions"><a class="button button-primary" href="#about">Explore AP-LEAD <span aria-hidden="true">→</span></a></div>
+                    <div class="hero-actions">
+                        <a class="button button-gold" href="#about">Explore AP-LEAD <span class="button-arrow" aria-hidden="true">→</span></a>
+                        <a class="button button-ghost" href="#portal" data-open-login>Sign in to the portal</a>
+                    </div>
                     <p class="public-note"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
                             <path d="m9 12 2 2 4-4" />
                         </svg>An official learning monitoring initiative of DepEd Regional Office XI</p>
                 </div>
-                <aside class="impact-panel" aria-label="AP-LEAD data-to-action overview">
-                    <div class="impact-top"><span>Regional learning intelligence</span><img class="impact-seal" src="<?= base_url('assets/r11-logo.jpg'); ?>" alt=""></div>
-                    <h2>Learning evidence in motion</h2>
-                    <p>A shared system for timely, focused, and accountable instructional support.</p>
-                    <div class="impact-flow" aria-hidden="true">
-                        <div class="impact-stage">
-                            <div><strong>01</strong><span>Identify</span></div>
-                        </div>
-                        <div class="impact-arrow">→</div>
-                        <div class="impact-stage">
-                            <div><strong>02</strong><span>Prioritize</span></div>
-                        </div>
-                        <div class="impact-arrow">→</div>
-                        <div class="impact-stage">
-                            <div><strong>03</strong><span>Respond</span></div>
-                        </div>
+                <div class="hero-visual">
+                    <div class="hero-chip hero-chip-a" aria-hidden="true">
+                        <span class="hero-chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg></span>
+                        <span>Least learned competencies<small>Flagged for focused support</small></span>
                     </div>
-                    <div class="impact-footer"><span>One regional network</span><strong><?= (int) $division_count; ?> SDOs connected</strong></div>
-                </aside>
+                    <aside class="impact-panel" aria-label="AP-LEAD data-to-action overview">
+                        <div class="impact-top"><span>Regional learning intelligence</span><img class="impact-seal" src="<?= html_escape($seal_url); ?>" alt="" width="58" height="58" decoding="async"></div>
+                        <h2>Learning evidence in motion</h2>
+                        <p>A shared system for timely, focused, and accountable instructional support.</p>
+                        <div class="impact-flow" aria-hidden="true">
+                            <div class="impact-stage">
+                                <div><strong>01</strong><span>Identify</span></div>
+                            </div>
+                            <div class="impact-arrow">→</div>
+                            <div class="impact-stage">
+                                <div><strong>02</strong><span>Prioritize</span></div>
+                            </div>
+                            <div class="impact-arrow">→</div>
+                            <div class="impact-stage">
+                                <div><strong>03</strong><span>Respond</span></div>
+                            </div>
+                        </div>
+                        <div class="impact-footer"><span>One regional network</span><strong><?= (int) $division_count; ?> SDOs connected</strong></div>
+                    </aside>
+                    <div class="hero-chip hero-chip-b" aria-hidden="true">
+                        <span class="hero-chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.5" /></svg></span>
+                        <span>Targeted assistance<small>Guided by the evidence</small></span>
+                    </div>
+                </div>
             </div>
         </section>
 
         <section class="stat-band" aria-label="AP-LEAD at a glance">
-            <div class="container stat-grid">
-                <div class="stat"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                        <path d="M3 21h18M6 18V9m4 9V9m4 9V9m4 9V9M4 6l8-4 8 4v3H4V6Z" />
-                    </svg>
-                    <div><strong><?= (int) $division_count; ?></strong><span>Schools Division Offices connected across Region XI</span></div>
-                </div>
-                <div class="stat"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                        <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" />
-                    </svg>
-                    <div><strong>1</strong><span>Shared regional view of AP learning evidence</span></div>
-                </div>
-                <div class="stat"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="m12 7 1.6 3.4L17 12l-3.4 1.6L12 17l-1.6-3.4L7 12l3.4-1.6L12 7Z" />
-                    </svg>
-                    <div><strong>Action</strong><span>Targeted support guided by the needs shown in the data</span></div>
+            <div class="container">
+                <div class="stat-grid reveal reveal-once">
+                    <div class="stat">
+                        <span class="stat-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M3 21h18M6 18V9m4 9V9m4 9V9m4 9V9M4 6l8-4 8 4v3H4V6Z" />
+                            </svg></span>
+                        <div><strong><span class="sr-only"><?= (int) $division_count; ?></span><span data-count="<?= (int) $division_count; ?>" aria-hidden="true"><?= (int) $division_count; ?></span></strong><span>Schools Division Offices connected across Region XI</span></div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" />
+                            </svg></span>
+                        <div><strong>1</strong><span>Shared regional view of AP learning evidence</span></div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="m12 7 1.6 3.4L17 12l-3.4 1.6L12 17l-1.6-3.4L7 12l3.4-1.6L12 7Z" />
+                            </svg></span>
+                        <div><strong>Action</strong><span>Targeted support guided by the needs shown in the data</span></div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section class="section" id="about">
             <div class="container mission-grid">
-                <div class="mission-quote">
-                    <blockquote>“Every learning data point should lead to a clearer decision and a better response for learners.”</blockquote>
+                <div class="mission-quote reveal reveal-once">
+                    <blockquote>Every learning data point should lead to a clearer decision and a better response for learners.</blockquote>
                     <p>The AP-LEAD commitment</p>
                 </div>
                 <div>
-                    <div class="section-heading">
+                    <div class="section-heading reveal reveal-once">
                         <p class="kicker">What AP-LEAD does</p>
                         <h2>From classroom evidence to focused regional support</h2>
                         <p>AP-LEAD tracks learner progress and identifies least learned competencies in Araling Panlipunan. The data guides Schools Division Offices and the Regional Office in providing targeted, data-driven technical assistance, interventions, and recommendations.</p>
                     </div>
-                    <div class="principles">
+                    <div class="principles reveal reveal-once">
                         <article class="principle">
                             <div class="principle-icon"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                     <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" />
@@ -1976,23 +1394,43 @@ if ($seal_url === '') {
 
         <section class="section section-soft" id="process">
             <div class="container">
-                <div class="section-heading center">
+                <div class="section-heading center reveal reveal-once">
                     <p class="kicker">The data-to-action cycle</p>
                     <h2>A simple path from learning gaps to better outcomes</h2>
                     <p>The platform supports a repeatable cycle of evidence gathering, collaborative analysis, and targeted response.</p>
                 </div>
-                <div class="steps">
+                <div class="steps reveal reveal-once">
                     <article class="step">
-                        <h3>Collect learning evidence</h3>
-                        <p>Schools record least learned competencies through a common and structured monitoring process.</p>
+                        <div class="step-marker" aria-hidden="true"><span class="step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="5" y="4" width="14" height="17" rx="2" />
+                                    <path d="M9 4h6v3H9zM9 12h6M9 16h4" />
+                                </svg></span></div>
+                        <div class="step-card">
+                            <p class="step-label">Step 01</p>
+                            <h3>Collect learning evidence</h3>
+                            <p>Schools record least learned competencies through a common and structured monitoring process.</p>
+                        </div>
                     </article>
                     <article class="step">
-                        <h3>Understand the pattern</h3>
-                        <p>Division and regional views help leaders identify shared needs, local differences, and areas of priority.</p>
+                        <div class="step-marker" aria-hidden="true"><span class="step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" />
+                                </svg></span></div>
+                        <div class="step-card">
+                            <p class="step-label">Step 02</p>
+                            <h3>Understand the pattern</h3>
+                            <p>Division and regional views help leaders identify shared needs, local differences, and areas of priority.</p>
+                        </div>
                     </article>
                     <article class="step">
-                        <h3>Act and improve</h3>
-                        <p>Findings inform responsive interventions, technical assistance, and follow-through for better AP outcomes.</p>
+                        <div class="step-marker" aria-hidden="true"><span class="step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m4 14 6-6 4 4 6-7" />
+                                    <path d="M14 5h6v6" />
+                                </svg></span></div>
+                        <div class="step-card">
+                            <p class="step-label">Step 03</p>
+                            <h3>Act and improve</h3>
+                            <p>Findings inform responsive interventions, technical assistance, and follow-through for better AP outcomes.</p>
+                        </div>
                     </article>
                 </div>
             </div>
@@ -2024,7 +1462,7 @@ if ($seal_url === '') {
                                     <div class="person-frame">
                                         <div class="person-photo">
                                             <?php if ($leader_photo !== ''): ?>
-                                                <img src="<?= html_escape($leader_photo); ?>" alt="<?= html_escape($leader['name']); ?>" style="object-position: center 12%;" loading="lazy" decoding="async">
+                                                <img src="<?= html_escape($leader_photo); ?>" data-full="<?= html_escape($person_display_url($leader['photo'], 800)); ?>" alt="<?= html_escape($leader['name']); ?>" style="object-position: center 12%;" loading="lazy" decoding="async">
                                             <?php else: ?>
                                                 <span class="person-placeholder" role="img" aria-label="<?= html_escape($leader['role']); ?> photo pending"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
                                                         <path d="M20 21a8 8 0 0 0-16 0" />
@@ -2064,7 +1502,7 @@ if ($seal_url === '') {
                                     <div class="person-frame">
                                         <div class="person-photo">
                                             <?php if ($consultant_photo !== '') : ?>
-                                                <img style="object-position: <?= html_escape($person_focus($consultant)); ?>;" src="<?= html_escape($consultant_photo); ?>" alt="<?= html_escape($consultant_name); ?>, AP-LEAD consultant for <?= html_escape($consultant['division']); ?>" loading="lazy" decoding="async">
+                                                <img style="object-position: <?= html_escape($person_focus($consultant)); ?>;" src="<?= html_escape($consultant_photo); ?>" data-full="<?= html_escape($person_display_url($consultant['photo'], 800)); ?>" alt="<?= html_escape($consultant_name); ?>, AP-LEAD consultant for <?= html_escape($consultant['division']); ?>" loading="lazy" decoding="async">
                                             <?php else : ?>
                                                 <span class="person-placeholder" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
                                                         <path d="M20 21a8 8 0 0 0-16 0" />
@@ -2100,7 +1538,7 @@ if ($seal_url === '') {
                                     <div class="person-frame">
                                         <div class="person-photo">
                                             <?php if ($developer_photo !== '') : ?>
-                                                <img style="object-position: <?= html_escape($person_focus($developer)); ?>;" src="<?= html_escape($developer_photo); ?>" alt="<?= html_escape($developer_name); ?>, AP-LEAD system developer" loading="lazy" decoding="async">
+                                                <img style="object-position: <?= html_escape($person_focus($developer)); ?>;" src="<?= html_escape($developer_photo); ?>" data-full="<?= html_escape($person_display_url($developer['photo'], 800)); ?>" alt="<?= html_escape($developer_name); ?>, AP-LEAD system developer" loading="lazy" decoding="async">
                                             <?php else : ?>
                                                 <span class="person-placeholder" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
                                                         <path d="M20 21a8 8 0 0 0-16 0" />
@@ -2123,10 +1561,13 @@ if ($seal_url === '') {
 
         <section class="cta">
             <div class="container">
-                <div>
-                    <h2>Ready to turn learning evidence into action?</h2>
-                    <p>Authorized school, division, and regional personnel may access the AP-LEAD portal.</p>
-                </div><a class="button" href="#portal" data-open-login>Proceed to sign in <span aria-hidden="true">→</span></a>
+                <div class="cta-card reveal reveal-once">
+                    <div>
+                        <h2>Ready to turn learning evidence into action?</h2>
+                        <p>Authorized school, division, and regional personnel may access the AP-LEAD portal.</p>
+                    </div>
+                    <a class="button button-gold" href="#portal" data-open-login>Proceed to sign in <span class="button-arrow" aria-hidden="true">→</span></a>
+                </div>
             </div>
         </section>
     </main>
@@ -2135,16 +1576,39 @@ if ($seal_url === '') {
         <div class="container">
             <div class="footer-grid">
                 <div>
-                    <div class="footer-brand"><img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal">
+                    <div class="footer-brand"><img src="<?= html_escape($seal_url); ?>" alt="Department of Education Region XI seal" width="60" height="60" loading="lazy" decoding="async">
                         <div><strong>AP-LEAD Region XI</strong><span>Department of Education · Regional Office XI</span></div>
                     </div>
                     <p class="footer-copy">AP-LEAD supports the responsible use of Araling Panlipunan learning data for informed decisions, focused assistance, and improved learner outcomes across the Davao Region.</p>
                 </div>
-                <nav class="footer-links" aria-label="Footer navigation"><strong>Quick links</strong><a href="#about">About AP-LEAD</a><a href="#governance">Program governance</a><a href="#portal" data-open-login>Portal access</a></nav>
+                <nav class="footer-links" aria-label="Footer navigation"><strong>Quick links</strong><a href="#about">About AP-LEAD</a><a href="#process">Data-to-action cycle</a><a href="#governance">Program governance</a><a href="#portal" data-open-login>Portal access</a></nav>
             </div>
             <div class="copyright"><span>© <?= date('Y'); ?> Department of Education Regional Office XI. All rights reserved.</span><span><?= html_escape($region_name); ?></span></div>
         </div>
     </footer>
+
+    <button class="to-top" id="toTop" type="button" aria-label="Back to top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="m6 15 6-6 6 6" />
+        </svg></button>
+
+    <div class="photo-viewer" id="photoViewer" aria-hidden="true">
+        <div class="photo-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="photoViewerName">
+            <p class="photo-viewer-count" id="photoViewerCount" aria-live="polite"></p>
+            <button class="photo-viewer-btn photo-viewer-close" id="photoViewerClose" type="button" aria-label="Close photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="m6 6 12 12M18 6 6 18" />
+                </svg></button>
+            <button class="photo-viewer-btn photo-viewer-prev" id="photoViewerPrev" type="button" aria-label="Previous photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6" />
+                </svg></button>
+            <figure class="photo-viewer-figure">
+                <img id="photoViewerImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
+                <figcaption><strong id="photoViewerName"></strong><span id="photoViewerRole"></span></figcaption>
+            </figure>
+            <button class="photo-viewer-btn photo-viewer-next" id="photoViewerNext" type="button" aria-label="Next photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="m9 18 6-6-6-6" />
+                </svg></button>
+        </div>
+    </div>
 
     <div class="portal-overlay" id="portalModal" aria-hidden="<?= $open_login_modal ? 'false' : 'true'; ?>">
         <div class="portal-dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
@@ -2266,21 +1730,200 @@ if ($seal_url === '') {
             }
             if (window.location.hash === '#portal') openPortal(null);
 
+            var motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+            var reduceMotion = !!(motionQuery && motionQuery.matches);
+
+            // Scroll-linked chrome (header shadow, back-to-top) shares one rAF-throttled listener.
+            var siteHeader = document.querySelector('.site-header'),
+                toTop = document.getElementById('toTop'),
+                scrollTicking = false;
+
+            function updateScrollChrome() {
+                var y = window.pageYOffset || document.documentElement.scrollTop;
+                if (siteHeader) siteHeader.classList.toggle('is-scrolled', y > 8);
+                if (toTop) toTop.classList.toggle('is-shown', y > 700);
+                scrollTicking = false;
+            }
+            window.addEventListener('scroll', function() {
+                if (!scrollTicking) {
+                    scrollTicking = true;
+                    window.requestAnimationFrame(updateScrollChrome);
+                }
+            }, { passive: true });
+            window.addEventListener('resize', updateScrollChrome);
+            updateScrollChrome();
+            if (toTop) toTop.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+            });
+
+            // Scroll spy: highlight the nav link for the section crossing the middle of the viewport.
+            // The hero is observed too, so returning to the top clears the highlight.
+            var navLinks = navigation ? [].slice.call(navigation.querySelectorAll('a[href^="#"]:not([data-open-login])')) : [];
+            if ('IntersectionObserver' in window && navLinks.length) {
+                var spyObserver = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (!entry.isIntersecting) return;
+                        navLinks.forEach(function(link) {
+                            var active = entry.target.id !== '' && link.getAttribute('href') === '#' + entry.target.id;
+                            link.classList.toggle('is-active', active);
+                            if (active) link.setAttribute('aria-current', 'location');
+                            else link.removeAttribute('aria-current');
+                        });
+                    });
+                }, { rootMargin: '-45% 0px -50% 0px' });
+                var heroSection = document.querySelector('.hero');
+                if (heroSection) spyObserver.observe(heroSection);
+                navLinks.forEach(function(link) {
+                    var target = document.querySelector(link.getAttribute('href'));
+                    if (target) spyObserver.observe(target);
+                });
+            }
+
+            // Count-up for numeric stats. The real value is in the markup, so no-JS and reduced-motion
+            // visitors simply see the final number.
+            var counters = [].slice.call(document.querySelectorAll('[data-count]'));
+            if (counters.length && !reduceMotion && 'IntersectionObserver' in window) {
+                var countObserver = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (!entry.isIntersecting) return;
+                        countObserver.unobserve(entry.target);
+                        var counter = entry.target,
+                            target = parseInt(counter.getAttribute('data-count'), 10) || 0,
+                            startTime = null;
+
+                        function tick(now) {
+                            if (startTime === null) startTime = now;
+                            var progress = Math.min((now - startTime) / 1400, 1);
+                            counter.textContent = Math.round(target * (1 - Math.pow(1 - progress, 3)));
+                            if (progress < 1) window.requestAnimationFrame(tick);
+                        }
+                        window.requestAnimationFrame(tick);
+                    });
+                }, { threshold: .6 });
+                counters.forEach(function(counter) {
+                    counter.textContent = '0';
+                    countObserver.observe(counter);
+                });
+            }
+
+            // Portrait viewer: every card with a photo opens a larger copy; arrows, keys, and swipes step through them.
+            var viewer = document.getElementById('photoViewer'),
+                viewerDialog = viewer ? viewer.querySelector('.photo-viewer-dialog') : null,
+                viewerImg = document.getElementById('photoViewerImg'),
+                viewerName = document.getElementById('photoViewerName'),
+                viewerRole = document.getElementById('photoViewerRole'),
+                viewerCount = document.getElementById('photoViewerCount'),
+                viewerClose = document.getElementById('photoViewerClose'),
+                viewerPrev = document.getElementById('photoViewerPrev'),
+                viewerNext = document.getElementById('photoViewerNext'),
+                viewerIndex = 0,
+                viewerTrigger = null;
+            var portraits = [].slice.call(document.querySelectorAll('.person-photo img[data-full]')).map(function(img) {
+                var card = img.closest('.person-card'),
+                    name = card.querySelector('.person-info strong'),
+                    role = card.querySelector('.person-info span');
+                return {
+                    img: img,
+                    frame: img.closest('.person-photo'),
+                    full: img.getAttribute('data-full') || img.src,
+                    name: name ? name.textContent.trim() : '',
+                    role: role ? role.textContent.trim() : ''
+                };
+            });
+
+            function showPortrait(index) {
+                viewerIndex = (index + portraits.length) % portraits.length;
+                var person = portraits[viewerIndex];
+                viewerImg.src = person.full;
+                viewerImg.alt = person.name;
+                viewerImg.style.objectPosition = person.img.style.objectPosition || 'center 12%';
+                viewerName.textContent = person.name;
+                viewerRole.textContent = person.role;
+                viewerCount.textContent = (viewerIndex + 1) + ' / ' + portraits.length;
+            }
+
+            function openViewer(index, trigger) {
+                viewerTrigger = trigger;
+                showPortrait(index);
+                viewer.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                // Wait for the fade-in to start: a still-hidden dialog cannot take focus.
+                window.setTimeout(function() {
+                    viewerClose.focus();
+                }, 60);
+            }
+
+            function closeViewer() {
+                viewer.setAttribute('aria-hidden', 'true');
+                if (!modal || modal.getAttribute('aria-hidden') !== 'false') document.body.classList.remove('modal-open');
+                if (viewerTrigger) viewerTrigger.focus();
+            }
+            if (viewer && portraits.length) {
+                portraits.forEach(function(person, index) {
+                    var frame = person.frame;
+                    frame.setAttribute('role', 'button');
+                    frame.setAttribute('tabindex', '0');
+                    frame.setAttribute('aria-label', 'View larger photo of ' + person.name);
+                    frame.insertAdjacentHTML('beforeend', '<span class="person-zoom" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M11 8v6M8 11h6"/></svg></span>');
+                    frame.addEventListener('click', function() {
+                        openViewer(index, frame);
+                    });
+                    frame.addEventListener('keydown', function(event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openViewer(index, frame);
+                        }
+                    });
+                });
+                viewerClose.addEventListener('click', closeViewer);
+                viewerPrev.addEventListener('click', function() {
+                    showPortrait(viewerIndex - 1);
+                });
+                viewerNext.addEventListener('click', function() {
+                    showPortrait(viewerIndex + 1);
+                });
+                viewer.addEventListener('click', function(event) {
+                    if (event.target === viewer || event.target === viewerDialog) closeViewer();
+                });
+                document.addEventListener('keydown', function(event) {
+                    if (viewer.getAttribute('aria-hidden') !== 'false') return;
+                    if (event.key === 'Escape') closeViewer();
+                    else if (event.key === 'ArrowLeft') showPortrait(viewerIndex - 1);
+                    else if (event.key === 'ArrowRight') showPortrait(viewerIndex + 1);
+                    else if (event.key === 'Tab') {
+                        var controls = [viewerClose, viewerPrev, viewerNext],
+                            position = controls.indexOf(document.activeElement);
+                        event.preventDefault();
+                        controls[(position + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
+                    }
+                });
+                var touchStartX = null;
+                viewer.addEventListener('touchstart', function(event) {
+                    touchStartX = event.touches[0].clientX;
+                }, { passive: true });
+                viewer.addEventListener('touchend', function(event) {
+                    if (touchStartX === null) return;
+                    var deltaX = event.changedTouches[0].clientX - touchStartX;
+                    if (Math.abs(deltaX) > 50) showPortrait(viewerIndex + (deltaX < 0 ? 1 : -1));
+                    touchStartX = null;
+                });
+            }
+
             var revealItems = [].slice.call(document.querySelectorAll('.reveal'));
             if (!revealItems.length) return;
-            var motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
             function showAllReveals() {
                 revealItems.forEach(function(element) {
                     element.classList.add('is-visible');
                 });
             }
-            if (!('IntersectionObserver' in window) || (motionQuery && motionQuery.matches)) {
+            if (!('IntersectionObserver' in window) || reduceMotion) {
                 showAllReveals();
             } else {
                 // Two thresholds give the toggle hysteresis: an item appears once it is meaningfully on
                 // screen and only resets after it has left completely, so edge-of-viewport scrolling
-                // cannot make it flicker. Items stay observed so the reveal repeats in both directions.
+                // cannot make it flicker. People cards stay observed so their reveal repeats in both
+                // directions; section content marked .reveal-once animates the first time only.
                 var revealObserver = new IntersectionObserver(function(entries) {
                     var entering = [],
                         minTop = Infinity,
@@ -2290,7 +1933,7 @@ if ($seal_url === '') {
                             entering.push(entry);
                             if (entry.boundingClientRect.top < minTop) minTop = entry.boundingClientRect.top;
                             if (entry.boundingClientRect.left < minLeft) minLeft = entry.boundingClientRect.left;
-                        } else if (!entry.isIntersecting) {
+                        } else if (!entry.isIntersecting && !entry.target.classList.contains('reveal-once')) {
                             entry.target.classList.remove('is-visible');
                             entry.target.style.removeProperty('--reveal-delay');
                         }
@@ -2303,6 +1946,7 @@ if ($seal_url === '') {
                         var delay = Math.min((box.top - minTop) * .3 + (box.left - minLeft) * .28, 620);
                         entry.target.style.setProperty('--reveal-delay', Math.round(delay) + 'ms');
                         entry.target.classList.add('is-visible');
+                        if (entry.target.classList.contains('reveal-once')) revealObserver.unobserve(entry.target);
                     });
                 }, {
                     threshold: [0, .12],
