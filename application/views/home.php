@@ -706,6 +706,20 @@ if ($seal_url === '') {
             right: 68px;
         }
 
+        /* The modal holds both the sign-in and the reset-password forms; only one is ever shown. */
+        .portal-panel[hidden] {
+            display: none;
+        }
+
+        .portal-panel {
+            animation: portalPanelIn .2s var(--ease-out) both;
+        }
+
+        @keyframes portalPanelIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: none; }
+        }
+
         .login-submit {
             position: relative;
         }
@@ -1616,27 +1630,49 @@ if ($seal_url === '') {
                 <button class="portal-close" id="portalClose" type="button" aria-label="Close portal sign in"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="m6 6 12 12M18 6 6 18" />
                     </svg></button>
-                <div class="login-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21a8 8 0 0 0-16 0" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg></div>
-                <h2 id="login-title">Portal access</h2>
-                <p class="login-intro">Sign in using your authorized AP-LEAD account.</p>
-                <?php if (!empty($login_failed)) : ?><div class="alert alert-danger" role="alert"><?= html_escape($login_failed); ?></div><?php endif; ?>
-                <?= $login_validation_errors; ?>
-                <?= form_open('log_in', array('id' => 'portalLoginForm')); ?>
-                <div class="field"><label for="username">Username</label>
-                    <div class="input-wrap"><input id="username" name="username" type="text" value="<?= html_escape(set_value('username')); ?>" autocomplete="username" required><span class="input-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21a8 8 0 0 0-16 0" />
-                                <circle cx="12" cy="7" r="4" />
-                            </svg></span></div>
+                <div class="portal-panel" id="portalSignin">
+                    <div class="login-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21a8 8 0 0 0-16 0" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg></div>
+                    <h2 id="login-title">Portal access</h2>
+                    <p class="login-intro">Sign in using your authorized AP-LEAD account.</p>
+                    <?php if (!empty($login_failed)) : ?><div class="alert alert-danger" role="alert"><?= html_escape($login_failed); ?></div><?php endif; ?>
+                    <?= $login_validation_errors; ?>
+                    <?= form_open('log_in', array('id' => 'portalLoginForm')); ?>
+                    <div class="field"><label for="username">Username</label>
+                        <div class="input-wrap"><input id="username" name="username" type="text" value="<?= html_escape(set_value('username')); ?>" autocomplete="username" required><span class="input-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21a8 8 0 0 0-16 0" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg></span></div>
+                    </div>
+                    <div class="field"><label for="password">Password</label>
+                        <div class="input-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" id="togglePassword" aria-controls="password" aria-pressed="false">SHOW</button></div>
+                    </div>
+                    <button class="button button-primary login-submit" id="loginSubmit" type="submit"><span class="button-label">Sign in securely</span><span class="button-spinner" aria-hidden="true"></span></button>
+                    <?= form_close(); ?>
+                    <p class="login-help"><a href="<?= base_url('Pages/forgot_password'); ?>" data-portal-view="reset">Forgot your password?</a><br>For account concerns, contact your division system administrator.</p>
                 </div>
-                <div class="field"><label for="password">Password</label>
-                    <div class="input-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required><button class="password-toggle" type="button" id="togglePassword" aria-controls="password" aria-pressed="false">SHOW</button></div>
+
+                <div class="portal-panel" id="portalReset" hidden>
+                    <div class="login-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="10" rx="2" />
+                            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                        </svg></div>
+                    <h2 id="reset-title">Reset password</h2>
+                    <p class="login-intro">Enter the email address registered to your AP-LEAD account. A new password will be sent to it.</p>
+                    <div class="alert" id="resetFeedback" role="status" aria-live="polite" hidden></div>
+                    <form id="portalResetForm" action="<?= base_url('Pages/forgot_password'); ?>" method="post">
+                        <div class="field"><label for="reset-email">Email address</label>
+                            <div class="input-wrap"><input id="reset-email" name="email" type="email" autocomplete="email" placeholder="name@deped.gov.ph" required><span class="input-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                                        <path d="m3 7 9 6 9-6" />
+                                    </svg></span></div>
+                        </div>
+                        <button class="button button-primary login-submit" id="resetSubmit" type="submit"><span class="button-label">Send new password</span><span class="button-spinner" aria-hidden="true"></span></button>
+                    </form>
+                    <p class="login-help"><a href="#portal" data-portal-view="signin">&larr; Back to sign in</a><br>For account concerns, contact your division system administrator.</p>
                 </div>
-                <button class="button button-primary login-submit" id="loginSubmit" type="submit"><span class="button-label">Sign in securely</span><span class="button-spinner" aria-hidden="true"></span></button>
-                <?= form_close(); ?>
-                <p class="login-help"><a href="<?= base_url('Pages/forgot_password'); ?>">Forgot your password?</a><br>For account concerns, contact your division system administrator.</p>
             </section>
         </div>
     </div>
@@ -1651,6 +1687,12 @@ if ($seal_url === '') {
                 closeButton = document.getElementById('portalClose');
             var loginForm = document.getElementById('portalLoginForm'),
                 loginSubmit = document.getElementById('loginSubmit');
+            var signinPanel = document.getElementById('portalSignin'),
+                resetPanel = document.getElementById('portalReset'),
+                portalDialog = modal ? modal.querySelector('.portal-dialog') : null;
+            var resetForm = document.getElementById('portalResetForm'),
+                resetSubmit = document.getElementById('resetSubmit'),
+                resetFeedback = document.getElementById('resetFeedback');
             var lastModalTrigger = null;
             if (menuButton && navigation) {
                 menuButton.addEventListener('click', function() {
@@ -1674,20 +1716,39 @@ if ($seal_url === '') {
                 passwordButton.setAttribute('aria-pressed', show ? 'true' : 'false');
             });
 
-            function openPortal(trigger) {
+            // The portal card carries two views - sign in and reset password - so neither one
+            // sends the visitor off the homepage.
+            function showPortalView(view) {
+                var isReset = view === 'reset';
+                if (signinPanel && resetPanel) {
+                    signinPanel.hidden = isReset;
+                    resetPanel.hidden = !isReset;
+                    if (portalDialog) portalDialog.setAttribute('aria-labelledby', isReset ? 'reset-title' : 'login-title');
+                }
+                var field = document.getElementById(isReset ? 'reset-email' : 'username');
+                if (field) window.setTimeout(function() {
+                    field.focus();
+                }, 100);
+            }
+
+            function openPortal(trigger, view) {
                 if (!modal) return;
                 lastModalTrigger = trigger || null;
                 modal.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
-                window.setTimeout(function() {
-                    document.getElementById('username').focus();
-                }, 100);
+                showPortalView(view || 'signin');
             }
 
             function closePortal() {
                 if (!modal) return;
                 modal.setAttribute('aria-hidden', 'true');
                 document.body.classList.remove('modal-open');
+                if (signinPanel && resetPanel) {
+                    signinPanel.hidden = false;
+                    resetPanel.hidden = true;
+                    if (portalDialog) portalDialog.setAttribute('aria-labelledby', 'login-title');
+                }
+                if (resetFeedback) resetFeedback.hidden = true;
                 if (lastModalTrigger) lastModalTrigger.focus();
             }
             document.querySelectorAll('[data-open-login]').forEach(function(trigger) {
@@ -1696,6 +1757,66 @@ if ($seal_url === '') {
                     openPortal(trigger);
                 });
             });
+            // Anchors keep their real href, so without JS they still land on the standalone page.
+            document.querySelectorAll('[data-portal-view]').forEach(function(link) {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    if (resetFeedback) resetFeedback.hidden = true;
+                    showPortalView(link.getAttribute('data-portal-view'));
+                });
+            });
+
+            function setResetFeedback(ok, message) {
+                if (!resetFeedback) return;
+                resetFeedback.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger');
+                resetFeedback.textContent = message;
+                resetFeedback.hidden = false;
+            }
+
+            function setResetLoading(busy) {
+                if (!resetSubmit) return;
+                resetSubmit.classList.toggle('is-loading', busy);
+                resetSubmit.disabled = busy;
+                if (busy) resetSubmit.setAttribute('aria-busy', 'true');
+                else resetSubmit.removeAttribute('aria-busy');
+            }
+
+            // Same controller the standalone page posts to; it answers JSON for XHR, so a wrong
+            // address is reported in place instead of costing a full round trip.
+            if (resetForm && window.fetch) resetForm.addEventListener('submit', function(event) {
+                var email = document.getElementById('reset-email');
+                if (email && !email.value.trim()) return; // let the browser raise its own prompt
+                event.preventDefault();
+                setResetLoading(true);
+                fetch(resetForm.action, {
+                    method: 'POST',
+                    body: new FormData(resetForm),
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).then(function(response) {
+                    return response.text();
+                }).then(function(text) {
+                    var payload = null;
+                    try {
+                        payload = JSON.parse(text);
+                    } catch (error) {
+                        payload = null;
+                    }
+                    setResetLoading(false);
+                    if (!payload) {
+                        setResetFeedback(false, 'Something went wrong on our end. Please try again.');
+                        return;
+                    }
+                    setResetFeedback(!!payload.success, payload.message || '');
+                    if (payload.success) resetForm.reset();
+                }).catch(function() {
+                    setResetLoading(false);
+                    setResetFeedback(false, 'We could not reach the server. Check your connection and try again.');
+                });
+            });
+
             if (closeButton) closeButton.addEventListener('click', closePortal);
             if (modal) modal.addEventListener('click', function(event) {
                 if (event.target === modal) closePortal();
@@ -1704,7 +1825,12 @@ if ($seal_url === '') {
                 if (!modal || modal.getAttribute('aria-hidden') !== 'false') return;
                 if (event.key === 'Escape') closePortal();
                 if (event.key === 'Tab') {
-                    var focusable = modal.querySelectorAll('button:not([disabled]), input:not([disabled]), a[href]');
+                    var focusable = Array.prototype.filter.call(
+                        modal.querySelectorAll('button:not([disabled]), input:not([disabled]), a[href]'),
+                        function(node) {
+                            return node.offsetParent !== null; // skips whichever panel is hidden
+                        }
+                    );
                     if (!focusable.length) return;
                     var first = focusable[0],
                         last = focusable[focusable.length - 1];
@@ -1729,6 +1855,7 @@ if ($seal_url === '') {
                 }, 100);
             }
             if (window.location.hash === '#portal') openPortal(null);
+            else if (window.location.hash === '#forgot-password') openPortal(null, 'reset');
 
             var motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
             var reduceMotion = !!(motionQuery && motionQuery.matches);

@@ -4275,12 +4275,19 @@ class Pages extends CI_Controller
     public function forgot_password()
     {
 
-        $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        ', '</div>');
-        $this->form_validation->set_rules('email', 'Email', 'required');
+        // Delimiters match the alert styling shared by the homepage portal and the reset page.
+        $this->form_validation->set_error_delimiters('<div class="alert alert-danger" role="alert">', '</div>');
+        $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
 
         if ($this->form_validation->run() == FALSE) {
+
+            // The homepage posts this form from its portal modal, so validation has to answer
+            // in JSON too - otherwise the modal receives a full HTML page it cannot read.
+            if ($this->input->is_ajax_request()) {
+                $message = trim(strip_tags(validation_errors('', ' ')));
+                echo json_encode(['success' => false, 'message' => $message !== '' ? $message : 'Please enter a valid email address.']);
+                return;
+            }
 
             $page = "fp";
 
