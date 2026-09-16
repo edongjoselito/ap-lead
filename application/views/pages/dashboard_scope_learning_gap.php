@@ -58,32 +58,91 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
     @media (max-width:991.98px) { .scope-lg .theme-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:767.98px) { .scope-lg .lg-hero { align-items:flex-start; flex-direction:column; padding:24px; }.scope-lg .lg-hero-actions,.scope-lg .lg-hero .btn { width:100%; }.scope-lg .lg-card-head { padding:18px; }.scope-lg .lg-card-body { padding:18px; }.scope-lg .lg-quick-grid,.scope-lg .theme-grid { grid-template-columns:1fr; }.scope-lg .performance-chart-wrap { height:300px; }.scope-lg .division-chart-wrap { height:430px; } }
     /* Division-only layout: the regional dashboard retains its existing presentation. */
-    .division-workspace .lg-hero { align-items:flex-start; padding:26px; box-shadow:none; }
-    .division-workspace .lg-hero-copy { flex:1; min-width:0; }
-    .division-workspace .lg-hero-actions { flex:0 1 230px; }
-    .division-workspace .lg-hero-actions .btn { width:100%; border-radius:8px; white-space:normal; }
-    .division-workspace .lg-stat { box-shadow:none; }
-    .division-workspace .lg-stat strong { font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-    .division-workspace .division-section-heading { margin:8px 0 18px; }
-    .division-workspace .division-section-heading h2 { margin:0 0 5px; color:var(--navy); font-size:19px; font-weight:700; }
-    .division-workspace .division-section-heading p { margin:0; color:var(--muted); font-size:13px; }
-    .division-workspace .lg-card { box-shadow:none; }
-    .division-workspace .lg-quick-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
-    .division-workspace .lg-quick-action { height:100%; padding:20px; }
-    .division-workspace .lg-card-head { flex-wrap:wrap; }
+    .division-workspace { padding-bottom: 10px; }
     .division-workspace a:focus-visible { outline:3px solid var(--blue); outline-offset:3px; }
-    @media (max-width:1199.98px) { .division-workspace .lg-quick-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+    /* Hero */
+    .division-workspace .lg-hero { align-items:center; padding:34px 36px; border-radius:20px; box-shadow:0 16px 36px rgba(18,63,99,.20); }
+    .division-workspace .lg-hero:after { width:320px; height:320px; right:-90px; bottom:-180px; border-width:40px; }
+    .division-workspace .lg-hero-copy { flex:1; min-width:0; }
+    .division-workspace .lg-eyebrow { margin-bottom:10px; }
+    .division-workspace .lg-hero h1 { font-size:30px; }
+    .division-workspace .lg-hero p { font-size:15px; line-height:1.55; }
+    .division-workspace .lg-hero-actions { flex:0 0 auto; gap:10px; }
+    .division-workspace .lg-hero .btn { width:auto; padding:11px 18px; border-radius:10px; font-size:13px; white-space:nowrap; }
+    .division-workspace .lg-hero .btn-light { color:var(--navy); }
+    .division-workspace .lg-fy-badge { display:inline-flex; align-items:center; gap:6px; margin-top:16px; padding:6px 12px; border-radius:999px; color:#fff; background:rgba(255,255,255,.16); font-size:11px; font-weight:700; letter-spacing:.04em; }
+
+    /* Stat cards */
+    .division-workspace .lg-stat-link { height:calc(100% - 24px); margin-bottom:24px; }
+    .division-workspace .lg-stat { padding:22px; border-radius:16px; box-shadow:0 8px 22px rgba(18,63,99,.07); transition:transform .18s ease, box-shadow .18s ease; }
+    .division-workspace .lg-stat-link:hover .lg-stat { transform:translateY(-3px); box-shadow:0 14px 30px rgba(18,63,99,.13); }
+    .division-workspace .lg-stat-icon { width:46px; height:46px; border-radius:13px; font-size:22px; }
+    .division-workspace .lg-stat strong { font-size:30px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+    .division-workspace .lg-stat small { font-size:11px; }
+    .division-workspace .lg-stat-hint { font-size:12px; }
+
+    /* Shared chart/thematic cards: restore depth and breathing room */
+    .division-workspace .lg-card { margin-bottom:24px; border-radius:16px; box-shadow:0 8px 22px rgba(18,63,99,.07); }
+    .division-workspace .lg-card-head { padding:22px 26px; border-radius:16px 16px 0 0; flex-wrap:wrap; }
+    .division-workspace .lg-card-head h4 { font-size:17px; }
+    .division-workspace .lg-card-body { padding:24px 26px; }
+
+    /* Section heading */
+    .division-workspace .division-section-heading { margin:6px 0 22px; }
+    .division-workspace .division-section-heading h2 { margin:0 0 6px; color:var(--navy); font-size:20px; font-weight:700; }
+    .division-workspace .division-section-heading p { margin:0; color:var(--muted); font-size:13px; }
+
+    /* Division network + registration cards */
+    .divd-card { height:calc(100% - 24px); margin-bottom:24px; border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 8px 22px rgba(18,63,99,.07); overflow:hidden; }
+    .divd-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:22px 26px; border-bottom:1px solid var(--line); background:#fbfdfe; }
+    .divd-card-head h4 { margin:0 0 4px; color:var(--navy); font-size:16px; font-weight:700; }
+    .divd-card-head p { margin:0; color:var(--muted); font-size:12px; }
+    .divd-card-body { padding:24px 26px; }
+
+    /* Registration progress */
+    .divd-reg-number { color:var(--navy); font-size:34px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+    .divd-reg-label { margin:10px 0 16px; color:var(--muted); font-size:13px; line-height:1.5; }
+    .divd-reg-bar { height:12px; border-radius:999px; background:#e9f0f4; overflow:hidden; }
+    .divd-reg-bar span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#1d709e,#3fa8d0); transition:width .4s ease; }
+    .divd-reg-foot { display:flex; justify-content:space-between; gap:10px; margin-top:14px; color:var(--muted); font-size:12px; }
+    .divd-reg-foot strong { color:var(--navy); font-size:14px; }
+
+    /* Network glance */
+    .divd-glance { display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid #edf2f5; }
+    .divd-glance:first-child { padding-top:0; }
+    .divd-glance:last-child { padding-bottom:0; border-bottom:0; }
+    .divd-glance-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 50px; width:50px; height:50px; border-radius:14px; font-size:24px; }
+    .divd-glance-icon.navy { color:var(--navy); background:var(--sky); }
+    .divd-glance-icon.green { color:var(--green); background:#e9f7f0; }
+    .divd-glance-text { flex:1; min-width:0; }
+    .divd-glance-text strong { display:block; color:var(--navy); font-size:24px; line-height:1.1; font-variant-numeric:tabular-nums; }
+    .divd-glance-text small { color:var(--muted); font-size:12px; }
+    .divd-glance-link { color:var(--blue); font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap; }
+    .divd-glance-link:hover { text-decoration:underline; }
+
+    /* Quick actions */
+    .divd-quick-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+    .divd-quick { display:flex; flex-direction:column; gap:12px; padding:20px; border:1px solid var(--line); border-radius:14px; background:#fbfdfe; color:var(--ink); text-decoration:none; transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+    .divd-quick:hover { border-color:var(--blue); box-shadow:0 10px 22px rgba(18,63,99,.10); transform:translateY(-3px); text-decoration:none; }
+    .divd-quick-icon { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; color:var(--blue); background:var(--sky); font-size:22px; }
+    .divd-quick-body { flex:1; min-width:0; }
+    .divd-quick-body strong { display:block; color:var(--navy); font-size:14px; font-weight:700; }
+    .divd-quick-body small { display:block; margin-top:3px; color:var(--muted); font-size:12px; line-height:1.45; }
+    .divd-quick-arrow { color:var(--blue); font-size:14px; font-weight:700; }
+
+    @media (max-width:1199.98px) { .divd-quick-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:767.98px) {
-        .division-workspace .lg-hero-actions { flex:auto; }
+        .division-workspace .lg-hero { align-items:flex-start; flex-direction:column; padding:26px; border-radius:16px; }
+        .division-workspace .lg-hero-actions { width:100%; }
+        .division-workspace .lg-hero .btn { width:100%; }
         .division-workspace .lg-hero h1 { font-size:24px; }
+        .divd-quick-grid { grid-template-columns:1fr; }
     }
-    @media (max-width:479.98px) {
-        .division-workspace .lg-quick-grid { grid-template-columns:1fr; }
-        .division-workspace .lg-glance-stat { gap:10px; flex-wrap:wrap; }
-    }
+    @media (max-width:479.98px) { .divd-glance { gap:12px; flex-wrap:wrap; } }
 </style>
 <div class="scope-lg<?= $is_division ? ' division-workspace' : ''; ?>">
-    <section class="lg-hero"><div class="lg-hero-copy"><span class="lg-eyebrow">Least Learned Competencies Monitoring<?= $is_division && $div_setup_name !== '' ? ' · ' . $div_setup_name : ''; ?></span><h1><?= $is_division ? 'Division Dashboard' : 'Regional Learning Gap Overview'; ?></h1><p><?= $is_division ? 'Track submitted assessment results and learning needs across your division.' : 'Welcome, ' . html_escape($display_name) . '. Monitor reporting coverage and the learning needs emerging across every division.'; ?></p></div><div class="lg-hero-actions"><a class="btn btn-light" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar mr-1"></i> Learning Gap Summary</a><a class="btn btn-outline-light" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted mr-1"></i> View Records</a></div></section>
+    <section class="lg-hero"><div class="lg-hero-copy"><span class="lg-eyebrow">Least Learned Competencies Monitoring<?= $is_division && $div_setup_name !== '' ? ' · ' . $div_setup_name : ''; ?></span><h1><?= $is_division ? 'Division Dashboard' : 'Regional Learning Gap Overview'; ?></h1><p><?= $is_division ? 'Track submitted assessment results and learning needs across your division.' : 'Welcome, ' . html_escape($display_name) . '. Monitor reporting coverage and the learning needs emerging across every division.'; ?></p><?php if ($is_division) : ?><span class="lg-fy-badge"><i class="mdi mdi-calendar-month-outline"></i> Fiscal Year <?= html_escape($div_fy); ?></span><?php endif; ?></div><div class="lg-hero-actions"><a class="btn btn-light" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar mr-1"></i> Learning Gap Summary</a><a class="btn btn-outline-light" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted mr-1"></i> View Records</a></div></section>
     <div class="row">
         <div class="col-sm-6 col-xl-3"><a class="lg-stat-link" href="<?= $records_url; ?>"><div class="lg-stat"><div class="lg-stat-top"><span>Reporting schools</span><span class="lg-stat-icon"><i class="mdi mdi-school-outline"></i></span></div><small>Schools with submissions</small><strong><?= number_format($school_count); ?></strong><span class="lg-stat-hint">Review submitted records <i class="mdi mdi-arrow-right"></i></span></div></a></div>
         <div class="col-sm-6 col-xl-3"><a class="lg-stat-link" href="<?= $records_url; ?>"><div class="lg-stat"><div class="lg-stat-top"><span>Encoded records</span><span class="lg-stat-icon"><i class="mdi mdi-file-document-outline"></i></span></div><small>Competency gap entries</small><strong><?= number_format($record_count); ?></strong><span class="lg-stat-hint">View all entries <i class="mdi mdi-arrow-right"></i></span></div></a></div>
@@ -150,52 +209,76 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
     <?php if (!$is_division) : ?><div class="row"><div class="col-lg-5"><section class="lg-card"><div class="lg-card-head"><div><h4>Division reporting coverage</h4><p>Divisions with at least one submitted learning-gap record.</p></div><small><?= $active_division_count; ?> / <?= $division_count; ?></small></div><div class="lg-card-body"><div class="coverage-number"><?= number_format($reporting_rate, 1); ?>%</div><p class="coverage-label">of divisions are represented in the regional overview</p><div class="lg-progress"><span style="width:<?= min(100, max(0, $reporting_rate)); ?>%"></span></div><div class="coverage-foot"><span><?= $active_division_count; ?> reporting divisions</span><span><?= max(0, $division_count - $active_division_count); ?> without records</span></div></div></section></div><div class="col-lg-7"><section class="lg-card"><div class="lg-card-head"><div><h4>Priority attention</h4><p>Divisions with the highest recorded number of learners with gaps.</p></div><a href="<?= $records_url; ?>">View records</a></div><div class="lg-card-body"><?php if (empty($priority_rows)) : ?><div class="empty-state">No division has submitted learning-gap data yet.</div><?php else : ?><ol class="priority-list"><?php foreach ($priority_rows as $index => $row) : $row_url = $records_url . '?division_id=' . (int) $row->division_id; ?><li><span class="priority-rank"><?= $index + 1; ?></span><div class="priority-name"><a href="<?= $row_url; ?>"><?= html_escape($row->division_name); ?></a><small><?= number_format((int) $row->school_count); ?> reporting school<?= (int) $row->school_count === 1 ? '' : 's'; ?> · <?= number_format((int) $row->record_count); ?> records</small></div><div class="priority-count"><?= number_format((int) $row->learners_with_gap); ?><small>learners with gap</small></div></li><?php endforeach; ?></ol><?php endif; ?></div></section></div></div>
         <section class="lg-card"><div class="lg-card-head"><div><h4>Regional performance by division</h4><p>Counts are direct sums from submitted records. Gap rate uses the same recorded assessed and gap populations.</p></div><small><?= number_format($division_count); ?> divisions</small></div><div class="table-responsive"><table class="table summary-table mb-0"><thead><tr><th>Division</th><th>Reporting status</th><th>School submissions</th><th>Submission rate</th><th>Records</th><th>Recorded assessed</th><th>Recorded gap</th><th>Weighted CPL</th><th>Recorded gap rate</th></tr></thead><tbody><?php if (empty($division_rows)) : ?><tr><td colspan="9" class="empty-state">No divisions are configured for this regional account.</td></tr><?php else : foreach ($division_rows as $row) : $record_link = $records_url . '?division_id=' . (int) $row->division_id; $row_assessed = (int) $row->learners_assessed; $row_gap_rate = $row_assessed > 0 ? ((int) $row->learners_with_gap / $row_assessed) * 100 : null; $row_school_total = (int) $row->total_school_count; $row_submission_rate = $row_school_total > 0 ? ((int) $row->school_count / $row_school_total) * 100 : 0; $row_performance = isset($division_performance_by_id[(int) $row->division_id]) ? $division_performance_by_id[(int) $row->division_id] : null; ?><tr><td><strong><?= html_escape($row->division_name); ?></strong></td><td><span class="status-pill<?= (int) $row->record_count > 0 ? '' : ' muted'; ?>"><?= (int) $row->record_count > 0 ? 'Reporting' : 'No records'; ?></span></td><td><a href="<?= $record_link; ?>"><?= number_format((int) $row->school_count); ?> / <?= number_format($row_school_total); ?></a></td><td><?= number_format($row_submission_rate, 1); ?>%</td><td><a href="<?= $record_link; ?>"><?= number_format((int) $row->record_count); ?></a></td><td><a href="<?= $record_link; ?>"><?= number_format($row_assessed); ?></a></td><td><a href="<?= $record_link; ?>"><?= number_format((int) $row->learners_with_gap); ?></a></td><td><?= $row_performance && $row_performance->class_proficiency_level !== null ? number_format((float) $row_performance->class_proficiency_level, 1) . '% <small>(' . number_format((int) $row_performance->cpl_record_count) . '/' . number_format((int) $row_performance->record_count) . ' records)</small>' : '—'; ?></td><td><?= $row_gap_rate === null ? '—' : number_format($row_gap_rate, 1) . '%'; ?></td></tr><?php endforeach; endif; ?></tbody></table></div></section>
     <?php else : ?>
-        <div class="division-section-heading"><h2>School participation &amp; administration</h2><p>Review registration, manage your network, and follow up on school submissions.</p></div>
+        <div class="division-section-heading"><h2>School participation & administration</h2><p>Review registration, manage your network, and follow up on school submissions.</p></div>
         <div class="row">
             <div class="col-lg-7">
-                <section class="lg-card">
-                    <div class="lg-card-head"><div><h4>School registration progress</h4><p>Registered schools out of the total encoded in Division Setup.</p></div><a href="<?= $div_setup_url; ?>" class="lg-glance-link">Division setup <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></div>
-                    <div class="lg-card-body lg-progress-card-body">
-                        <div class="coverage-number"><?= $div_encoded_total > 0 ? number_format($div_signup_pct, 1) . '%' : 'Not configured'; ?></div>
-                        <p class="coverage-label"><?= $div_encoded_total > 0 ? 'of encoded schools are registered in the system' : 'Set your total number of schools in Division Setup to track registration progress.'; ?></p>
-                        <div class="lg-progress"><span style="width:<?= min(100, max(0, $div_signup_pct)); ?>%"></span></div>
-                        <div class="lg-progress-foot"><span><strong><?= number_format($div_registered); ?></strong> registered</span><span><strong><?= number_format($div_encoded_total); ?></strong> encoded total</span></div>
+                <section class="divd-card">
+                    <div class="divd-card-head">
+                        <div><h4>School registration progress</h4><p>Registered schools out of the total encoded in Division Setup.</p></div>
+                        <a href="<?= $div_setup_url; ?>" class="divd-glance-link">Division setup <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+                    </div>
+                    <div class="divd-card-body">
+                        <?php if ($div_encoded_total > 0) : ?>
+                            <div class="divd-reg-number"><?= number_format($div_signup_pct, 1); ?>%</div>
+                            <p class="divd-reg-label">of encoded schools are registered in the system</p>
+                            <div class="divd-reg-bar" aria-hidden="true"><span style="width:<?= min(100, max(0, $div_signup_pct)); ?>%"></span></div>
+                            <div class="divd-reg-foot">
+                                <span><strong><?= number_format($div_registered); ?></strong> registered</span>
+                                <span><strong><?= number_format($div_encoded_total); ?></strong> encoded total</span>
+                            </div>
+                        <?php else : ?>
+                            <div class="divd-reg-number">Not configured</div>
+                            <p class="divd-reg-label">Set your total number of schools in Division Setup to track registration progress.</p>
+                            <a href="<?= $div_setup_url; ?>" class="divd-glance-link">Configure now <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+                        <?php endif; ?>
                     </div>
                 </section>
             </div>
             <div class="col-lg-5">
-                <section class="lg-card">
-                    <div class="lg-card-head"><div><h4>Division network</h4><p>Districts and schools under your division.</p></div></div>
-                    <div class="lg-card-body">
-                        <div class="lg-glance-stat">
-                            <span class="lg-glance-icon navy"><i class="mdi mdi-map-marker-multiple-outline"></i></span>
-                            <div class="lg-glance-text"><strong><?= number_format($div_district_count); ?></strong><small>District<?= $div_district_count === 1 ? '' : 's'; ?></small></div>
-                            <a class="lg-glance-link" href="<?= $div_districts_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
+                <section class="divd-card">
+                    <div class="divd-card-head"><div><h4>Division network</h4><p>Districts and schools under your division.</p></div></div>
+                    <div class="divd-card-body">
+                        <div class="divd-glance">
+                            <span class="divd-glance-icon navy"><i class="mdi mdi-map-marker-multiple-outline"></i></span>
+                            <div class="divd-glance-text"><strong><?= number_format($div_district_count); ?></strong><small>District<?= $div_district_count === 1 ? '' : 's'; ?></small></div>
+                            <a class="divd-glance-link" href="<?= $div_districts_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
                         </div>
-                        <div class="lg-glance-stat">
-                            <span class="lg-glance-icon green"><i class="mdi mdi-school-outline"></i></span>
-                            <div class="lg-glance-text"><strong><?= number_format($div_registered); ?></strong><small>Registered school<?= $div_registered === 1 ? '' : 's'; ?></small></div>
-                            <a class="lg-glance-link" href="<?= $div_schools_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <section class="lg-card">
-                    <div class="lg-card-head"><div><h4>Quick actions</h4><p>Jump to your key division tasks.</p></div></div>
-                    <div class="lg-card-body">
-                        <div class="lg-quick-grid">
-                            <a class="lg-quick-action" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar"></i><strong>Learning Gap Summary</strong><small>Review competency gaps</small></a>
-                            <a class="lg-quick-action" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted"></i><strong>Submitted Records</strong><small>View all entries</small></a>
-                            <a class="lg-quick-action" href="<?= $div_submission_url; ?>"><i class="mdi mdi-clipboard-check-outline"></i><strong>School Submissions</strong><small>Monitor reporting</small></a>
-                            <a class="lg-quick-action" href="<?= $div_setup_url; ?>"><i class="mdi mdi-cogs"></i><strong>Division Setup</strong><small>Configure details</small></a>
+                        <div class="divd-glance">
+                            <span class="divd-glance-icon green"><i class="mdi mdi-school-outline"></i></span>
+                            <div class="divd-glance-text"><strong><?= number_format($div_registered); ?></strong><small>Registered school<?= $div_registered === 1 ? '' : 's'; ?></small></div>
+                            <a class="divd-glance-link" href="<?= $div_schools_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
                         </div>
                     </div>
                 </section>
             </div>
         </div>
+        <section class="divd-card">
+            <div class="divd-card-head"><div><h4>Quick actions</h4><p>Jump to your key division tasks.</p></div></div>
+            <div class="divd-card-body">
+                <div class="divd-quick-grid">
+                    <a class="divd-quick" href="<?= $overview_url; ?>">
+                        <span class="divd-quick-icon"><i class="mdi mdi-chart-bar"></i></span>
+                        <span class="divd-quick-body"><strong>Learning Gap Summary</strong><small>Review competency gaps</small></span>
+                        <span class="divd-quick-arrow"><i class="mdi mdi-arrow-right"></i></span>
+                    </a>
+                    <a class="divd-quick" href="<?= $records_url; ?>">
+                        <span class="divd-quick-icon"><i class="mdi mdi-format-list-bulleted"></i></span>
+                        <span class="divd-quick-body"><strong>Submitted Records</strong><small>View all entries</small></span>
+                        <span class="divd-quick-arrow"><i class="mdi mdi-arrow-right"></i></span>
+                    </a>
+                    <a class="divd-quick" href="<?= $div_submission_url; ?>">
+                        <span class="divd-quick-icon"><i class="mdi mdi-clipboard-check-outline"></i></span>
+                        <span class="divd-quick-body"><strong>School Submissions</strong><small>Monitor reporting</small></span>
+                        <span class="divd-quick-arrow"><i class="mdi mdi-arrow-right"></i></span>
+                    </a>
+                    <a class="divd-quick" href="<?= $div_setup_url; ?>">
+                        <span class="divd-quick-icon"><i class="mdi mdi-cogs"></i></span>
+                        <span class="divd-quick-body"><strong>Division Setup</strong><small>Configure details</small></span>
+                        <span class="divd-quick-arrow"><i class="mdi mdi-arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+        </section>
     <?php endif; ?>
 </div>
 <script src="<?= base_url('assets/libs/chart-js/Chart.bundle.min.js'); ?>"></script>
