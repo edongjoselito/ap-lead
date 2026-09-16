@@ -53,7 +53,24 @@
  *
  * NOTE: If you change these, also change the error_reporting() code below
  */
-	define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'production');
+	if (isset($_SERVER['CI_ENV']))
+	{
+		$ci_environment = $_SERVER['CI_ENV'];
+	}
+	else
+	{
+		// Only a local development hostname may relax the production default,
+		// so an internet-facing deployment still boots in 'production'.
+		$ci_request_host = isset($_SERVER['HTTP_HOST'])
+			? strtolower(trim((string) strtok((string) $_SERVER['HTTP_HOST'], ':'), '[]'))
+			: '';
+		$ci_environment = (in_array($ci_request_host, array('localhost', '127.0.0.1', '::1'), true)
+			|| preg_match('/\\.(?:local|localhost|test)$/', $ci_request_host))
+			? 'development'
+			: 'production';
+	}
+
+	define('ENVIRONMENT', $ci_environment);
 
 /*
  *---------------------------------------------------------------

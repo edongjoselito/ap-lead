@@ -1,11 +1,34 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 
 $request_scheme = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
 	? 'https'
 	: 'http';
-$config['base_url'] = getenv('APP_BASE_URL') ?: 'https://ap.depedmis.com/';
+
+// Local development (XAMPP/MAMP and friends) is served over plain HTTP from a
+// sub-directory, so the production URL cannot be hard-coded for every request.
+// APP_BASE_URL still wins wherever it is set; a recognised local hostname falls
+// back to the URL the browser actually used; anything else keeps production.
+$request_host = isset($_SERVER['HTTP_HOST']) ? strtolower((string) $_SERVER['HTTP_HOST']) : '';
+$request_hostname = trim((string) parse_url($request_scheme . '://' . $request_host, PHP_URL_HOST), '[]');
+$is_local_request = in_array($request_hostname, array('localhost', '127.0.0.1', '::1'), true)
+	|| (bool) preg_match('/\.(?:local|localhost|test)$/', $request_hostname);
+
+if ($env_base_url = getenv('APP_BASE_URL'))
+{
+	$config['base_url'] = $env_base_url;
+}
+elseif ($is_local_request && $request_host !== '')
+{
+	$base_path = str_replace('\\', '/', dirname((string) $_SERVER['SCRIPT_NAME']));
+	$config['base_url'] = $request_scheme . '://' . $request_host . rtrim($base_path, '/') . '/';
+}
+else
+{
+	$config['base_url'] = 'https://ap.depedmis.com/';
+}
+
 $configured_scheme = strtolower((string) parse_url($config['base_url'], PHP_URL_SCHEME));
 
 /*

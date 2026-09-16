@@ -929,6 +929,7 @@ class Pages extends CI_Controller
             }));
         }
         $data['summary'] = $this->Page_model->learning_gap_summary($scope);
+        $data['term_performance'] = $this->Page_model->learning_gap_term_performance($scope);
         $data['learning_area_filter'] = $scope['type'] === 'division'
             ? trim((string) $this->input->get('learning_area', true))
             : '';

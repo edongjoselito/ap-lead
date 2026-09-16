@@ -1939,7 +1939,7 @@ public function learning_gap_school_competency_summary($scope, $grade = '')
 
 public function learning_gap_summary($scope)
 {
-    $this->db->select('COUNT(*) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
+    $this->db->select('COUNT(*) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, COALESCE(SUM(lgr.learners_assessed), 0) AS learners_assessed, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
         ->from('learning_gap_records lgr');
     if ($scope['type'] === 'school') {
         $this->db->where('lgr.school_id', $scope['id']);
@@ -1948,20 +1948,25 @@ public function learning_gap_summary($scope)
     } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
         $this->db->where('lgr.region_id', $scope['id']);
     }
-    $summary = $this->db->get()->row();
-    $summary->learners_assessed = $this->learning_gap_assessed_by_grade_total($scope);
-    return $summary;
+    return $this->db->get()->row();
 }
 
 /**
- * A learner can have several competency records. Count the assessed total once
- * per school and grade level, rather than once for every competency record.
+ * Assessment totals and weighted class proficiency level for each trimester.
+ * CPL is weighted by the number of assessed learners so larger classes have a
+ * proportionate contribution to division and regional results.
  */
-private function learning_gap_assessed_by_grade_total($scope)
+public function learning_gap_term_performance($scope)
 {
-    $this->db->select('MAX(lgr.learners_assessed) AS learners_assessed')
+    $terms = array(
+        'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
+        'Term 2' => array('term' => 'Term 2', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
+        'Term 3' => array('term' => 'Term 3', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
+    );
+
+    $this->db->select('lgr.school_id, lgr.grade_level, lgr.term, lgr.learners_assessed, lgr.learners_with_gap, lgr.class_proficiency_level')
         ->from('learning_gap_records lgr')
-        ->group_by('lgr.school_id, lgr.grade_level');
+        ->where_in('lgr.term', array_keys($terms));
     if ($scope['type'] === 'school') {
         $this->db->where('lgr.school_id', $scope['id']);
     } elseif ($scope['type'] === 'division') {
@@ -1970,28 +1975,240 @@ private function learning_gap_assessed_by_grade_total($scope)
         $this->db->where('lgr.region_id', $scope['id']);
     }
 
-    $rows = $this->db->get()->result();
-    return array_sum(array_map(function ($row) {
-        return (int) $row->learners_assessed;
-    }, $rows));
+    $cpl_weighted_totals = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
+    $cpl_learner_totals = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
+    foreach ($this->db->get()->result() as $record) {
+        $term = (string) $record->term;
+        $assessed = (int) $record->learners_assessed;
+        $terms[$term]['record_count']++;
+        $terms[$term]['learners_assessed'] += $assessed;
+        $terms[$term]['learners_with_gap'] += (int) $record->learners_with_gap;
+        if ($record->class_proficiency_level !== null && $record->class_proficiency_level !== '') {
+            $weight = max(1, $assessed);
+            $cpl_weighted_totals[$term] += (float) $record->class_proficiency_level * $weight;
+            $cpl_learner_totals[$term] += $weight;
+            $terms[$term]['cpl_record_count']++;
+        }
+    }
+
+    foreach ($terms as $term => &$row) {
+        if ($cpl_learner_totals[$term] > 0) {
+            $row['class_proficiency_level'] = round(
+                $cpl_weighted_totals[$term] / $cpl_learner_totals[$term],
+                2
+            );
+        }
+        $row = (object) $row;
+    }
+    unset($row);
+
+    return array_values($terms);
+}
+
+/**
+ * Produces an in-system thematic analysis of intervention and remarks text.
+ * This keeps school-submitted text inside the application and groups common
+ * planning themes using a transparent education-focused keyword taxonomy.
+ */
+public function learning_gap_thematic_analysis($scope, $limit = 6)
+{
+    $catalog = array(
+        'Remediation and academic support' => array(
+            'remedial', 'remediation', 'tutorial', 'tutoring', 'reteach', 're-teach',
+            'catch-up', 'reading program', 'literacy', 'numeracy', 'learning support',
+            'learner support', 'enrichment', 'intervention class', 'aral'
+        ),
+        'Teacher coaching and capacity building' => array(
+            'teacher training', 'training', 'workshop', 'seminar', 'lac', 'inset',
+            'coaching', 'mentoring', 'peer coaching', 'capacity building',
+            'professional development', 'instructional strategy', 'pedagogy'
+        ),
+        'Assessment and progress monitoring' => array(
+            'assessment', 'assess', 'monitor', 'progress', 'evaluate', 'evaluation',
+            'test analysis', 'item analysis', 'diagnostic', 'formative', 'tracking',
+            'mastery', 'feedback'
+        ),
+        'Learning resources and technology' => array(
+            'learning material', 'instructional material', 'module', 'worksheet',
+            'resource', 'book', 'library', 'computer', 'internet', 'ict',
+            'technology', 'device', 'digital'
+        ),
+        'Parent and community engagement' => array(
+            'parent', 'guardian', 'family', 'community', 'stakeholder', 'barangay',
+            'home visit', 'home visitation', 'pta', 'lgu', 'partnership'
+        ),
+        'Learner wellbeing and inclusion' => array(
+            'mental health', 'psychosocial', 'wellbeing', 'well-being', 'counseling',
+            'guidance', 'inclusive', 'inclusion', 'sped', 'sned', 'disability',
+            'special needs', 'safe space', 'child protection'
+        ),
+        'Attendance and learner engagement' => array(
+            'attendance', 'absent', 'absenteeism', 'dropout', 'drop-out',
+            'participation', 'engagement', 'motivation', 'study habit', 'retention'
+        ),
+        'Implementation and coordination' => array(
+            'implement', 'implementation', 'to be implemented', 'planned', 'ongoing',
+            'schedule', 'timeline', 'coordinate', 'coordination', 'follow-up',
+            'follow up', 'sustain', 'continue', 'strengthen'
+        ),
+    );
+    $themes = array();
+    foreach ($catalog as $name => $keywords) {
+        $themes[$name] = array(
+            'theme' => $name,
+            'record_count' => 0,
+            'school_ids' => array(),
+            'intervention_count' => 0,
+            'remarks_count' => 0,
+            'examples' => array(),
+        );
+    }
+
+    $this->db->select('lgr.school_id, lgr.intervention_action, lgr.remarks')
+        ->from('learning_gap_records lgr');
+    if ($scope['type'] === 'school') {
+        $this->db->where('lgr.school_id', $scope['id']);
+    } elseif ($scope['type'] === 'division') {
+        $this->db->where('lgr.division_id', $scope['id']);
+    } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
+        $this->db->where('lgr.region_id', $scope['id']);
+    }
+
+    $source_count = 0;
+    $source_schools = array();
+    $unclassified_count = 0;
+    foreach ($this->db->get()->result() as $record) {
+        $fields = array(
+            'intervention' => trim((string) $record->intervention_action),
+            'remarks' => trim((string) $record->remarks),
+        );
+        if ($fields['intervention'] === '' && $fields['remarks'] === '') {
+            continue;
+        }
+        $source_count++;
+        $source_schools[(string) $record->school_id] = true;
+        $record_themes = array();
+
+        foreach ($fields as $field => $text) {
+            if ($text === '') {
+                continue;
+            }
+            $normalized = mb_strtolower(preg_replace('/\s+/u', ' ', $text), 'UTF-8');
+            foreach ($catalog as $name => $keywords) {
+                $matched = false;
+                foreach ($keywords as $keyword) {
+                    if (mb_strpos($normalized, $keyword, 0, 'UTF-8') !== false) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    continue;
+                }
+                $themes[$name][$field . '_count']++;
+                $themes[$name]['school_ids'][(string) $record->school_id] = true;
+                $record_themes[$name] = true;
+                if (count($themes[$name]['examples']) < 2 && !in_array($text, $themes[$name]['examples'], true)) {
+                    $themes[$name]['examples'][] = mb_strlen($text, 'UTF-8') > 150
+                        ? mb_substr($text, 0, 147, 'UTF-8') . '...'
+                        : $text;
+                }
+            }
+        }
+
+        if (empty($record_themes)) {
+            $unclassified_count++;
+        } else {
+            foreach (array_keys($record_themes) as $name) {
+                $themes[$name]['record_count']++;
+            }
+        }
+    }
+
+    $themes = array_values(array_filter($themes, function ($theme) {
+        return $theme['record_count'] > 0;
+    }));
+    foreach ($themes as &$theme) {
+        $theme['school_count'] = count($theme['school_ids']);
+        unset($theme['school_ids']);
+        $theme = (object) $theme;
+    }
+    unset($theme);
+    usort($themes, function ($left, $right) {
+        return $right->record_count <=> $left->record_count
+            ?: $right->school_count <=> $left->school_count
+            ?: strcasecmp($left->theme, $right->theme);
+    });
+
+    return array(
+        'themes' => array_slice($themes, 0, max(1, (int) $limit)),
+        'source_count' => $source_count,
+        'school_count' => count($source_schools),
+        'unclassified_count' => $unclassified_count,
+    );
+}
+
+/** Overall CPL and learner-gap percentage for every division in a region. */
+public function learning_gap_division_performance($region_id)
+{
+    $rows = array();
+    foreach ($this->regional_divisions($region_id) as $division) {
+        $rows[(int) $division->id] = array(
+            'division_id' => (int) $division->id,
+            'division_name' => (string) $division->description,
+            'record_count' => 0,
+            'learners_assessed' => 0,
+            'learners_with_gap' => 0,
+            'class_proficiency_level' => null,
+            'cpl_record_count' => 0,
+            'cpl_weighted_total' => 0.0,
+            'cpl_learner_total' => 0,
+        );
+    }
+
+    $records = $this->db
+        ->select('division_id, school_id, grade_level, learners_assessed, learners_with_gap, class_proficiency_level')
+        ->where('region_id', (int) $region_id)
+        ->get('learning_gap_records')
+        ->result();
+    foreach ($records as $record) {
+        $division_id = (int) $record->division_id;
+        if (!isset($rows[$division_id])) {
+            continue;
+        }
+        $assessed = (int) $record->learners_assessed;
+        $rows[$division_id]['record_count']++;
+        $rows[$division_id]['learners_assessed'] += $assessed;
+        $rows[$division_id]['learners_with_gap'] += (int) $record->learners_with_gap;
+        if ($record->class_proficiency_level !== null && $record->class_proficiency_level !== '') {
+            $weight = max(1, $assessed);
+            $rows[$division_id]['cpl_weighted_total'] += (float) $record->class_proficiency_level * $weight;
+            $rows[$division_id]['cpl_learner_total'] += $weight;
+            $rows[$division_id]['cpl_record_count']++;
+        }
+    }
+
+    foreach ($rows as &$row) {
+        if ($row['cpl_learner_total'] > 0) {
+            $row['class_proficiency_level'] = round($row['cpl_weighted_total'] / $row['cpl_learner_total'], 2);
+        }
+        unset($row['cpl_weighted_total'], $row['cpl_learner_total']);
+        $row = (object) $row;
+    }
+    unset($row);
+
+    return array_values($rows);
 }
 
 public function learning_gap_division_summary($region_id)
 {
-    $this->db->select('d.id AS division_id, d.description AS division_name, COUNT(lgr.id) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, (SELECT COUNT(*) FROM schools school_totals WHERE school_totals.division_id = d.id) AS total_school_count, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
+    $this->db->select('d.id AS division_id, d.description AS division_name, COUNT(lgr.id) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, (SELECT COUNT(*) FROM schools school_totals WHERE school_totals.division_id = d.id) AS total_school_count, COALESCE(SUM(lgr.learners_assessed), 0) AS learners_assessed, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
         ->from('division d')
         ->join('learning_gap_records lgr', 'lgr.division_id = d.id', 'left')
         ->where('d.region_id', (int) $region_id)
         ->group_by('d.id, d.description')
         ->order_by('learners_with_gap', 'DESC');
-    $summaries = $this->db->get()->result();
-    foreach ($summaries as $summary) {
-        $summary->learners_assessed = $this->learning_gap_assessed_by_grade_total(array(
-            'type' => 'division',
-            'id' => (int) $summary->division_id,
-        ));
-    }
-    return $summaries;
+    return $this->db->get()->result();
 }
 
 /**
@@ -2122,8 +2339,6 @@ public function save_learning_gap_record($school_id)
         'percent_not_meeting' => $assessed > 0 ? round(($with_gap / $assessed) * 100, 2) : 0,
         'learners_assessed' => $assessed,
         'learners_with_gap' => $with_gap,
-        'learning_difficulty' => $this->input->post('learning_difficulty', true),
-        'possible_causes' => $this->input->post('possible_causes', true),
         'intervention_action' => $this->input->post('intervention_action', true),
         'intervention_status' => $this->input->post('intervention_status', true),
         'remarks' => $this->input->post('remarks', true),
