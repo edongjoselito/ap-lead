@@ -1,5 +1,5 @@
 <?php
-$is_division = in_array($this->session->position, array('division', 'division_head'), true);
+$is_division = in_array($this->session->position, array('division', 'division_head', 'ict'), true);
 $scope = $is_division ? array('type' => 'division', 'id' => (int) $this->session->division) : array('type' => 'region', 'id' => (int) $this->session->region);
 $summary = $this->Page_model->learning_gap_summary($scope);
 $term_performance = $this->Page_model->learning_gap_term_performance($scope);

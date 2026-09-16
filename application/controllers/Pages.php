@@ -27,6 +27,12 @@ class Pages extends CI_Controller
         // High-risk endpoints receive an explicit role policy here in addition
         // to their record-level checks below.
         $role_policies = array(
+            // Scope dashboards. Each role reaches only its own level; the site
+            // root dispatches users here so the URL names the scope on screen.
+            'region' => array('region'),
+            'division' => array('division', 'division_head', 'ict'),
+            'district' => array('district'),
+            'school_dashboard' => array('school'),
             'profilelist' => array('admin'),
             'profile_new' => array('admin'),
             'qr' => array('admin'),
@@ -697,192 +703,154 @@ class Pages extends CI_Controller
     }
 
 
-    public function view()
+    /**
+     * SBM indicator lists shared by every scope dashboard.
+     */
+    private function dashboard_indicator_data()
     {
-        if (!$this->session->logged_in) {
-            redirect(base_url('homepage'));
-            return;
+        $data = array();
+        $data['sbm'] = $this->Common->no_cond('sbm_indicator');
+        $data['sbm_sub'] = $this->Common->no_cond('sbm_sub_indicator');
+        $data['sbm_sub_by_principle'] = array();
+
+        foreach ($data['sbm_sub'] as $indicator) {
+            $data['sbm_sub_by_principle'][(string) $indicator->priciple_id][] = $indicator;
         }
 
-        if ($this->session->position == 'admin') {
-            $page = "dashboard";
-            $data['sbm'] = $this->Common->no_cond('sbm_indicator');
-            $data['sbm_sub'] = $this->Common->no_cond('sbm_sub_indicator');
-            $indicator_numbers = array_map(function ($indicator) {
-                return (int) $indicator->i_no;
-            }, $data['sbm_sub']);
+        $data['title'] = "Dashboard";
 
-            $data['sbm_sub_by_principle'] = array();
-            foreach ($data['sbm_sub'] as $indicator) {
-                $data['sbm_sub_by_principle'][(string) $indicator->priciple_id][] = $indicator;
-            }
+        return $data;
+    }
 
-            $region_id = (int) $this->session->region;
-            $setup_summary = $this->Page_model->region_division_setup_summary($region_id);
+    private function dashboard_indicator_numbers($data)
+    {
+        return array_map(function ($indicator) {
+            return (int) $indicator->i_no;
+        }, $data['sbm_sub']);
+    }
 
-            $data['division_count'] = $this->Page_model->region_division_count($region_id);
-            $data['district_count'] = $this->Page_model->region_district_count($region_id);
-            $data['registered_school_count'] = $this->Page_model->region_school_count($region_id);
-            $data['user_count'] = $this->Page_model->region_user_count($region_id);
-            $data['sgc_counts'] = $this->Page_model->region_sgc_counts($region_id);
-            $data['sbm_rate_counts'] = $this->Page_model->region_sbm_rate_counts(
-                $region_id,
-                $this->session->fy,
-                $indicator_numbers
-            );
-            $data['completed_checklist_count'] = $this->Page_model->region_sbm_completed_count(
-                $region_id,
-                $this->session->fy
-            );
-            $data['encoded_total_schools'] = isset($setup_summary['encoded_total_schools'])
-                ? (int) $setup_summary['encoded_total_schools']
-                : 0;
-            $data['configured_division_count'] = isset($setup_summary['configured_division_count'])
-                ? (int) $setup_summary['configured_division_count']
-                : 0;
-            $data['signup_percentage'] = $data['encoded_total_schools'] > 0
-                ? ($data['registered_school_count'] / $data['encoded_total_schools']) * 100
-                : 0;
-            $data['checklist_completion_percentage'] = $data['encoded_total_schools'] > 0
-                ? ($data['completed_checklist_count'] / $data['encoded_total_schools']) * 100
-                : 0;
-            $data['title'] = "Dashboard";
-        } elseif ($this->session->position == 'division' || $this->session->position == 'division_head') {
-            $page = "dashboard_scope_learning_gap";
-            $data['sbm'] = $this->Common->no_cond('sbm_indicator');
-            $data['sbm_sub'] = $this->Common->no_cond('sbm_sub_indicator');
-            $indicator_numbers = array_map(function ($indicator) {
-                return (int) $indicator->i_no;
-            }, $data['sbm_sub']);
+    /**
+     * Regional figures. The administrator and regional dashboards read the same
+     * numbers and differ only in the view that renders them.
+     */
+    private function region_scope_data()
+    {
+        $data = $this->dashboard_indicator_data();
+        $indicator_numbers = $this->dashboard_indicator_numbers($data);
 
-            $data['sbm_sub_by_principle'] = array();
-            foreach ($data['sbm_sub'] as $indicator) {
-                $data['sbm_sub_by_principle'][(string) $indicator->priciple_id][] = $indicator;
-            }
+        $region_id = (int) $this->session->region;
+        $setup_summary = $this->Page_model->region_division_setup_summary($region_id);
 
-            $data['sgc_counts'] = $this->Page_model->division_sgc_counts($this->session->division);
-            $data['sbm_rate_counts'] = $this->Page_model->division_sbm_rate_counts(
-                $this->session->division,
-                $this->session->fy,
-                $indicator_numbers
-            );
-            $data['district_count'] = count(
-                $this->Page_model->one_cond('district', 'division_id', $this->session->division)
-            );
-            $data['division'] = $this->Page_model->get_division_setup($this->session->division);
-            $data['registered_school_count'] = $this->Page_model->division_school_count($this->session->division);
-            $data['completed_checklist_count'] = $this->Page_model->division_sbm_completed_count(
-                $this->session->division,
-                $this->session->fy
-            );
-            $data['encoded_total_schools'] = !empty($data['division']->total_schools)
-                ? (int) $data['division']->total_schools
-                : 0;
-            $data['signup_percentage'] = $data['encoded_total_schools'] > 0
-                ? ($data['registered_school_count'] / $data['encoded_total_schools']) * 100
-                : 0;
-            $data['checklist_completion_percentage'] = $data['encoded_total_schools'] > 0
-                ? ($data['completed_checklist_count'] / $data['encoded_total_schools']) * 100
-                : 0;
+        $data['division_count'] = $this->Page_model->region_division_count($region_id);
+        $data['district_count'] = $this->Page_model->region_district_count($region_id);
+        $data['registered_school_count'] = $this->Page_model->region_school_count($region_id);
+        $data['user_count'] = $this->Page_model->region_user_count($region_id);
+        $data['sgc_counts'] = $this->Page_model->region_sgc_counts($region_id);
+        $data['sbm_rate_counts'] = $this->Page_model->region_sbm_rate_counts(
+            $region_id,
+            $this->session->fy,
+            $indicator_numbers
+        );
+        $data['completed_checklist_count'] = $this->Page_model->region_sbm_completed_count(
+            $region_id,
+            $this->session->fy
+        );
+        $data['encoded_total_schools'] = isset($setup_summary['encoded_total_schools'])
+            ? (int) $setup_summary['encoded_total_schools']
+            : 0;
+        $data['configured_division_count'] = isset($setup_summary['configured_division_count'])
+            ? (int) $setup_summary['configured_division_count']
+            : 0;
+        $data['signup_percentage'] = $data['encoded_total_schools'] > 0
+            ? ($data['registered_school_count'] / $data['encoded_total_schools']) * 100
+            : 0;
+        $data['checklist_completion_percentage'] = $data['encoded_total_schools'] > 0
+            ? ($data['completed_checklist_count'] / $data['encoded_total_schools']) * 100
+            : 0;
 
-            $data['title'] = "Dashboard";
-        } elseif ($this->session->position == 'region') {
-            $page = "dashboard_scope_learning_gap";
-            $data['sbm'] = $this->Common->no_cond('sbm_indicator');
-            $data['sbm_sub'] = $this->Common->no_cond('sbm_sub_indicator');
-            $indicator_numbers = array_map(function ($indicator) {
-                return (int) $indicator->i_no;
-            }, $data['sbm_sub']);
+        return $data;
+    }
 
-            $data['sbm_sub_by_principle'] = array();
-            foreach ($data['sbm_sub'] as $indicator) {
-                $data['sbm_sub_by_principle'][(string) $indicator->priciple_id][] = $indicator;
-            }
+    private function division_scope_data()
+    {
+        $data = $this->dashboard_indicator_data();
+        $indicator_numbers = $this->dashboard_indicator_numbers($data);
 
-            $region_id = (int) $this->session->region;
-            $setup_summary = $this->Page_model->region_division_setup_summary($region_id);
+        $division_id = $this->session->division;
 
-            $data['division_count'] = $this->Page_model->region_division_count($region_id);
-            $data['district_count'] = $this->Page_model->region_district_count($region_id);
-            $data['registered_school_count'] = $this->Page_model->region_school_count($region_id);
-            $data['user_count'] = $this->Page_model->region_user_count($region_id);
-            $data['sgc_counts'] = $this->Page_model->region_sgc_counts($region_id);
-            $data['sbm_rate_counts'] = $this->Page_model->region_sbm_rate_counts(
-                $region_id,
-                $this->session->fy,
-                $indicator_numbers
-            );
-            $data['completed_checklist_count'] = $this->Page_model->region_sbm_completed_count(
-                $region_id,
-                $this->session->fy
-            );
-            $data['encoded_total_schools'] = isset($setup_summary['encoded_total_schools'])
-                ? (int) $setup_summary['encoded_total_schools']
-                : 0;
-            $data['configured_division_count'] = isset($setup_summary['configured_division_count'])
-                ? (int) $setup_summary['configured_division_count']
-                : 0;
-            $data['signup_percentage'] = $data['encoded_total_schools'] > 0
-                ? ($data['registered_school_count'] / $data['encoded_total_schools']) * 100
-                : 0;
-            $data['checklist_completion_percentage'] = $data['encoded_total_schools'] > 0
-                ? ($data['completed_checklist_count'] / $data['encoded_total_schools']) * 100
-                : 0;
+        $data['sgc_counts'] = $this->Page_model->division_sgc_counts($division_id);
+        $data['sbm_rate_counts'] = $this->Page_model->division_sbm_rate_counts(
+            $division_id,
+            $this->session->fy,
+            $indicator_numbers
+        );
+        $data['district_count'] = count(
+            $this->Page_model->one_cond('district', 'division_id', $division_id)
+        );
+        $data['division'] = $this->Page_model->get_division_setup($division_id);
+        $data['registered_school_count'] = $this->Page_model->division_school_count($division_id);
+        $data['completed_checklist_count'] = $this->Page_model->division_sbm_completed_count(
+            $division_id,
+            $this->session->fy
+        );
+        $data['encoded_total_schools'] = !empty($data['division']->total_schools)
+            ? (int) $data['division']->total_schools
+            : 0;
+        $data['signup_percentage'] = $data['encoded_total_schools'] > 0
+            ? ($data['registered_school_count'] / $data['encoded_total_schools']) * 100
+            : 0;
+        $data['checklist_completion_percentage'] = $data['encoded_total_schools'] > 0
+            ? ($data['completed_checklist_count'] / $data['encoded_total_schools']) * 100
+            : 0;
 
-            $data['title'] = "Dashboard";
-        } elseif ($this->session->position == 'district') {
-            $page = "dashboard_district";
-            $data['sbm'] = $this->Common->no_cond('sbm_indicator');
-            $data['sbm_sub'] = $this->Common->no_cond('sbm_sub_indicator');
-            $indicator_numbers = array_map(function ($indicator) {
-                return (int) $indicator->i_no;
-            }, $data['sbm_sub']);
+        return $data;
+    }
 
-            $data['sbm_sub_by_principle'] = array();
-            foreach ($data['sbm_sub'] as $indicator) {
-                $data['sbm_sub_by_principle'][(string) $indicator->priciple_id][] = $indicator;
-            }
+    private function district_scope_data()
+    {
+        $data = $this->dashboard_indicator_data();
+        $indicator_numbers = $this->dashboard_indicator_numbers($data);
 
-            $district_id = (int) $this->session->district;
-            $data['district'] = $this->Page_model->one_cond_row('district', 'id', $district_id);
-            $data['division'] = $this->Page_model->one_cond_row('division', 'id', $this->session->division);
-            $data['school_total'] = $this->Page_model->district_school_count($district_id);
-            $data['sgc_counts'] = $this->Page_model->district_sgc_counts($district_id);
-            $data['checklist_submission_count'] = $this->Page_model->district_submission_count(
-                'sbm',
-                $district_id,
-                $this->session->fy
-            );
-            $data['ta_submission_count'] = $this->Page_model->district_submission_count(
-                'sbm_ta',
-                $district_id,
-                $this->session->fy
-            );
-            $data['action_plan_submission_count'] = $this->Page_model->district_submission_count(
-                'sgod_action_plan',
-                $district_id,
-                $this->session->fy
-            );
-            $data['completed_checklist_count'] = $this->Page_model->district_sbm_completed_count(
-                $district_id,
-                $this->session->fy
-            );
-            $data['tech_entry_count'] = $this->Page_model->district_tech_entry_count(
-                $district_id,
-                $this->session->fy
-            );
-            $data['sbm_rate_counts'] = $this->Page_model->district_sbm_rate_counts(
-                $district_id,
-                $this->session->fy,
-                $indicator_numbers
-            );
+        $district_id = (int) $this->session->district;
 
-            $data['title'] = "Dashboard";
-        } else {
-            $page = "dashboard_school_learning_gap";
-            $data['title'] = "Dashboard";
-        }
+        $data['district'] = $this->Page_model->one_cond_row('district', 'id', $district_id);
+        $data['division'] = $this->Page_model->one_cond_row('division', 'id', $this->session->division);
+        $data['school_total'] = $this->Page_model->district_school_count($district_id);
+        $data['sgc_counts'] = $this->Page_model->district_sgc_counts($district_id);
+        $data['checklist_submission_count'] = $this->Page_model->district_submission_count(
+            'sbm',
+            $district_id,
+            $this->session->fy
+        );
+        $data['ta_submission_count'] = $this->Page_model->district_submission_count(
+            'sbm_ta',
+            $district_id,
+            $this->session->fy
+        );
+        $data['action_plan_submission_count'] = $this->Page_model->district_submission_count(
+            'sgod_action_plan',
+            $district_id,
+            $this->session->fy
+        );
+        $data['completed_checklist_count'] = $this->Page_model->district_sbm_completed_count(
+            $district_id,
+            $this->session->fy
+        );
+        $data['tech_entry_count'] = $this->Page_model->district_tech_entry_count(
+            $district_id,
+            $this->session->fy
+        );
+        $data['sbm_rate_counts'] = $this->Page_model->district_sbm_rate_counts(
+            $district_id,
+            $this->session->fy,
+            $indicator_numbers
+        );
 
+        return $data;
+    }
+
+    private function render_dashboard($page, $data)
+    {
         if (!file_exists(APPPATH . 'views/pages/' . $page . '.php')) {
             show_404();
         }
@@ -892,6 +860,80 @@ class Pages extends CI_Controller
         $this->load->view('pages/' . $page, $data);
         $this->load->view('templates/footer');
         $this->load->view('templates/footer_basic');
+    }
+
+    /**
+     * Scope dashboard path for a role, or NULL when the role has none.
+     * Administrators are absent on purpose: they are served at the site root so
+     * that no URL advertises the privileged role.
+     */
+    private function dashboard_path_for_position($position)
+    {
+        $paths = array(
+            'region'        => 'region',
+            'division'      => 'division',
+            'division_head' => 'division',
+            'ict'           => 'division',
+            'district'      => 'district',
+            'school'        => 'school',
+        );
+
+        return isset($paths[$position]) ? $paths[$position] : null;
+    }
+
+    /**
+     * Site root. Guests go to the public homepage, administrators are served
+     * here, and every other role is redirected to its own scope URL.
+     */
+    public function view()
+    {
+        if (!$this->session->logged_in) {
+            redirect(base_url('homepage'));
+            return;
+        }
+
+        $position = strtolower(trim((string) $this->session->position));
+
+        if ($position === 'admin') {
+            $this->render_dashboard('dashboard', $this->region_scope_data());
+            return;
+        }
+
+        $path = $this->dashboard_path_for_position($position);
+
+        if ($path === null) {
+            show_error('No dashboard is available for this account type.', 403);
+        }
+
+        redirect(base_url($path));
+    }
+
+    /**
+     * Scope dashboards. Role access is enforced centrally by $role_policies in
+     * the constructor, so each method only loads and renders.
+     */
+    public function region()
+    {
+        $this->render_dashboard('dashboard_scope_learning_gap', $this->region_scope_data());
+    }
+
+    public function division()
+    {
+        $this->render_dashboard('dashboard_scope_learning_gap', $this->division_scope_data());
+    }
+
+    public function district()
+    {
+        $this->render_dashboard('dashboard_district', $this->district_scope_data());
+    }
+
+    /**
+     * Named school_dashboard() because school() is already the school/(:any)
+     * profile handler. The public URL is still /school.
+     */
+    public function school_dashboard()
+    {
+        $this->render_dashboard('dashboard_school_learning_gap', array('title' => 'Dashboard'));
     }
 
     /**

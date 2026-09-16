@@ -61,6 +61,15 @@ $route['homepage'] = 'pages/homepage';
 $route['lock_user_screen'] = 'pages/lock_user_screen';
 
 
+// Scope dashboards. The site root dispatches each role to its own level so a
+// dashboard URL names the scope it shows. Access is enforced by $role_policies
+// in Pages::__construct(); admin is deliberately served at the root instead.
+$route['region'] = 'pages/region';
+$route['division'] = 'pages/division';
+$route['district'] = 'pages/district';
+// Bare 'school' is the dashboard; 'school/<id>' remains the school profile.
+// ':any' compiles to [^/]+, so the two patterns never overlap.
+$route['school'] = 'pages/school_dashboard';
 $route['school/(:any)'] = 'pages/school/$1';
 
 $route['pages/get_provinces'] = 'pages/get_provinces';
