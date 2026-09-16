@@ -668,14 +668,20 @@ class Common extends CI_Model
     function delete_with_attach($table, $segment, $attach)
     {
         $this->db->where('id', $segment);
-        unlink("uploads/" . $attach);
+        $file = FCPATH . 'uploads/' . basename((string) $attach);
+        if ($attach !== '' && is_file($file)) {
+            unlink($file);
+        }
         $this->db->delete($table);
     }
 
     function delete_with_attachv2($table, $segment, $folder, $attach)
     {
         $this->db->where('id', $segment);
-        unlink($folder . "/" . $attach);
+        $file = rtrim((string) $folder, '/\\') . DIRECTORY_SEPARATOR . basename((string) $attach);
+        if ($attach !== '' && is_file($file)) {
+            unlink($file);
+        }
         $this->db->delete($table);
     }
 
@@ -697,14 +703,23 @@ class Common extends CI_Model
 
     public function rqa($table, $jobID)
     {
-        $query = $this->db->query("SELECT * FROM hris_applications a join $table r on a.appID=r.appID where jobID='" . $jobID . "' and  total_points>='50' ORDER BY total_points DESC");
+        if (!preg_match('/^[A-Za-z0-9_]+$/', (string) $table) || !$this->db->table_exists($table)) {
+            throw new InvalidArgumentException('Invalid rating table.');
+        }
+        $query = $this->db->query(
+            "SELECT * FROM hris_applications a JOIN `{$table}` r ON a.appID = r.appID WHERE jobID = ? AND total_points >= 50 ORDER BY total_points DESC",
+            array($jobID)
+        );
         return $query->result();
     }
 
     public function rqa_non($jobID)
     {
 
-        $query = $this->db->query("SELECT * FROM hris_applications a join hris_rating_none r on a.appID=r.appID where jobID='" . $jobID . "'  and dq=1 ORDER BY total_points DESC");
+        $query = $this->db->query(
+            'SELECT * FROM hris_applications a JOIN hris_rating_none r ON a.appID = r.appID WHERE jobID = ? AND dq = 1 ORDER BY total_points DESC',
+            array($jobID)
+        );
         return $query->result();
     }
 

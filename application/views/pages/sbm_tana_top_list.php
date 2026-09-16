@@ -512,10 +512,10 @@
                                             <i class="mdi mdi-content-save-outline"></i>
                                             Save Rankings
                                         </button>
-                                        <a href="<?= base_url(); ?>Pages/update_tana_summary" onclick="return confirm('Are you sure? If you press OK, everything currently saved will be deleted.');" class="action-button action-button-secondary">
+                                        <button type="submit" formaction="<?= base_url(); ?>Pages/update_tana_summary" onclick="return confirm('Are you sure? If you press OK, everything currently saved will be deleted.');" class="action-button action-button-secondary">
                                             <i class="mdi mdi-refresh"></i>
                                             Update / Reset
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </div>

@@ -31,7 +31,7 @@
                             <div class="card-body text-center">
                             
 
-                            <img style="width:300px; height:300px" src="https://qrcode.tec-it.com/API/QRCode?data=<?= base_url() ?>Pages/verify/<?= $data->id; ?>" title="<?= base_url() ?>Pages/verify/<?= $data->id; ?>" />  
+                            <img style="width:300px; height:300px" src="https://qrcode.tec-it.com/API/QRCode?data=<?= rawurlencode($verification_url); ?>" title="<?= html_escape($verification_url); ?>" alt="Verification QR code" />
 
                             </div>
                             <!-- end card-body -->

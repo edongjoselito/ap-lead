@@ -78,11 +78,13 @@
                                                                 </td>
                                                                 <td>
                                                                     <?php if ($request->status == 'pending') : ?>
-                                                                        <a href="<?= base_url(); ?>Pages/sbm_ta_unlock/<?= $request->ta_id; ?>/<?= rawurlencode($request->school_id); ?>" 
-                                                                           onclick="return confirm('Are you sure you want to unlock this TA report?')" 
-                                                                           class="btn btn-sm btn-primary">
+                                                                        <?php $unlock_action = $request->request_type === 'checklist' ? 'Pages/sbm_checklist_unlock' : 'Pages/sbm_ta_unlock'; ?>
+                                                                        <?= form_open($unlock_action, array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to unlock this record?');")); ?>
+                                                                        <input type="hidden" name="id" value="<?= (int) ($request->request_type === 'checklist' ? $request->checklist_id : $request->ta_id); ?>">
+                                                                        <button type="submit" class="btn btn-sm btn-primary">
                                                                             <i class="mdi mdi-lock-open-outline"></i> Unlock
-                                                                        </a>
+                                                                        </button>
+                                                                        <?= form_close(); ?>
                                                                     <?php elseif ($request->status == 'approved') : ?>
                                                                         <span class="text-muted">
                                                                             <i class="mdi mdi-check"></i> Unlocked

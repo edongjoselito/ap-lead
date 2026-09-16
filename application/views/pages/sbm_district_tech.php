@@ -569,10 +569,10 @@ foreach ($entries as $entry) {
                                             <i class="mdi mdi-pencil-outline"></i>
                                             Update
                                         </a>
-                                        <a onclick="return confirm('Are you sure you want to delete this technical assistance entry?');" href="<?= base_url(); ?>Pages/sbm_district_tech_del/<?= (int) $row->id; ?>" class="district-tech-button district-tech-button-delete">
-                                            <i class="mdi mdi-trash-can-outline"></i>
-                                            Delete
-                                        </a>
+                                        <?= form_open('Pages/sbm_district_tech_del', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this technical assistance entry?');")); ?>
+                                            <input type="hidden" name="id" value="<?= (int) $row->id; ?>">
+                                            <button type="submit" class="district-tech-button district-tech-button-delete"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
+                                        <?= form_close(); ?>
                                     </div>
                                 </div>
 

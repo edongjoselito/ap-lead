@@ -36,6 +36,7 @@
                                                     </div>
                                                     <div class="modal-body">
                                                         <form action="<?= base_url('Pages/change_password_user') ?>" method="post">
+                                                            <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                                                             
                                                             <p class="text-muted small">Enter your current password to confirm this change.</p>
                                                             <div class="form-group"><label for="current-password">Current Password</label><input type="password" class="form-control" name="current_password" id="current-password" autocomplete="current-password" required></div>
@@ -69,6 +70,7 @@
                                                     </div>
                                                     <div class="modal-body">
                                                         <form action="<?= base_url('Pages/user_profile') ?>" method="post" enctype="multipart/form-data">
+                                                            <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                                                             
                                                             <div class="form-group row">
                                                                 <div class="col-lg-12">

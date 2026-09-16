@@ -1472,20 +1472,20 @@ if (!$checklist_record) {
                         <?php endif; ?>
 
                         <?php if ($ta_record && !$is_finalized) : ?>
-                            <a href="<?= base_url(); ?>Pages/sbm_ta_final/<?= $ta_record->id; ?>" onclick="return confirm('Are you sure you want to finalize this TA report? Once finalized, it will be locked until a division reviewer unlocks it.')" class="workspace-button workspace-button-success">
+                            <button type="submit" formaction="<?= base_url(); ?>Pages/sbm_ta_final" formmethod="post" name="id" value="<?= (int) $ta_record->id; ?>" onclick="return confirm('Are you sure you want to finalize this TA report? Once finalized, it will be locked until a division reviewer unlocks it.')" class="workspace-button workspace-button-success">
                                 <i class="mdi mdi-lock-check-outline"></i>
                                 Finalize TA Report
-                            </a>
+                            </button>
                         <?php elseif ($is_locked_for_user && $is_division_user) : ?>
-                            <a href="<?= base_url(); ?>Pages/sbm_ta_unlock/<?= $ta_record->id; ?>" onclick="return confirm('Are you sure you want to unlock this TA report? The school will be able to edit it again.')" class="workspace-button workspace-button-primary">
+                            <button type="submit" formaction="<?= base_url(); ?>Pages/sbm_ta_unlock" formmethod="post" name="id" value="<?= (int) $ta_record->id; ?>" onclick="return confirm('Are you sure you want to unlock this TA report? The school will be able to edit it again.')" class="workspace-button workspace-button-primary">
                                 <i class="mdi mdi-lock-open-outline"></i>
                                 Unlock TA Report
-                            </a>
+                            </button>
                         <?php elseif ($is_locked_for_user && $is_school_user) : ?>
-                            <a href="<?= base_url(); ?>Pages/sbm_ta_unlock_request/<?= $ta_record->id; ?>" onclick="return confirm('Are you sure you want to request an unlock for this TA report? A notification will be sent to your division reviewer.')" class="workspace-button workspace-button-warning">
+                            <button type="submit" formaction="<?= base_url(); ?>Pages/sbm_ta_unlock_request" formmethod="post" name="id" value="<?= (int) $ta_record->id; ?>" onclick="return confirm('Are you sure you want to request an unlock for this TA report? A notification will be sent to your division reviewer.')" class="workspace-button workspace-button-warning">
                                 <i class="mdi mdi-lock-open-variant-outline"></i>
                                 Request to Unlock
-                            </a>
+                            </button>
                         <?php endif; ?>
 
                         <a href="<?= $dashboard_url; ?>" class="workspace-button workspace-button-secondary">
@@ -1604,6 +1604,7 @@ if (!$checklist_record) {
                 </div>
                 <div class="modal-body">
                     <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
+                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                         <label for="taFiscalYear">Fiscal Year</label>
                         <select id="taFiscalYear" name="new_fy" class="form-control" onchange="this.form.submit()">
                             <?php for ($year = 2023; $year <= 2030; $year++) : ?>

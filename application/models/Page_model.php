@@ -28,7 +28,7 @@ function random_password(){
     $password = array();
     $alpha_length = strlen($alphabet) - 1;
 
-    for ($i = 0; $i < 10; $i++) {
+    for ($i = 0; $i < 16; $i++) {
         $password[] = $alphabet[random_int(0, $alpha_length)];
     }
 
@@ -82,8 +82,8 @@ public function insert_user(){
     'p_id' => $this->input->post('division_id'),
     'd_id' => $this->input->post('d_id'),
     'email' => $this->input->post('schoolEmail'),
-    //'virified' => 1
-    'virified' => 0
+    // New self-service accounts remain disabled until the email token is used.
+    'virified' => 1
     ); 
 
     $this->db->insert('users', $data);
@@ -116,16 +116,50 @@ public function insert_district_user(){
     return $this->db->insert_id(); 
 }
 
-public function confirm_signup(){
-    $id = $this->uri->segment(3);
-    
-    $data = array(
-    'virified' => 0
-    ); 
+private function ensure_user_verification_tokens_table()
+{
+    $this->db->query('CREATE TABLE IF NOT EXISTS `user_verification_tokens` (
+        `user_id` INT UNSIGNED NOT NULL,
+        `token_hash` CHAR(64) NOT NULL,
+        `expires_at` DATETIME NOT NULL,
+        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`user_id`),
+        UNIQUE KEY `uniq_user_verification_token_hash` (`token_hash`),
+        KEY `idx_user_verification_expires` (`expires_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+}
 
-    $this->db->where('id', $id);
-    return $this->db->update('users', $data);
-    
+public function create_signup_verification_token($user_id)
+{
+    $this->ensure_user_verification_tokens_table();
+    $token = bin2hex(random_bytes(32));
+    $this->db->replace('user_verification_tokens', array(
+        'user_id' => (int) $user_id,
+        'token_hash' => hash('sha256', $token),
+        'expires_at' => date('Y-m-d H:i:s', time() + 86400),
+    ));
+    return $token;
+}
+
+public function confirm_signup($user_id, $token)
+{
+    if ((int) $user_id <= 0 || !preg_match('/^[a-f0-9]{64}$/', (string) $token)) {
+        return false;
+    }
+
+    $this->ensure_user_verification_tokens_table();
+    $row = $this->db->where('user_id', (int) $user_id)
+        ->where('expires_at >=', date('Y-m-d H:i:s'))
+        ->get('user_verification_tokens')->row();
+    if (!$row || !hash_equals((string) $row->token_hash, hash('sha256', (string) $token))) {
+        return false;
+    }
+
+    $this->db->trans_start();
+    $this->db->where('id', (int) $user_id)->update('users', array('virified' => 0));
+    $this->db->where('user_id', (int) $user_id)->delete('user_verification_tokens');
+    $this->db->trans_complete();
+    return $this->db->trans_status();
 }
 
 public function user_update(){
@@ -143,10 +177,7 @@ public function user_update(){
     return $this->db->update('users', $data);
 }
 
-public function add_school_user($school_id,$schoolName,$district,$division){
-
-
-    $password = 'school112';
+public function add_school_user($school_id, $schoolName, $district, $division, $password){
     $hash = password_hash($password, PASSWORD_DEFAULT);
     
     $data = array(
@@ -219,7 +250,11 @@ public function reset_user_password($id, $password){
     );
 
     $this->db->where('id', $id);
-    return $this->db->update('users', $data);
+    $updated = $this->db->update('users', $data);
+    if ($updated) {
+        $this->log_audit_trail('PASSWORD_RESET', 'users', (int) $id, null, array('password_reset' => true));
+    }
+    return $updated;
 }
 
 public function user_update_profile(){
@@ -1024,7 +1059,7 @@ public function delete_two_cond($table,$col,$val,$col2,$val2){
 
 function delete_with_attach($table,$segment,$attach){
     $this->db->where('id', $segment);
-    $file = "uploads/".$attach;
+    $file = FCPATH . 'uploads/' . basename((string) $attach);
     if (!empty($attach) && file_exists($file)) {
         unlink($file);
     }
@@ -1109,6 +1144,7 @@ public function action_plan_update()
 		);
 
 		$this->db->where('id', $this->input->post('id'));
+		$this->db->where('school_id', (string) $this->session->username);
 		return $this->db->update('sgod_action_plan', $data);
 }
 
@@ -1142,6 +1178,7 @@ public function sbm_checklist_update()
 
 
    $this->db->where('id', $this->input->post('id'));
+   $this->db->where('school_id', (string) $this->session->username);
    return $this->db->update('sbm', $data);
 }
 
@@ -1152,6 +1189,15 @@ public function sbm_cecklist_lock_unloc($stat){
 
 	$this->db->where('id', $this->uri->segment(3));
 	return $this->db->update('sbm', $data);
+}
+
+public function sbm_checklist_lock_unloc_by_id($id, $stat, $school_id = null)
+{
+    $this->db->where('id', (int) $id);
+    if ($school_id !== null) {
+        $this->db->where('school_id', (string) $school_id);
+    }
+    return $this->db->update('sbm', array('stat' => (int) $stat));
 }
 
     public function sbm_ta_insert()
@@ -1208,8 +1254,9 @@ public function sbm_cecklist_lock_unloc($stat){
 			}
 		}
 
-		$this->db->where('id', $this->input->post('id'));
-		return $this->db->update('sbm_ta', $data);
+			$this->db->where('id', $this->input->post('id'));
+			$this->db->where('school_id', (string) $this->session->username);
+			return $this->db->update('sbm_ta', $data);
 	}
 
     public function sbm_tana_update()
@@ -1223,6 +1270,7 @@ public function sbm_cecklist_lock_unloc($stat){
 		}
 
 		$this->db->where('id', $this->input->post('id'));
+		$this->db->where('school_id', (string) $this->session->username);
 		return $this->db->update('tana', $data);
 	}
 
@@ -1234,6 +1282,15 @@ public function sbm_cecklist_lock_unloc($stat){
 
 		$this->db->where('id', $this->uri->segment(3));
 		return $this->db->update('sbm_ta', $data);
+	}
+
+    public function sbm_ta_lock_unloc_by_id($id, $stat, $school_id = null)
+	{
+		$this->db->where('id', (int) $id);
+        if ($school_id !== null) {
+            $this->db->where('school_id', (string) $school_id);
+        }
+		return $this->db->update('sbm_ta', array('stat' => (int) $stat));
 	}
     
     public function sbm_cecklist_admin_insert()
@@ -1626,10 +1683,10 @@ public function update_district_id()
     $this->db->trans_start();
 
     foreach ($tables as $table) {
-        $this->db->where('school_id', $this->session->username);
+        $this->db->where('school_id', $this->input->post('old_schoolID'));
         $this->db->update($table, [
             'district' => $this->input->post('d_id'),
-            'division' => $this->input->post('division')
+            'division' => $this->input->post('division_id')
         ]);
     }
 
@@ -1807,7 +1864,7 @@ public function tana_summary_del(){
 public function log_audit_trail($action, $table_name, $record_id = null, $old_values = null, $new_values = null)
 {
     $data = array(
-        'user_id' => isset($this->session->user_id) ? $this->session->user_id : null,
+        'user_id' => isset($this->session->id) ? $this->session->id : null,
         'username' => isset($this->session->username) ? $this->session->username : null,
         'user_position' => isset($this->session->position) ? $this->session->position : null,
         'action' => $action,

@@ -60,7 +60,7 @@
                                             <tbody>
                                                 <?php foreach($data as $row){?>
                                                 <tr>
-                                                    <td><?= $row->schoolID; ?></td>
+                                                    <td><?= html_escape($row->schoolID); ?></td>
                                                     <td><?= strtoupper($row->schoolName); ?></td>
                                                     <td>
                                                         <a href="<?=base_url(); ?>Page/schoolProfile?schoolid=<?php echo $row->schoolID; ?>" class="text-success"><i class="mdi mdi-file-document-box-check-outline"></i>View</a> &nbsp; &nbsp;
@@ -78,5 +78,5 @@
                         <!-- end row -->
 
 
-                        
+
                         

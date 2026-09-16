@@ -424,13 +424,12 @@ $signup_rate = isset($signup_percentage) ? (float) $signup_percentage : 0;
                                     </a>
                                     <?php } ?>
                                     <?php if($this->session->position == 'division' || $this->session->position == 'Admin'){ ?>
-                                    <a
-                                        onclick="return confirm('Delete this district and all its schools?');"
-                                        href="<?= base_url(); ?>Pages/district_delete/<?= $district_row->id; ?>"
-                                        class="btn btn-outline-danger btn-sm"
-                                    >
+                                    <?= form_open('Pages/district_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Delete this district and all its schools?');")); ?>
+                                    <input type="hidden" name="id" value="<?= (int) $district_row->id; ?>">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
                                         <i class="mdi mdi-trash-can-outline"></i> Delete District
-                                    </a>
+                                    </button>
+                                    <?= form_close(); ?>
                                     <?php } ?>
                                 </div>
 
@@ -467,13 +466,15 @@ $signup_rate = isset($signup_percentage) ? (float) $signup_percentage : 0;
                                                         <td>
                                                             <div class="school-account-actions">
                                                                 <?php if (!$has_account) { ?>
-                                                                    <a
-                                                                        onclick="return confirm('Create an account for this school?');"
-                                                                        href="<?= base_url(); ?>Pages/add_school_user/<?= rawurlencode($school_id); ?>/<?= rawurlencode($school->schoolName); ?>/<?= $school->district_id; ?>/<?= $school->division_id; ?>"
-                                                                        class="btn btn-success btn-sm"
-                                                                    >
+                                                                    <?= form_open('Pages/add_school_user', array(
+                                                                        'style' => 'display:inline;',
+                                                                        'onsubmit' => "return confirm('Create an account for this school?');"
+                                                                    )); ?>
+                                                                        <input type="hidden" name="school_id" value="<?= html_escape($school_id); ?>">
+                                                                    <button type="submit" class="btn btn-success btn-sm">
                                                                         <i class="mdi mdi-account-plus-outline"></i> Add Account
-                                                                    </a>
+                                                                    </button>
+                                                                    <?= form_close(); ?>
                                                                 <?php } else { ?>
                                                                     <?= form_open(
                                                                         'pages/user_reset_password',
@@ -496,13 +497,12 @@ $signup_rate = isset($signup_percentage) ? (float) $signup_percentage : 0;
                                                                 <a href="<?= base_url(); ?>Pages/school_update/<?= $school->recID; ?>" class="btn btn-primary btn-sm">
                                                                     <i class="mdi mdi-pencil-outline"></i> Edit
                                                                 </a>
-                                                                <a
-                                                                    onclick="return confirm('Delete this school and its account?');"
-                                                                    href="<?= base_url(); ?>Pages/school_delete/<?= html_escape($school->recID); ?>"
-                                                                    class="btn btn-danger btn-sm"
-                                                                >
+                                                                <?= form_open('Pages/school_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Delete this school and its account?');")); ?>
+                                                                <input type="hidden" name="id" value="<?= (int) $school->recID; ?>">
+                                                                <button type="submit" class="btn btn-danger btn-sm">
                                                                     <i class="mdi mdi-trash-can-outline"></i> Delete
-                                                                </a>
+                                                                </button>
+                                                                <?= form_close(); ?>
                                                             </div>
                                                         </td>
                                                     </tr>

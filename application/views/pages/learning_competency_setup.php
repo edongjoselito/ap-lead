@@ -65,7 +65,7 @@
                                 <?php endif; ?>
                             </td>
                             <td class="competency-text"><?= html_escape($competency->competency); ?></td>
-                            <td><?php if (empty($view_only)): ?><a href="<?= base_url('Pages/learning_competency_setup_delete/' . (int) $area->id . '/' . (int) $competency->id . '?division_id=' . (int) $selected_division_id); ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this learning competency?');"><i class="mdi mdi-delete-outline"></i> Remove</a><?php else: ?><span class="text-muted">View only</span><?php endif; ?></td>
+                            <td><?php if (empty($view_only)): ?><?= form_open('Pages/learning_competency_setup_delete/' . (int) $area->id, array('style' => 'display:inline;', 'onsubmit' => "return confirm('Remove this learning competency?');")); ?><input type="hidden" name="id" value="<?= (int) $competency->id; ?>"><input type="hidden" name="division_id" value="<?= (int) $selected_division_id; ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-delete-outline"></i> Remove</button><?= form_close(); ?><?php else: ?><span class="text-muted">View only</span><?php endif; ?></td>
                         </tr>
                     <?php endforeach; endif; ?>
                 </tbody>

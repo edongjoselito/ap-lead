@@ -742,7 +742,8 @@ function initTotalSchoolsScript() {
             type: 'POST',
             data: {
                 division_id: divisionId,
-                total_schools: totalSchools
+                total_schools: totalSchools,
+                <?= json_encode($this->security->get_csrf_token_name()); ?>: <?= json_encode($this->security->get_csrf_hash()); ?>
             },
             dataType: 'json',
             success: function(response) {

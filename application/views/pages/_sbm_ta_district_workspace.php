@@ -927,14 +927,17 @@ $form_attributes = array(
                             <?php endif; ?>
 
                             <?php if ($is_locked && $this->session->position === 'division') : ?>
-                                <a
-                                    href="<?= base_url(); ?>Pages/sbm_ta_unlock/<?= (int) $ta_record->id; ?>/<?= rawurlencode($view_school_id); ?>"
+                                <button type="submit"
+                                    formaction="<?= base_url(); ?>Pages/sbm_ta_unlock"
+                                    formmethod="post"
+                                    name="id"
+                                    value="<?= (int) $ta_record->id; ?>"
                                     onclick="return confirm('Are you sure you want to unlock this TA form?');"
                                     class="review-button review-button-secondary"
                                 >
                                     <i class="mdi mdi-lock-open-variant-outline"></i>
                                     Unlock TA Form
-                                </a>
+                                </button>
                             <?php elseif ($is_locked) : ?>
                                 <span class="review-button review-button-secondary">
                                     <i class="mdi mdi-lock-outline"></i>
@@ -1129,14 +1132,17 @@ $form_attributes = array(
                             <?php endif; ?>
 
                             <?php if ($is_locked && $this->session->position === 'division') : ?>
-                                <a
-                                    href="<?= base_url(); ?>Pages/sbm_ta_unlock/<?= (int) $ta_record->id; ?>/<?= rawurlencode($view_school_id); ?>"
+                                <button type="submit"
+                                    formaction="<?= base_url(); ?>Pages/sbm_ta_unlock"
+                                    formmethod="post"
+                                    name="id"
+                                    value="<?= (int) $ta_record->id; ?>"
                                     onclick="return confirm('Are you sure you want to unlock this TA form?');"
                                     class="review-button review-button-secondary"
                                 >
                                     <i class="mdi mdi-lock-open-variant-outline"></i>
                                     Unlock TA Form
-                                </a>
+                                </button>
                             <?php endif; ?>
                         </div>
                     </section>

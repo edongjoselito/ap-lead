@@ -61,7 +61,7 @@
                                                     ?>
                                                     <tr>
                                                         <td><?= $c++; ?></td>
-                                                        <td><?= $row->description; ?></td>
+                                                        <td><?= html_escape($row->description); ?></td>
                                                         <td>
                                                             <a href="<?= base_url(); ?>Pages/sbm_rate_list/<?= $this->uri->segment(3); ?>/<?= $this->uri->segment(4); ?>">
                                                                 <span class="badge badge-<?= $ivan != 0 ? 'primary' : 'danger'; ?>"><?= $ivan; ?></span>
@@ -79,5 +79,5 @@
                         <!-- end row -->
 
 
-                        
+
                         

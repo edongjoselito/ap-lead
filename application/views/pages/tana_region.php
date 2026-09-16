@@ -474,13 +474,10 @@ $dashboard_url = base_url();
                                     <div class="tana-concern"><?= html_escape($analysis->tana); ?></div>
                                 </td>
                                 <td data-label="Action">
-                                    <a
-                                        onclick="return confirm('Delete this thematic analysis?');"
-                                        href="<?= base_url(); ?>Pages/tana_region_delete/<?= $analysis->id; ?>"
-                                        class="btn btn-danger btn-sm tana-delete-button"
-                                    >
-                                        <i class="mdi mdi-trash-can-outline"></i> Delete
-                                    </a>
+                                    <?= form_open('Pages/tana_region_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Delete this thematic analysis?');")); ?>
+                                        <input type="hidden" name="id" value="<?= (int) $analysis->id; ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm tana-delete-button"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
+                                    <?= form_close(); ?>
                                 </td>
                             </tr>
                         <?php } ?>

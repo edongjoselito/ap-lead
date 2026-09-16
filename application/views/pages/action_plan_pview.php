@@ -26,7 +26,7 @@
                     <span class="rp">Republic of the Philippines</span>
                         <span class="de">Department of Education</span>
                         <span class="r">Region XI</span>
-                        <span class="r">School Division of <?= $div->description; ?></span>
+                        <span class="r">School Division of <?= html_escape($div->description); ?></span>
                         <span class="r">Region Office Address</span>
                     </p>
 
@@ -35,7 +35,7 @@
                     <p>
                     <b><u><?= strtoupper($school->schoolName); ?></u></b><br />
                         <?= ucfirst($school->brgy).', '.ucfirst($school->city) ?>, <?= ucfirst($school->province); ?><br />
-                        School ID <b><u><?= $school->schoolID; ?></u></b><br />
+                        School ID <b><u><?= html_escape($school->schoolID); ?></u></b><br />
                     </p>
                     
             </div>
@@ -56,14 +56,14 @@
                 </tr>
                 <?php foreach($data as $row){?>
                 <tr>
-                    <td><?= $row->activity; ?></td>
-                    <td><?= $row->objective; ?></td>
-                    <td><?= $row->ex_output; ?></td>
-                    <td><?= $row->metho_strategy; ?></td>
-                    <td><?= $row->time_frame; ?></td>
-                    <td><?= $row->person_involved; ?></td>
-                    <td><?= $row->bud_req; ?></td>
-                    <td><?= $row->remarks; ?></td>
+                    <td><?= html_escape($row->activity); ?></td>
+                    <td><?= html_escape($row->objective); ?></td>
+                    <td><?= html_escape($row->ex_output); ?></td>
+                    <td><?= html_escape($row->metho_strategy); ?></td>
+                    <td><?= html_escape($row->time_frame); ?></td>
+                    <td><?= html_escape($row->person_involved); ?></td>
+                    <td><?= html_escape($row->bud_req); ?></td>
+                    <td><?= html_escape($row->remarks); ?></td>
                 </tr>
                 <?php } ?>
             </table>
@@ -74,4 +74,3 @@
 
         </body>
     </html>
-

@@ -1649,27 +1649,27 @@ if ($checklist_record && !$all_answered && $can_edit) {
                         <?php endif; ?>
 
                         <?php if ($can_finalize && $all_answered) : ?>
-                            <a href="<?= base_url(); ?>Pages/sbm_checklist_final/<?= $checklist_record->id; ?>" onclick="return confirm('Are you sure you want to finalize this checklist? Once finalized, it will be locked until a division reviewer unlocks it.')" class="workspace-button workspace-button-success">
+                            <button type="submit" formaction="<?= base_url(); ?>Pages/sbm_checklist_final" formmethod="post" name="id" value="<?= (int) $checklist_record->id; ?>" onclick="return confirm('Are you sure you want to finalize this checklist? Once finalized, it will be locked until a division reviewer unlocks it.')" class="workspace-button workspace-button-success">
                                 <i class="mdi mdi-lock-check-outline"></i>
                                 Finalize Checklist
-                            </a>
+                            </button>
                         <?php elseif ($can_finalize) : ?>
                             <button type="button" class="workspace-button workspace-button-disabled" onclick="alert('Please answer every indicator before finalizing the checklist.')">
                                 <i class="mdi mdi-alert-circle-outline"></i>
                                 Finalize Checklist
                             </button>
                         <?php elseif ($is_finalized && $is_school_user) : ?>
-                            <a href="<?= base_url(); ?>Pages/sbm_checklist_unlock_request/<?= $checklist_record->id; ?>" onclick="return confirm('Are you sure you want to request an unlock for this checklist? A notification will be sent to your division reviewer.')" class="workspace-button workspace-button-warning">
+                            <button type="submit" formaction="<?= base_url(); ?>Pages/sbm_checklist_unlock_request" formmethod="post" name="id" value="<?= (int) $checklist_record->id; ?>" onclick="return confirm('Are you sure you want to request an unlock for this checklist? A notification will be sent to your division reviewer.')" class="workspace-button workspace-button-warning">
                                 <i class="mdi mdi-lock-open-variant-outline"></i>
                                 Request to Unlock
-                            </a>
+                            </button>
                         <?php endif; ?>
 
                         <?php if ($can_unlock) : ?>
-                            <a href="<?= base_url(); ?>Pages/sbm_checklist_unlock/<?= $checklist_record->id; ?>/<?= rawurlencode($checklist_record->school_id); ?>" onclick="return confirm('Unlock this finalized checklist so the school can edit it again?')" class="workspace-button workspace-button-warning">
+                            <button type="submit" formaction="<?= base_url(); ?>Pages/sbm_checklist_unlock" formmethod="post" name="id" value="<?= (int) $checklist_record->id; ?>" onclick="return confirm('Unlock this finalized checklist so the school can edit it again?')" class="workspace-button workspace-button-warning">
                                 <i class="mdi mdi-lock-open-variant-outline"></i>
                                 Unlock Checklist
-                            </a>
+                            </button>
                         <?php endif; ?>
 
                         <?php if ($checklist_record && $is_finalized) : ?>
@@ -1813,6 +1813,7 @@ if ($checklist_record && !$all_answered && $can_edit) {
                 </div>
                 <div class="modal-body">
                     <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
+                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                         <label for="checklistFiscalYear">Fiscal Year</label>
                         <select id="checklistFiscalYear" name="new_fy" class="form-control" onchange="this.form.submit()">
                             <?php for ($year = 2023; $year <= 2030; $year++) : ?>

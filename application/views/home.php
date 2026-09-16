@@ -18,7 +18,7 @@ $sdo_consultants = array(
     array('name' => 'Grace D. Pontillas, EdD',    'division' => 'SDO Davao de Oro',     'key' => 'Davao de Oro',     'abbr' => 'DAVAO DE ORO',     'photo' => 'assets/images/sdo/SDO-DAVAO-DE-ORO- Grace-D.-Pontillas,Ed.png'),
     array('name' => 'Grace Santa T. Daclan',      'division' => 'SDO Davao del Norte',  'key' => 'Davao del Norte',  'abbr' => 'DAVAO DEL NORTE',  'photo' => 'assets/images/sdo/sdo-davao-del-norte.png'),
     array('name' => 'Leonora Liza D. Dacillo',    'division' => 'SDO Davao del Sur',    'key' => 'Davao del Sur',    'abbr' => 'DAVAO DEL SUR',    'photo' => 'assets/images/sdo/SDO-DAVAO-DEL-SUR-Leonora-Liza-D.Dacillo.png'),
-    array('name' => '',                           'division' => 'SDO Davao Occidental', 'key' => 'Davao Occidental', 'abbr' => 'DAVAO OCCIDENTAL', 'photo' => ''),
+    array('name' => 'Jonathan C. Araneta',        'division' => 'SDO Davao Occidental', 'key' => 'Davao Occidental', 'abbr' => 'DAVAO OCCIDENTAL', 'photo' => 'assets/images/sdo/sdo-davao-occi.png'),
     array('name' => 'Alan D. Limbadan, PhD',      'division' => 'SDO Davao Oriental',   'key' => 'Davao Oriental',   'abbr' => 'DAVAO ORIENTAL',   'photo' => 'assets/images/sdo/SDO-DavOr-Alan-D.-Limbadan,PhD.png'),
     array('name' => 'Atty. Rodel L. Pagayon, MT', 'division' => 'SDO Digos City',       'key' => 'Digos City',       'abbr' => 'DIGOS CITY',       'photo' => 'assets/images/sdo/DIGOS-CITY-ATTY.RODEL-L.-PAGAYON,MT.png'),
     array('name' => 'Marichu M. Celestial, EdD',  'division' => 'SDO IGaCoS',           'key' => 'IGACOS',           'abbr' => 'IGACOS',           'photo' => 'assets/images/sdo/SDO-IGaCoS-Marichu-M.-Celestial,-EdD.png'),
@@ -3082,6 +3082,7 @@ if ($seal_url === '') {
                     <p class="login-intro">Enter the email address registered to your AP-LEAD account. A new password will be sent to it.</p>
                     <div class="alert" id="resetFeedback" role="status" aria-live="polite" hidden></div>
                     <form id="portalResetForm" action="<?= base_url('Pages/forgot_password'); ?>" method="post">
+                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                         <div class="field"><label for="reset-email">Email address</label>
                             <div class="input-wrap"><input id="reset-email" name="email" type="email" autocomplete="email" placeholder="name@deped.gov.ph" required><span class="input-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="3" y="5" width="18" height="14" rx="2" />

@@ -1,4 +1,31 @@
+Options -Indexes
+
 RewriteEngine On
+
+# Never serve source-control metadata, database exports, backups, dependency
+# manifests, or one-off migration scripts from the public web root.
+RewriteRule ^\.well-known/acme-challenge/[A-Za-z0-9_-]+$ - [L]
+RewriteRule (^|/)\. - [F,L]
+RewriteRule ^(?:application|system|vendor|database)(?:/|$) - [F,L,NC]
+RewriteRule \.(?:sql|sqlite|zip|tar|gz|bak|old|orig|save|log|lock|env|ini|yml|yaml)$ - [F,L,NC]
+RewriteRule ^(?:barcode\.php|create_audit_trail\.php|database_ta_unlock_requests\.sql|audit_trail\.sql)$ - [F,L,NC]
+
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Cross-Origin-Resource-Policy "same-origin"
+    Header always set Content-Security-Policy "default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https:; frame-src https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
+<FilesMatch "^(?:composer\.(?:json|lock)|readme(?:\.rst|\.md)?|license\.txt)$">
+    Require all denied
+</FilesMatch>
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

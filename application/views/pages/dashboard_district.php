@@ -1198,6 +1198,7 @@ $work_queue_cards = array(
                 </div>
                 <div class="modal-body">
                     <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
+                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                         <div class="form-group mb-0">
                             <label for="district-dashboard-fy" class="font-weight-bold text-muted">Select fiscal year</label>
                             <select id="district-dashboard-fy" name="new_fy" class="form-control" onchange="this.form.submit()">

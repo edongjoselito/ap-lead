@@ -950,10 +950,13 @@ if ($total_entries > 0 && $budgeted_entries < $total_entries) {
                                                     <i class="mdi mdi-pencil-outline"></i>
                                                     Update
                                                 </a>
-                                                <a href="<?= base_url(); ?>Pages/action_plan_delete/<?= $row->id; ?>" onclick="return confirm('Are you sure you want to delete this action plan item?')" class="plan-action-link delete-link">
+                                                <?= form_open('Pages/action_plan_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this action plan item?');")); ?>
+                                                <input type="hidden" name="id" value="<?= (int) $row->id; ?>">
+                                                <button type="submit" class="plan-action-link delete-link">
                                                     <i class="mdi mdi-trash-can-outline"></i>
                                                     Delete
-                                                </a>
+                                                </button>
+                                                <?= form_close(); ?>
                                             </div>
                                         </td>
                                         <?php endif; ?>

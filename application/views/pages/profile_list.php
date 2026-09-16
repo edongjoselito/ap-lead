@@ -62,13 +62,13 @@
                                             <tbody>
                                                 <?php foreach($data as $row){?>
                                                 <tr>
-                                                    <td><?= $row->name; ?></td>
-                                                    <td><?= $row->docType; ?></td>
-                                                    <td><?= $row->description; ?></td>
-                                                    <td><?= $row->docNo; ?></td>
-                                                    <td><?= $row->dateReleased; ?></td>
+                                                    <td><?= html_escape($row->name); ?></td>
+                                                    <td><?= html_escape($row->docType); ?></td>
+                                                    <td><?= html_escape($row->description); ?></td>
+                                                    <td><?= html_escape($row->docNo); ?></td>
+                                                    <td><?= html_escape($row->dateReleased); ?></td>
                                                     <td>
-                                                        <a target="_blank" href="<?= base_url(); ?>Pages/qr/<?= $row->id; ?>"><i class="mdi mdi-qrcode-scan text-success tooltips" data-placement="top" data-toggle="tooltip" data-original-title="QR Code"></i></a>
+                                                        <a target="_blank" rel="noopener" href="<?= base_url(); ?>Pages/qr/<?= (int) $row->id; ?>"><i class="mdi mdi-qrcode-scan text-success tooltips" data-placement="top" data-toggle="tooltip" data-original-title="QR Code"></i></a>
                                                     </td>
                                                 </tr>
                                                 <?php } ?>
@@ -82,7 +82,6 @@
                         <!-- end row -->
 
 
-                        
 
 
-                        
+

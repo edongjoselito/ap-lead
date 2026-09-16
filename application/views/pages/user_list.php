@@ -459,11 +459,15 @@
                                                         <a href="#profile" class="open-AddBookDialog btn btn-primary btn-sm waves-effect waves-light" data-id="<?= $row->id; ?>" data-animation="slit" data-plugin="custommodal" data-overlayspeed="100" data-overlaycolor="#36404a">Change profile</a>
                                                         <?php } ?>
                                                         <form action="<?= base_url(); ?>pages/user_reset_password" method="post" style="display:inline;" onsubmit="return confirm('Reset this user\'s password?');">
+                                                            <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                                                             <input type="hidden" name="id" value="<?= $row->id; ?>">
                                                             <button type="submit" class="btn btn-warning btn-sm waves-effect waves-light"><i class="mdi mdi-lock-reset"></i> Reset</button>
                                                         </form>
                                                         <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
-                                                        <a onclick="return confirm('Delete this user account?')" class="btn btn-danger btn-sm" href="<?= base_url(); ?>pages/user_delete/<?= $row->id; ?>"><i class="mdi mdi-trash-can-outline"></i> Delete</a>
+                                                        <?= form_open('pages/user_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Delete this user account?');")); ?>
+                                                        <input type="hidden" name="id" value="<?= (int) $row->id; ?>">
+                                                        <button type="submit" class="btn btn-danger btn-sm"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
+                                                        <?= form_close(); ?>
                                                         <?php } ?>
                                                     </div>
                                                 </td>
@@ -571,11 +575,15 @@
                                             actions += '<a href="#profile" class="open-AddBookDialog btn btn-primary btn-sm waves-effect waves-light" data-id="' + data + '" data-animation="slit" data-plugin="custommodal" data-overlayspeed="100" data-overlaycolor="#36404a">Change profile</a> ';
                                             <?php } ?>
                                             actions += '<form action="<?= base_url(); ?>pages/user_reset_password" method="post" style="display:inline;" onsubmit="return confirm(\'Reset this user\\\'s password?\');">' +
+                                                '<input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">' +
                                                 '<input type="hidden" name="id" value="' + data + '">' +
                                                 '<button type="submit" class="btn btn-warning btn-sm waves-effect waves-light"><i class="mdi mdi-lock-reset"></i> Reset</button>' +
                                                 '</form> ';
                                             <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
-                                            actions += '<a onclick="return confirm(\'Delete this user account?\')" class="btn btn-danger btn-sm" href="<?= base_url(); ?>pages/user_delete/' + data + '"><i class="mdi mdi-trash-can-outline"></i> Delete</a>';
+                                            actions += '<form action="<?= base_url(); ?>pages/user_delete" method="post" style="display:inline" onsubmit="return confirm(\'Delete this user account?\')">' +
+                                                '<input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">' +
+                                                '<input type="hidden" name="id" value="' + parseInt(data, 10) + '">' +
+                                                '<button type="submit" class="btn btn-danger btn-sm"><i class="mdi mdi-trash-can-outline"></i> Delete</button></form>';
                                             <?php } ?>
                                             return '<div class="user-actions">' + actions + '</div>';
                                         }

@@ -401,9 +401,10 @@ $hero_title = (!$is_admin_view && empty($division_school_scope))
                                                 <i class="mdi mdi-pencil-outline"></i> Edit
                                             </a>
                                             <?php if ($can_delete) : ?>
-                                            <a onclick="return confirm('Are you sure you want to delete this school?');" href="<?= base_url(); ?>pages/school_delete/<?= html_escape($row->recID); ?>" class="btn btn-sm btn-outline-danger">
-                                                <i class="mdi mdi-trash-can-outline"></i> Delete
-                                            </a>
+                                            <?= form_open('pages/school_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this school?');")); ?>
+                                            <input type="hidden" name="id" value="<?= (int) $row->recID; ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
+                                            <?= form_close(); ?>
                                             <?php else : ?>
                                             <button class="btn btn-sm btn-outline-danger" disabled title="Cannot delete: School has completed Self-Assessment and Action Plan">
                                                 <i class="mdi mdi-trash-can-outline"></i> Delete

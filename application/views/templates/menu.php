@@ -50,9 +50,9 @@
                             <div class="dropdown-item noti-title">
                                 <h5 class="m-0">
                                     <span class="float-right">
-                                        <a href="<?= base_url(); ?>Pages/clear_unlock_requests" class="text-dark">
-                                            <small>Clear All</small>
-                                        </a>
+                                        <?= form_open('Pages/clear_unlock_requests', array('style' => 'display:inline;')); ?>
+                                            <button type="submit" class="btn btn-link text-dark p-0"><small>Clear All</small></button>
+                                        <?= form_close(); ?>
                                     </span>
                                     Unlock Requests
                                 </h5>
@@ -98,10 +98,10 @@
                         <?php $image = $this->Common->one_cond_row_select('users','username,image','username',$this->session->username); if (empty($image->image ?? null)) {?>
                             <img src="<?= base_url(); ?>assets/images/users/avatar-1.jpg" alt="user-image" class="rounded-circle">
                         <?php }else{ ?>
-                            <img src="<?= base_url(); ?>uploads/<?= $image->image; ?>" alt="user-image" class="rounded-circle">
+                            <img src="<?= base_url(); ?>uploads/<?= rawurlencode(basename((string) $image->image)); ?>" alt="user-image" class="rounded-circle">
                         <?php } ?>
                         <span class="pro-user-name ml-1">
-                            <?= $this->session->user; ?> <i class="mdi mdi-chevron-down"></i>
+                            <?= html_escape($this->session->user); ?> <i class="mdi mdi-chevron-down"></i>
                         </span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right profile-dropdown ">
@@ -112,7 +112,7 @@
 
                         <!-- item-->
                         <?php if($this->session->position == 'school'){?>
-                            <a href="<?= base_url(); ?>school/<?= $this->session->username; ?>" class="dropdown-item notify-item">
+                            <a href="<?= base_url(); ?>school/<?= rawurlencode((string) $this->session->username); ?>" class="dropdown-item notify-item">
                         <?php }else{ ?>
                             <a href="javascript:void(0);" class="dropdown-item notify-item">
                         <?php } ?>
@@ -121,18 +121,20 @@
                         </a>
 
                         <!-- item-->
-                        <a href="<?= base_url(); ?>lock" class="dropdown-item notify-item" data-toggle="modal" data-target="#ivankylecrodua">
+                        <button type="button" class="dropdown-item notify-item" style="border:0;background:transparent;width:100%;text-align:left;" data-toggle="modal" data-target="#ivankylecrodua">
                             <i class="mdi mdi-lock-outline"></i>
                             <span>Change Profile Image</span>
-                        </a>
+                        </button>
 
                         <div class="dropdown-divider"></div>
 
                         <!-- item-->
-                        <a href="<?= base_url(); ?>logout" class="dropdown-item notify-item">
-                            <i class="mdi mdi-logout-variant"></i>
-                            <span>Logout</span>
-                        </a>
+                        <?= form_open('logout', array('style' => 'margin:0;')); ?>
+                            <button type="submit" class="dropdown-item notify-item" style="border:0;background:transparent;width:100%;text-align:left;">
+                                <i class="mdi mdi-logout-variant"></i>
+                                <span>Logout</span>
+                            </button>
+                        <?= form_close(); ?>
 
                     </div>
                 </li>

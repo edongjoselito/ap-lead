@@ -42,18 +42,18 @@
                                             $attributes = array('class' => 'parsley-examples');
                                             echo form_open_multipart('pages/sbm_action_plan_update', $attributes);
                                         ?>
-                                            <input type="hidden" name="id" value="<?= $data->id; ?>">
+                                            <input type="hidden" name="id" value="<?= (int) $data->id; ?>">
                                             
                                             <div class="form-section">
                                                 <h6 class="form-section-title"><i class="mdi mdi-target"></i> Activity & Objectives</h6>
                                                 <div class="row">
                                                     <div class="form-group col-lg-12">
                                                         <label for="activity">Activity <span class="text-danger">*</span></label>
-                                                        <textarea class="form-control" rows="3" name="activity" id="activity" required placeholder="Describe the main activity..."><?= $data->activity; ?></textarea>
+                                                        <textarea class="form-control" rows="3" name="activity" id="activity" required placeholder="Describe the main activity..."><?= html_escape($data->activity); ?></textarea>
                                                     </div>
                                                     <div class="form-group col-lg-12">
                                                         <label for="objective">Objectives</label>
-                                                        <textarea class="form-control" rows="3" name="objective" id="objective" placeholder="What are the key objectives of this activity?"><?= $data->objective; ?></textarea>
+                                                        <textarea class="form-control" rows="3" name="objective" id="objective" placeholder="What are the key objectives of this activity?"><?= html_escape($data->objective); ?></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -63,11 +63,11 @@
                                                 <div class="row">
                                                     <div class="form-group col-lg-6">
                                                         <label for="ex_output">Expected Outputs</label>
-                                                        <textarea class="form-control" rows="3" name="ex_output" id="ex_output" placeholder="What tangible results do you expect?"><?= $data->ex_output; ?></textarea>
+                                                        <textarea class="form-control" rows="3" name="ex_output" id="ex_output" placeholder="What tangible results do you expect?"><?= html_escape($data->ex_output); ?></textarea>
                                                     </div>
                                                     <div class="form-group col-lg-6">
                                                         <label for="metho_strategy">Methodology Strategy</label>
-                                                        <textarea class="form-control" rows="3" name="metho_strategy" id="metho_strategy" placeholder="How will this activity be implemented?"><?= $data->metho_strategy; ?></textarea>
+                                                        <textarea class="form-control" rows="3" name="metho_strategy" id="metho_strategy" placeholder="How will this activity be implemented?"><?= html_escape($data->metho_strategy); ?></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -77,15 +77,15 @@
                                                 <div class="row">
                                                     <div class="form-group col-lg-4">
                                                         <label for="time_frame">Time Frame</label>
-                                                        <input type="text" name="time_frame" id="time_frame" class="form-control" value="<?= $data->time_frame; ?>" placeholder="e.g., January - March 2024">
+                                                        <input type="text" name="time_frame" id="time_frame" class="form-control" value="<?= html_escape($data->time_frame); ?>" placeholder="e.g., January - March 2024">
                                                     </div>
                                                     <div class="form-group col-lg-4">
                                                         <label for="person_involved">Person Involved</label>
-                                                        <input type="text" name="person_involved" id="person_involved" class="form-control" value="<?= $data->person_involved; ?>" placeholder="Who is responsible?">
+                                                        <input type="text" name="person_involved" id="person_involved" class="form-control" value="<?= html_escape($data->person_involved); ?>" placeholder="Who is responsible?">
                                                     </div>
                                                     <div class="form-group col-lg-4">
                                                         <label for="bud_req">Budgetary Requirement</label>
-                                                        <input type="text" name="bud_req" id="bud_req" class="form-control" value="<?= $data->bud_req; ?>" placeholder="e.g., ₱50,000">
+                                                        <input type="text" name="bud_req" id="bud_req" class="form-control" value="<?= html_escape($data->bud_req); ?>" placeholder="e.g., ₱50,000">
                                                     </div>
                                                 </div>
                                             </div>
@@ -95,7 +95,7 @@
                                                 <div class="row">
                                                     <div class="form-group col-lg-12">
                                                         <label for="remarks">Remarks</label>
-                                                        <textarea class="form-control" rows="3" name="remarks" id="remarks" placeholder="Any additional notes or comments..."><?= $data->remarks; ?></textarea>
+                                                        <textarea class="form-control" rows="3" name="remarks" id="remarks" placeholder="Any additional notes or comments..."><?= html_escape($data->remarks); ?></textarea>
                                                     </div>
                                                 </div>
                                             </div>

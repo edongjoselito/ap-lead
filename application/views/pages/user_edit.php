@@ -57,25 +57,25 @@
                                             $attributes = array('class' => 'parsley-examples');
                                             echo form_open('pages/user_update', $attributes);
                                         ?>
-                                            <input type="hidden" name="id" value="<?= $data->id; ?>">
+                                            <input type="hidden" name="id" value="<?= (int) $data->id; ?>">
                                             <div class="form-group row">
                                                 <label class="col-md-4 col-form-label">First Name<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="text" required class="form-control" name="fname" value="<?= $data->fname; ?>" oninput="this.value = this.value.toUpperCase()" placeholder="First Name">
+                                                    <input type="text" required class="form-control" name="fname" value="<?= html_escape($data->fname); ?>" oninput="this.value = this.value.toUpperCase()" placeholder="First Name">
                                                 </div>
                                             </div>
 
                                             <div class="form-group row">
                                                 <label class="col-md-4 col-form-label">Middle Name</label>
                                                 <div class="col-md-7">
-                                                    <input type="text"  name="mname" value="<?= $data->mname; ?>" class="form-control" placeholder="Middle Name" oninput="this.value = this.value.toUpperCase()">
+                                                    <input type="text"  name="mname" value="<?= html_escape($data->mname); ?>" class="form-control" placeholder="Middle Name" oninput="this.value = this.value.toUpperCase()">
                                                 </div>
                                             </div>
 
                                             <div class="form-group row">
                                                 <label class="col-md-4 col-form-label">Last Name<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="text" required name="lname" value="<?= $data->lname; ?>" class="form-control" placeholder="Last Name" oninput="this.value = this.value.toUpperCase()">
+                                                    <input type="text" required name="lname" value="<?= html_escape($data->lname); ?>" class="form-control" placeholder="Last Name" oninput="this.value = this.value.toUpperCase()">
                                                 </div>
                                             </div>
 

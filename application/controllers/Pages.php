@@ -7,9 +7,104 @@ class Pages extends CI_Controller
     {
         parent::__construct();
 
+        // Deny by default. Public routes must be deliberately listed here;
+        // every other controller action requires an authenticated session.
+        $method = strtolower((string) $this->router->fetch_method());
+        $public_methods = array(
+            // The default controller lands on view(), which performs its own
+            // guest-only redirect to homepage before rendering any data.
+            'view', 'homepage', 'log_in', 'signup', 'forgot_password', 'confirm_signup',
+            'lock_user_screen',
+            'get_provinces', 'get_districts', 'get_district_by_division',
+            'data_privacy', 'authors', 'about', 'verify',
+            'division_checklist_completed_shared'
+        );
+
+        if (!in_array($method, $public_methods, true) && !$this->session->logged_in) {
+            show_error('Authentication is required to access this resource.', 401);
+        }
+
+        // High-risk endpoints receive an explicit role policy here in addition
+        // to their record-level checks below.
+        $role_policies = array(
+            'profilelist' => array('admin'),
+            'profile_new' => array('admin'),
+            'qr' => array('admin'),
+            'school_by_district' => array('admin', 'region'),
+            'school_new' => array('admin'),
+            'schools' => array('admin', 'region', 'division', 'ict'),
+            'schools_district' => array('admin', 'region', 'division', 'ict', 'district'),
+            'schools_division' => array('admin', 'region', 'division', 'ict'),
+            'school_list' => array('admin', 'district'),
+            'school_list_region' => array('region'),
+            'school_list_division_only' => array('division'),
+            // District dashboards link to this scoped submission status list;
+            // require_district_scope() below enforces the exact district ID.
+            'school_list_division' => array('division', 'district'),
+            'district_list_division' => array('admin', 'region'),
+            'district_list' => array('division'),
+            'division_list' => array('admin', 'region'),
+            'report_division_submission' => array('admin', 'region'),
+            'report_overall_accomplishments' => array('admin', 'region'),
+            'report_sgc' => array('admin', 'region'),
+            'sbm_rate_divisions_list' => array('admin', 'region'),
+            'district_account' => array('division', 'ict'),
+            'update_total_schools' => array('admin', 'region'),
+            'action_plan_new' => array('school'),
+            'sbm_action_plan' => array('school'),
+            'sbm_action_plan_pview' => array('school'),
+            'sbm_action_plan_pview_district' => array('district', 'division'),
+            'sbm_list' => array('district'),
+            'sbm_action_plan_update' => array('school'),
+            'action_plan_delete' => array('school'),
+            'sbm_checklist' => array('school'),
+            'sbm_checklist_update' => array('school'),
+            'sbm_checklist_final' => array('school'),
+            'checklist_district' => array('district', 'division'),
+            'sbm_checklist_pdf' => array('school', 'district', 'division', 'region', 'admin'),
+            'tapr_form' => array('school'),
+            'tapr_form_update' => array('school'),
+            'sbm_ta_final' => array('school'),
+            'tana_form' => array('school'),
+            'tana_form_update' => array('school'),
+            'tana_summary' => array('school'),
+            'tana_summary_update' => array('school'),
+            'update_tana_summary' => array('school'),
+            'final_tana_summary' => array('school'),
+            'tana_summary_division' => array('division'),
+            'tana_division' => array('division'),
+            'tana_division_autogenerate' => array('division'),
+            'tana_division_delete' => array('division'),
+            'tana_summary_region' => array('region'),
+            'tana_region' => array('region'),
+            'tana_region_delete' => array('region'),
+            'sbm_district_tech' => array('district'),
+            'sbm_district_tech_new' => array('district'),
+            'sbm_district_tech_edit' => array('district'),
+            'sbm_district_tech_del' => array('district'),
+            'tapr_admin' => array('district', 'division'),
+            'tapr_district_update' => array('district', 'division'),
+            'tapr_form_district' => array('district', 'division'),
+            'clear_unlock_requests' => array('division'),
+            'unlock_requests' => array('division'),
+            'unlock_request_view' => array('division'),
+            'sbm_ta_unlock' => array('division'),
+            'sbm_checklist_unlock' => array('division'),
+            'division_setup' => array('division'),
+            'signup_district' => array('admin', 'division'),
+            'add_school_user' => array('admin', 'division', 'ict'),
+            'change_password_user_division' => array('admin', 'division', 'ict'),
+        );
+
+        if (isset($role_policies[$method])) {
+            $position = strtolower(trim((string) $this->session->position));
+            if (!$this->session->logged_in || !in_array($position, $role_policies[$method], true)) {
+                show_error('You are not authorized to perform this operation.', 403);
+            }
+        }
+
         // Legacy SBM modules are not available in the Learning Gap system.
         // This prevents direct URL access after their menus are removed.
-        $method = strtolower((string) $this->router->fetch_method());
         $learning_gap_roles = array('school', 'division', 'division_head', 'region');
         $legacy_sbm_methods = array(
             'district_list', 'school_list_division_only', 'division_checklist_completed_details',
@@ -20,6 +115,170 @@ class Pages extends CI_Controller
             && (strpos($method, 'sbm_') === 0 || strpos($method, 'tapr_') === 0
                 || strpos($method, 'tana_') === 0 || in_array($method, $legacy_sbm_methods, true))) {
             show_error('This legacy SBM feature is not available in the Least Learned Competencies Monitoring system.', 403);
+        }
+    }
+
+    private function require_post()
+    {
+        if (strtoupper((string) $this->input->method()) !== 'POST') {
+            show_error('This operation requires a POST request.', 405);
+        }
+    }
+
+    private function require_school_scope($school)
+    {
+        if (!$school) {
+            show_404();
+        }
+
+        $position = strtolower(trim((string) $this->session->position));
+        $allowed = false;
+
+        if ($position === 'admin') {
+            $allowed = true;
+        } elseif ($position === 'region') {
+            $allowed = (int) $school->region_id === (int) $this->session->region;
+        } elseif (in_array($position, array('division', 'division_head', 'ict'), true)) {
+            $allowed = (int) $school->division_id === (int) $this->session->division;
+        } elseif ($position === 'district') {
+            $allowed = (int) $school->district_id === (int) $this->session->district;
+        } elseif ($position === 'school') {
+            $allowed = (string) $school->schoolID === (string) $this->session->username;
+        }
+
+        if (!$allowed) {
+            show_error('You are not authorized to access this school record.', 403);
+        }
+
+        return $school;
+    }
+
+    private function require_division_scope($division)
+    {
+        if (!$division) {
+            show_404();
+        }
+
+        $position = strtolower(trim((string) $this->session->position));
+        $allowed = $position === 'admin'
+            || ($position === 'region' && (int) $division->region_id === (int) $this->session->region)
+            || (in_array($position, array('division', 'division_head', 'ict'), true)
+                && (int) $division->id === (int) $this->session->division);
+
+        if (!$allowed) {
+            show_error('You are not authorized to access this division.', 403);
+        }
+        return $division;
+    }
+
+    private function require_district_scope($district)
+    {
+        if (!$district) {
+            show_404();
+        }
+
+        $division = $this->Page_model->one_cond_row('division', 'id', (int) $district->division_id);
+        $position = strtolower(trim((string) $this->session->position));
+        $allowed = $position === 'admin'
+            || ($position === 'region' && $division
+                && (int) $division->region_id === (int) $this->session->region)
+            || (in_array($position, array('division', 'division_head', 'ict'), true)
+                && (int) $district->division_id === (int) $this->session->division)
+            || ($position === 'district' && (int) $district->id === (int) $this->session->district);
+
+        if (!$allowed) {
+            show_error('You are not authorized to access this district.', 403);
+        }
+        return $district;
+    }
+
+    private function school_for_record($table, $record_id)
+    {
+        $allowed_tables = array('sgod_action_plan', 'sbm', 'sbm_ta', 'tana');
+        if (!in_array($table, $allowed_tables, true)) {
+            show_error('Invalid record type.', 400);
+        }
+
+        $record = $this->db->where('id', (int) $record_id)->get($table)->row();
+        if (!$record || empty($record->school_id)) {
+            show_404();
+        }
+
+        $school = $this->Page_model->one_cond_row('schools', 'schoolID', $record->school_id);
+        $this->require_school_scope($school);
+        return array($record, $school);
+    }
+
+    private function verify_recaptcha_response()
+    {
+        $secret = trim((string) getenv('RECAPTCHA_SECRET_KEY'));
+        $response_token = trim((string) $this->input->post('g-recaptcha-response', true));
+        if ($secret === '' || $response_token === '' || strlen($response_token) > 4096) {
+            log_message('error', 'Registration rejected because reCAPTCHA is not configured or no token was supplied.');
+            return false;
+        }
+
+        $payload = http_build_query(array(
+            'secret' => $secret,
+            'response' => $response_token,
+            'remoteip' => $this->input->ip_address(),
+        ), '', '&');
+        $context = stream_context_create(array('http' => array(
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\n"
+                . 'Content-Length: ' . strlen($payload) . "\r\n",
+            'content' => $payload,
+            'timeout' => 8,
+            'ignore_errors' => true,
+        )));
+        $response = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+        $result = is_string($response) ? json_decode($response, true) : null;
+        if (!is_array($result) || empty($result['success'])) {
+            return false;
+        }
+
+        $expected_hostname = trim((string) getenv('RECAPTCHA_EXPECTED_HOSTNAME'));
+        return $expected_hostname === ''
+            || (!empty($result['hostname']) && hash_equals($expected_hostname, (string) $result['hostname']));
+    }
+
+    private function login_throttle_file($username)
+    {
+        $key = hash('sha256', $this->input->ip_address() . '|' . mb_strtolower(trim((string) $username), 'UTF-8'));
+        return APPPATH . 'cache/login-rate-' . $key . '.json';
+    }
+
+    private function login_throttle_state($username)
+    {
+        $file = $this->login_throttle_file($username);
+        $state = is_file($file) ? json_decode((string) @file_get_contents($file), true) : null;
+        if (!is_array($state) || empty($state['first_attempt']) || time() - (int) $state['first_attempt'] > 900) {
+            return array('attempts' => 0, 'first_attempt' => time());
+        }
+        return $state;
+    }
+
+    private function login_is_rate_limited($username)
+    {
+        $state = $this->login_throttle_state($username);
+        return (int) $state['attempts'] >= 5;
+    }
+
+    private function record_login_failure($username)
+    {
+        $state = $this->login_throttle_state($username);
+        $state['attempts'] = (int) $state['attempts'] + 1;
+        @file_put_contents($this->login_throttle_file($username), json_encode($state), LOCK_EX);
+        log_message('error', 'Failed login for account identifier hash '
+            . hash('sha256', mb_strtolower(trim((string) $username), 'UTF-8'))
+            . ' from ' . $this->input->ip_address());
+    }
+
+    private function clear_login_failures($username)
+    {
+        $file = $this->login_throttle_file($username);
+        if (is_file($file)) {
+            @unlink($file);
         }
     }
 
@@ -182,34 +441,37 @@ class Pages extends CI_Controller
         }));
     }
 
-    private function get_division_checklist_share_secret()
+    private function get_application_signing_secret()
     {
         $secret = trim((string) config_item('encryption_key'));
 
-        if ($secret !== '') {
-            return $secret;
+        if (strlen($secret) < 32) {
+            log_message('error', 'APP_ENCRYPTION_KEY is missing or too short for signed links.');
+            show_error('Secure link generation is not configured.', 503);
         }
-
-        return hash('sha256', implode('|', array(
-            APPPATH,
-            FCPATH,
-            (string) config_item('base_url'),
-            (string) $this->config->item('cookie_prefix'),
-            'division-checklist-share',
-        )));
+        return $secret;
     }
 
-    private function build_division_checklist_share_token($division_id, $fy)
+    private function build_division_checklist_share_token($division_id, $fy, $expires)
     {
-        $payload = trim((string) $division_id) . '|' . trim((string) $fy);
+        $payload = trim((string) $division_id) . '|' . trim((string) $fy) . '|' . (int) $expires;
 
-        return hash_hmac('sha256', $payload, $this->get_division_checklist_share_secret());
+        return hash_hmac('sha256', $payload, $this->get_application_signing_secret());
+    }
+
+    private function build_profile_verification_token($profile)
+    {
+        $payload = 'profile|' . (int) $profile->id . '|' . (string) $profile->docNo
+            . '|' . (string) $profile->dateReleased;
+        return hash_hmac('sha256', $payload, $this->get_application_signing_secret());
     }
 
     private function build_division_checklist_share_url($division_id, $fy, $selected_filter = '')
     {
+        $expires = time() + 604800;
         $query = array(
-            'token' => $this->build_division_checklist_share_token($division_id, $fy),
+            'expires' => $expires,
+            'token' => $this->build_division_checklist_share_token($division_id, $fy, $expires),
         );
         $selected_filter = trim((string) $selected_filter);
 
@@ -228,12 +490,13 @@ class Pages extends CI_Controller
     private function validate_division_checklist_share_request($division_id, $fy)
     {
         $token = trim((string) $this->input->get('token', true));
+        $expires = (int) $this->input->get('expires', true);
 
-        if ($division_id === '' || $fy === '' || $token === '') {
+        if ($division_id === '' || $fy === '' || $token === '' || $expires < time() || $expires > time() + 691200) {
             show_error('This shared checklist link is invalid.', 403);
         }
 
-        $expected_token = $this->build_division_checklist_share_token($division_id, $fy);
+        $expected_token = $this->build_division_checklist_share_token($division_id, $fy, $expires);
 
         if (!hash_equals($expected_token, $token)) {
             show_error('This shared checklist link is invalid.', 403);
@@ -246,8 +509,9 @@ class Pages extends CI_Controller
         $fy = trim((string) $fy);
         $print_mode = !empty($options['print_mode']);
         $share_mode = !empty($options['share_mode']);
+        $share_expires = $share_mode ? (int) $this->input->get('expires', true) : 0;
         $share_token = $share_mode
-            ? $this->build_division_checklist_share_token($division_id, $fy)
+            ? $this->build_division_checklist_share_token($division_id, $fy, $share_expires)
             : '';
         $records = $this->Page_model->division_completed_checklist_report_rows($division_id, $fy);
         $filter_options = $this->build_checklist_filter_options(
@@ -302,8 +566,12 @@ class Pages extends CI_Controller
                 . '/'
                 . rawurlencode((string) $fy)
             );
-            $default_filter_reset_url = $this->build_division_checklist_share_url($division_id, $fy);
+            $default_filter_reset_url = $default_filter_action_url . '?' . http_build_query(array(
+                'expires' => $share_expires,
+                'token' => $share_token,
+            ));
             $default_filter_hidden_fields = array(
+                'expires' => $share_expires,
                 'token' => $share_token,
             );
             $default_printable_url = '';
@@ -865,6 +1133,7 @@ class Pages extends CI_Controller
         if (!$this->session->logged_in || $this->session->position !== 'school') {
             show_error('Only school users can encode learning gap records.', 403);
         }
+        $this->require_post();
 
         $this->form_validation->set_rules('grade_level', 'Grade Level', 'trim|required|max_length[50]');
         $this->form_validation->set_rules('learning_area', 'Learning Area / Subject', 'trim|required|max_length[150]');
@@ -910,13 +1179,18 @@ class Pages extends CI_Controller
         redirect('Pages/learning_gap');
     }
 
-    public function learning_gap_delete($id = 0)
+    public function learning_gap_delete()
     {
         if (!$this->session->logged_in || $this->session->position !== 'school') {
             show_error('Only school users can remove learning gap records.', 403);
         }
 
-        $this->Page_model->delete_learning_gap_record((int) $id, (string) $this->session->username);
+        $this->require_post();
+        $id = (int) $this->input->post('id', true);
+        if ($id < 1) {
+            show_404();
+        }
+        $this->Page_model->delete_learning_gap_record($id, (string) $this->session->username);
         $this->session->set_flashdata('success', 'Learning gap record removed.');
         redirect('Pages/learning_gap');
     }
@@ -939,6 +1213,7 @@ class Pages extends CI_Controller
     public function learning_area_setup_save()
     {
         $this->require_regional_learning_area_access();
+        $this->require_post();
         $division_id = $this->regional_learning_area_division_id($this->input->post('division_id', true));
         $this->form_validation->set_rules('grade_level', 'Grade Level', 'trim|required|max_length[50]');
         $this->form_validation->set_rules('learning_area', 'Learning Area', 'trim|required|max_length[150]');
@@ -952,11 +1227,16 @@ class Pages extends CI_Controller
         redirect('Pages/learning_area_setup?division_id=' . $division_id);
     }
 
-    public function learning_area_setup_delete($id = 0)
+    public function learning_area_setup_delete()
     {
         $this->require_regional_learning_area_access();
-        $division_id = $this->regional_learning_area_division_id($this->input->get('division_id', true));
-        $this->Page_model->delete_learning_area_setting((int) $id, $division_id);
+        $this->require_post();
+        $division_id = $this->regional_learning_area_division_id($this->input->post('division_id', true));
+        $id = (int) $this->input->post('id', true);
+        if ($id < 1) {
+            show_404();
+        }
+        $this->Page_model->delete_learning_area_setting($id, $division_id);
         $this->session->set_flashdata('success', 'Learning area removed from this division setup.');
         redirect('Pages/learning_area_setup?division_id=' . $division_id);
     }
@@ -1010,6 +1290,7 @@ class Pages extends CI_Controller
     public function learning_competency_setup_save($area_id = 0)
     {
         $this->require_regional_learning_area_access();
+        $this->require_post();
         $division_id = $this->regional_learning_area_division_id($this->input->post('division_id', true));
         $area = $this->Page_model->learning_area_setting((int) $area_id, $division_id);
         if (!$area) {
@@ -1027,12 +1308,17 @@ class Pages extends CI_Controller
         redirect('Pages/learning_competency_setup/' . (int) $area->id . '?division_id=' . $division_id);
     }
 
-    public function learning_competency_setup_delete($area_id = 0, $competency_id = 0)
+    public function learning_competency_setup_delete($area_id = 0)
     {
         $this->require_regional_learning_area_access();
-        $division_id = $this->regional_learning_area_division_id($this->input->get('division_id', true));
+        $this->require_post();
+        $division_id = $this->regional_learning_area_division_id($this->input->post('division_id', true));
         $area = $this->Page_model->learning_area_setting((int) $area_id, $division_id);
         if (!$area) {
+            show_404();
+        }
+        $competency_id = (int) $this->input->post('id', true);
+        if ($competency_id < 1) {
             show_404();
         }
         $this->Page_model->delete_learning_competency((int) $competency_id, (int) $this->session->region);
@@ -1043,6 +1329,7 @@ class Pages extends CI_Controller
     public function learning_competency_setup_update_term($area_id = 0, $competency_id = 0)
     {
         $this->require_regional_learning_area_access();
+        $this->require_post();
         $division_id = $this->regional_learning_area_division_id($this->input->post('division_id', true));
         $area = $this->Page_model->learning_area_setting((int) $area_id, $division_id);
         if (!$area) {
@@ -1124,7 +1411,12 @@ class Pages extends CI_Controller
 
         $data['title'] = "QR Code";
 
-        $data['data'] = $this->Page_model->one_cond_row('profile', 'id', $this->uri->segment(3));
+        $data['data'] = $this->Page_model->one_cond_row('profile', 'id', (int) $this->uri->segment(3));
+        if (!$data['data']) {
+            show_404();
+        }
+        $data['verification_url'] = base_url('Pages/verify/' . (int) $data['data']->id)
+            . '?token=' . rawurlencode($this->build_profile_verification_token($data['data']));
 
         $this->load->view('pages/' . $page, $data);
     }
@@ -1140,7 +1432,12 @@ class Pages extends CI_Controller
 
         $data['title'] = "QR Code";
 
-        $data['data'] = $this->Page_model->one_cond_row('profile', 'id', $this->uri->segment(3));
+        $data['data'] = $this->Page_model->one_cond_row('profile', 'id', (int) $this->uri->segment(3));
+        $token = trim((string) $this->input->get('token', true));
+        if (!$data['data'] || !preg_match('/^[a-f0-9]{64}$/', $token)
+            || !hash_equals($this->build_profile_verification_token($data['data']), $token)) {
+            show_404();
+        }
 
         $this->load->view('pages/' . $page, $data);
     }
@@ -1152,7 +1449,10 @@ class Pages extends CI_Controller
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>', '</div>');
-        $this->form_validation->set_rules('name', 'Fullname', 'required');
+        $this->form_validation->set_rules('name', 'Full name', 'trim|required|max_length[255]');
+        $this->form_validation->set_rules('docType', 'Document type', 'trim|required|max_length[100]');
+        $this->form_validation->set_rules('docNo', 'Document number', 'trim|required|max_length[100]');
+        $this->form_validation->set_rules('description', 'Description', 'trim|max_length[1000]');
 
         if ($this->form_validation->run() == FALSE) {
 
@@ -1171,6 +1471,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->profile_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/profilelist');
@@ -1210,14 +1511,7 @@ class Pages extends CI_Controller
 
     public function userlist_ajax()
     {
-        // Bypass CSRF validation for AJAX requests
-        $this->config->set_item('csrf_protection', false);
-
-        error_log("userlist_ajax called - CSRF bypassed");
-
         $this->require_user_manager();
-
-        error_log("userlist_ajax - user manager check passed");
 
         // DataTables parameters
         $draw = $this->input->post('draw');
@@ -1231,6 +1525,9 @@ class Pages extends CI_Controller
 
         // Build query
         $this->db->select('id, fname, mname, lname, username, position');
+        if ($this->is_division_user_manager()) {
+            $this->db->where('p_id', (int) $this->session->division);
+        }
 
         // Search
         if (!empty($search)) {
@@ -1306,12 +1603,7 @@ class Pages extends CI_Controller
             'data' => $formatted_data
         );
 
-        error_log("Response: " . json_encode($response));
-
-        echo json_encode($response);
-
-        // Re-enable CSRF protection
-        $this->config->set_item('csrf_protection', true);
+        $this->output->set_content_type('application/json')->set_output(json_encode($response));
     }
 
     public function userlist_division()
@@ -1383,34 +1675,28 @@ class Pages extends CI_Controller
 
     public function update_total_schools()
     {
-        // Bypass CSRF validation for AJAX requests
-        $this->config->set_item('csrf_protection', false);
+        $this->require_post();
+        $division_id = (int) $this->input->post('division_id', true);
+        $total_schools = filter_var($this->input->post('total_schools', true), FILTER_VALIDATE_INT);
+        $division = $this->Page_model->one_cond_row('division', 'id', $division_id);
 
-        $division_id = $this->input->post('division_id');
-        $total_schools = $this->input->post('total_schools');
-
-        error_log("update_total_schools called - division_id: " . $division_id . ", total_schools: " . $total_schools);
-        error_log("POST data: " . print_r($_POST, true));
-
-        if ($division_id && $total_schools !== null) {
-            $this->db->where('id', $division_id);
-            $result = $this->db->update('division', array('total_schools' => $total_schools));
-
-            error_log("Update result: " . ($result ? "success" : "failed"));
-            error_log("Affected rows: " . $this->db->affected_rows());
-
-            if ($result) {
-                echo json_encode(array('success' => true));
-            } else {
-                echo json_encode(array('success' => false, 'message' => 'Database update failed'));
-            }
-        } else {
-            error_log("Invalid parameters - division_id: " . ($division_id ? 'set' : 'not set') . ", total_schools: " . ($total_schools !== null ? 'set' : 'not set'));
-            echo json_encode(array('success' => false, 'message' => 'Invalid parameters'));
+        if (!$division || $total_schools === false || $total_schools < 0 || $total_schools > 100000) {
+            $this->output->set_status_header(422)->set_content_type('application/json')
+                ->set_output(json_encode(array('success' => false, 'message' => 'Invalid parameters.')));
+            return;
         }
 
-        // Re-enable CSRF protection
-        $this->config->set_item('csrf_protection', true);
+        if ($this->session->position === 'region'
+            && (int) $division->region_id !== (int) $this->session->region) {
+            show_error('You can only update divisions in your region.', 403);
+        }
+
+        $result = $this->db->where('id', $division_id)
+            ->update('division', array('total_schools' => $total_schools));
+        $this->output->set_content_type('application/json')->set_output(json_encode(array(
+            'success' => (bool) $result,
+            'message' => $result ? '' : 'Database update failed.',
+        )));
     }
 
     public function schools()
@@ -1422,8 +1708,10 @@ class Pages extends CI_Controller
         }
 
         $data['title'] = "School List";
+        $division_id = (int) $this->uri->segment(3);
+        $this->require_division_scope($this->Page_model->one_cond_row('division', 'id', $division_id));
 
-        $data['data'] = $this->Common->two_join_one_cond_not_gb('schools','district', 'a.recID,id,description,schoolID,schoolName,a.division_id,a.district_id','a.district_id = id', 'a.division_id', $this->uri->segment(3),'schoolName','ASC');
+        $data['data'] = $this->Common->two_join_one_cond_not_gb('schools','district', 'a.recID,id,description,schoolID,schoolName,a.division_id,a.district_id','a.district_id = id', 'a.division_id', $division_id,'schoolName','ASC');
 
         $this->load->view('templates/header_dt');
         $this->load->view('templates/menu');
@@ -1441,8 +1729,10 @@ class Pages extends CI_Controller
         }
 
         $data['title'] = "School List";
+        $district_id = (int) $this->uri->segment(3);
+        $this->require_district_scope($this->Page_model->one_cond_row('district', 'id', $district_id));
 
-        $data['data'] = $this->Common->two_join_one_cond_not_gb('schools','district', 'a.recID,id,description,schoolID,schoolName,a.division_id,a.district_id','a.district_id = id', 'a.district_id', $this->uri->segment(3),'schoolName','ASC');
+        $data['data'] = $this->Common->two_join_one_cond_not_gb('schools','district', 'a.recID,id,description,schoolID,schoolName,a.division_id,a.district_id','a.district_id = id', 'a.district_id', $district_id,'schoolName','ASC');
 
         $this->load->view('templates/header_dt');
         $this->load->view('templates/menu');
@@ -1460,8 +1750,10 @@ class Pages extends CI_Controller
         }
 
         $data['title'] = "School List";
+        $division_id = (int) $this->uri->segment(3);
+        $this->require_division_scope($this->Page_model->one_cond_row('division', 'id', $division_id));
 
-        $data['data'] = $this->Common->two_join_one_cond_not_gb('schools','district', 'a.recID,id,description,schoolID,schoolName,a.division_id,a.district_id','a.district_id = id', 'a.division_id', $this->uri->segment(3),'schoolName','ASC');
+        $data['data'] = $this->Common->two_join_one_cond_not_gb('schools','district', 'a.recID,id,description,schoolID,schoolName,a.division_id,a.district_id','a.district_id = id', 'a.division_id', $division_id,'schoolName','ASC');
 
         $this->load->view('templates/header_dt');
         $this->load->view('templates/menu');
@@ -1624,7 +1916,8 @@ class Pages extends CI_Controller
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>', '</div>');
-        $this->form_validation->set_rules('username', 'Username', 'required');
+        $this->form_validation->set_rules('username', 'Username', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[12]|max_length[128]');
         $this->form_validation->set_rules('gender', 'Gender', 'required');
 
         if ($this->form_validation->run() == FALSE) {
@@ -1669,6 +1962,9 @@ class Pages extends CI_Controller
 
             $config['allowed_types'] = 'jpg|png';
             $config['upload_path'] = './uploads/';
+            $config['max_size'] = 2048;
+            $config['encrypt_name'] = TRUE;
+            $config['file_ext_tolower'] = TRUE;
             $this->load->library('upload', $config);
 
             $this->upload->do_upload('file');
@@ -1721,8 +2017,8 @@ class Pages extends CI_Controller
     public function user_delete()
     {
         $this->require_user_manager();
-
-        $id = $this->uri->segment(3);
+        $this->require_post();
+        $id = (int) $this->input->post('id', true);
         $user = $this->get_managed_user($id);
 
         if ((string) $user->id === (string) $this->session->id) {
@@ -1741,7 +2037,8 @@ class Pages extends CI_Controller
             show_error('Only admin and division users can delete schools.', 403);
         }
 
-        $rec_id = $this->uri->segment(3);
+        $this->require_post();
+        $rec_id = (int) $this->input->post('id', true);
 
         if (empty($rec_id)) {
             show_404();
@@ -1784,24 +2081,26 @@ class Pages extends CI_Controller
 
     public function confirm_signup()
     {
-
-        $user = $this->Page_model->confirm_signup();
-        $this->session->set_flashdata('success', 'Successfully Confirmed.');
+        $user_id = (int) $this->uri->segment(3);
+        $token = rawurldecode((string) $this->uri->segment(4));
+        if ($user_id <= 0 || !$this->Page_model->confirm_signup($user_id, $token)) {
+            show_error('This verification link is invalid or has expired.', 400);
+        }
+        $this->session->set_flashdata('success', 'Your account has been verified. You may now sign in.');
         redirect(base_url() . 'pages/log_in');
     }
 
     public function cp()
     {
-        $this->require_user_manager();
-        $this->get_managed_user($this->input->post('id'));
-        $this->Page_model->user_pass();
-        $this->session->set_flashdata('success', 'Successfully updated.');
-        redirect(base_url() . ($this->is_division_user_manager() ? 'pages/userlist_division' : 'pages/userlist'));
+        // Retired in favor of user_reset_password(), which generates a strong
+        // temporary password, checks manager scope, and writes an audit event.
+        show_error('This legacy password endpoint has been disabled.', 410);
     }
 
     public function user_reset_password()
     {
         $this->require_user_manager();
+        $this->require_post();
 
         $id = $this->input->post('id');
         $user = $this->get_managed_user($id);
@@ -1832,47 +2131,58 @@ class Pages extends CI_Controller
             show_error('You are not authorized to update user profile pictures.', 403);
         }
 
-        $id = $this->input->post('id');
+        $this->require_post();
+        $id = (int) $this->input->post('id', true);
         $user = $this->Page_model->one_cond_row('users', 'id', $id);
-        $config['allowed_types'] = 'jpg|png|jpeg|gif|';
+        if (!$user) {
+            show_404();
+        }
+        $config['allowed_types'] = 'jpg|png|jpeg|gif';
         $config['upload_path'] = './uploads/';
+        $config['max_size'] = 2048;
+        $config['encrypt_name'] = TRUE;
+        $config['file_ext_tolower'] = TRUE;
         $this->load->library('upload', $config);
 
         if ($this->upload->do_upload('file')) {
-            $file = "uploads/" . $user->image;
+            $file = FCPATH . 'uploads/' . basename((string) $user->image);
 
-            if (!empty($user->image) && file_exists($file)) {
+            if (!empty($user->image) && is_file($file)) {
                 unlink($file);
             }
             $this->Page_model->user_update_profile();
             $this->session->set_flashdata('success', 'Successfully updated.');
-            redirect($_SERVER['HTTP_REFERER']);
+            redirect(base_url() . 'pages/profilelist');
         } else {
-            print_r($this->upload->display_errors());
+            $this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', '')));
+            redirect(base_url() . 'pages/profilelist');
         }
     }
 
     public function user_profile()
     {
+        $this->require_post();
         $id = $this->session->username;
         $user = $this->Page_model->one_cond_row('users', 'username', $id);
-        $config['allowed_types'] = 'jpg|png|jpeg|gif|';
+        $config['allowed_types'] = 'jpg|png|jpeg|gif';
         $config['upload_path'] = './uploads/';
         $config['max_size']      = 1024; // 1MB
+        $config['encrypt_name'] = TRUE;
+        $config['file_ext_tolower'] = TRUE;
         $this->load->library('upload', $config);
 
         if ($this->upload->do_upload('file')) {
-            $file = "uploads/" . $user->image;
+            $file = FCPATH . 'uploads/' . basename((string) $user->image);
 
-            if (!empty($user->image) && file_exists($file)) {
+            if (!empty($user->image) && is_file($file)) {
                 unlink($file);
             }
             $this->Page_model->users_update_profile();
             $this->session->set_flashdata('success', 'Successfully updated.');
-            redirect($_SERVER['HTTP_REFERER']);
+            redirect(base_url());
         } else {
-            $this->session->set_flashdata('danger', $this->upload->display_errors());
-            redirect($_SERVER['HTTP_REFERER']);
+            $this->session->set_flashdata('danger', strip_tags($this->upload->display_errors('', '')));
+            redirect(base_url());
         }
     }
 
@@ -1892,11 +2202,24 @@ class Pages extends CI_Controller
 
             $this->load->view($page, $this->homepage_data());
         } else {
-
+            $login_identifier = trim((string) $this->input->post('username', true));
+            if ($this->login_is_rate_limited($login_identifier)) {
+                log_message('error', 'Rate-limited login attempt from ' . $this->input->ip_address());
+                $message = 'Too many sign-in attempts. Please wait 15 minutes and try again.';
+                if ($this->input->is_ajax_request()) {
+                    $this->output->set_status_header(429)->set_content_type('application/json')
+                        ->set_output(json_encode(array('success' => false, 'message' => $message)));
+                    return;
+                }
+                $this->session->set_flashdata('failed', $message);
+                redirect(base_url() . 'homepage');
+                return;
+            }
             $user_id = $this->Page_model->login();
 
             if ($user_id) {
-
+                $this->clear_login_failures($login_identifier);
+                $this->session->sess_regenerate(TRUE);
                 $user_data = array(
                     'id' => $user_id['id'],
                     'username' => $user_id['username'],
@@ -1922,8 +2245,9 @@ class Pages extends CI_Controller
                 
                 redirect(base_url());
             } else {
+                $this->record_login_failure($login_identifier);
                 if ($this->input->is_ajax_request()) {
-                    echo json_encode(['success' => false, 'message' => 'Invalid login. Either your account is not verified (please check your email for the verification link) or your username or password is incorrect.']);
+                    echo json_encode(['success' => false, 'message' => 'Invalid username or password.']);
                     return;
                 }
                 
@@ -1934,6 +2258,12 @@ class Pages extends CI_Controller
     }
     public function lock_user_screen()
     {
+        // A locked session deliberately has logged_in removed, but it must
+        // still be tied to the user who initiated the lock operation.
+        if (!$this->session->username) {
+            redirect(base_url('homepage'));
+            return;
+        }
 
         $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
         $this->form_validation->set_rules('password', 'password', 'required');
@@ -1954,18 +2284,21 @@ class Pages extends CI_Controller
             if ($user_id) {
 
                 $user_data = array(
+                    'id' => $user_id['id'],
                     'username' => $user_id['username'],
                     'user' => $user_id['fname'] . ' ' . $user_id['mname'] . ' ' . $user_id['lname'],
                     'position' => $user_id['position'],
-                    'office' => $user_id['office'],
-                    'image' => $user_id['image'],
-                    'id' => $user_id['id'],
-                    'com_id' => $user_id['company_id'],
+                    'region' => $user_id['r_id'],
+                    'division' => $user_id['p_id'],
+                    'district' => $user_id['d_id'],
+                    'virified' => $user_id['virified'],
                     'logged_in' => true
 
                 );
 
+                $this->session->sess_regenerate(TRUE);
                 $this->session->set_userdata($user_data);
+                $this->session->set_userdata('fy', date('Y'));
                 $this->session->set_flashdata('user_log', 'You are now loged in as '
                     . $this->session->position);
                 redirect(base_url());
@@ -1977,18 +2310,13 @@ class Pages extends CI_Controller
     }
     public function logout()
     {
-
-        $this->session->unset_userdata('id');
-        $this->session->unset_userdata('username');
-        $this->session->unset_userdata('position');
-        $this->session->unset_userdata('office');
-        $this->session->unset_userdata('logged_in');
-
-        $this->session->set_flashdata('success', 'You have signed out securely.');
+        $this->require_post();
+        $this->session->sess_destroy();
         redirect(base_url() . 'homepage');
     }
     public function lock()
     {
+        $this->require_post();
         $this->session->unset_userdata('id');
         $this->session->unset_userdata('position');
         $this->session->unset_userdata('logged_in');
@@ -2085,6 +2413,7 @@ class Pages extends CI_Controller
             ->select('s.schoolID, s.schoolName, d.description as division_name')
             ->from('schools s')
             ->join('division d', 's.division_id = d.id', 'left')
+            ->where('s.region_id', (int) $this->session->region)
             ->order_by('s.schoolName', 'ASC')
             ->get()
             ->result();
@@ -2141,6 +2470,7 @@ class Pages extends CI_Controller
         if (!$data['school']) {
             show_404();
         }
+        $this->require_school_scope($data['school']);
 
         // Get school details with division
         $data['school']->division = $this->Common->one_cond_row('division', 'id', $data['school']->division_id);
@@ -2228,6 +2558,8 @@ class Pages extends CI_Controller
         }
 
         $district_id = (int) $this->uri->segment(3);
+        $district = $this->Page_model->one_cond_row('district', 'id', $district_id);
+        $this->require_district_scope($district);
 
         // Get all schools in the district, not just those with submissions to the selected table
         $data['data'] = $this->db
@@ -2246,7 +2578,7 @@ class Pages extends CI_Controller
             'sbm' => $this->Page_model->submission_school_ids('sbm', $this->session->fy, $school_ids),
             'sbm_ta' => $this->Page_model->submission_school_ids('sbm_ta', $this->session->fy, $school_ids)
         );
-        $data['district'] = $this->Page_model->one_cond_row('district', 'id', $district_id);
+        $data['district'] = $district;
         $data['selected_submission'] = $table;
         $data['division_school_scope'] = true;
 
@@ -2277,6 +2609,8 @@ class Pages extends CI_Controller
         }
 
         $division_id = (int) $this->uri->segment(3);
+        $division = $this->Page_model->one_cond_row('division', 'id', $division_id);
+        $this->require_division_scope($division);
 
         //$data['data'] = $this->Page_model->one_cond('schools','p_id',$this->session->p_id);
         //$data['data'] = $this->Page_model->schools_with_district($this->uri->segment(3));
@@ -2291,7 +2625,7 @@ class Pages extends CI_Controller
             'sbm_ta' => $this->Page_model->submission_school_ids('sbm_ta', $this->session->fy, $school_ids)
         );
         $data['selected_submission'] = $table;
-        $data['division'] = $this->Page_model->one_cond_row('division', 'id', $division_id);
+        $data['division'] = $division;
         $data['districts'] = $this->Page_model->get_districts_by_division($division_id);
 
 
@@ -2304,11 +2638,12 @@ class Pages extends CI_Controller
 
     public function change_fy()
     {
-        $new_fy = $this->input->post('new_fy');
-        if (!empty($new_fy)) {
+        $this->require_post();
+        $new_fy = (int) $this->input->post('new_fy', true);
+        if ($new_fy >= 2000 && $new_fy <= (int) date('Y') + 1) {
             $this->session->set_userdata('fy', $new_fy);
         }
-        redirect($_SERVER['HTTP_REFERER']);
+        redirect(base_url());
     }
 
     public function school_new()
@@ -2338,7 +2673,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
-
+            $this->require_post();
             $this->Page_model->school_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/school_list/' . $this->input->post('schoolType'));
@@ -2402,8 +2737,10 @@ class Pages extends CI_Controller
 
         $data['title'] = "Action Plan for Implementation of SBM";
 
-        $data['school'] = $this->Common->one_cond_row('schools', 'schoolID', $this->uri->segment(3));
-        $data['data'] = $this->Common->two_cond('sgod_action_plan', 'fy', $this->session->fy, 'school_id', $this->uri->segment(3));
+        $school_id = (string) $this->uri->segment(3);
+        $data['school'] = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
+        $this->require_school_scope($data['school']);
+        $data['data'] = $this->Common->two_cond('sgod_action_plan', 'fy', $this->session->fy, 'school_id', $school_id);
 
         $this->load->view('pages/' . $page, $data);
     }
@@ -2461,7 +2798,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
-
+            $this->require_post();
             $this->Page_model->action_plan_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/sbm_action_plan');
@@ -2470,6 +2807,12 @@ class Pages extends CI_Controller
 
     public function sbm_action_plan_update()
     {
+        $record_id = strtoupper((string) $this->input->method()) === 'POST'
+            ? (int) $this->input->post('id', true)
+            : (int) $this->uri->segment(3);
+        if ($record_id > 0) {
+            $this->school_for_record('sgod_action_plan', $record_id);
+        }
 
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -2494,7 +2837,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
-
+            $this->require_post();
             $this->Page_model->action_plan_update();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/sbm_action_plan');
@@ -2535,6 +2878,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_checklist_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/sbm_checklist');
@@ -2545,6 +2889,8 @@ class Pages extends CI_Controller
     {
 
         $school_id = $this->uri->segment(3);
+        $school = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
+        $this->require_school_scope($school);
         $data['sbmc'] = $this->Common->two_cond_row('sbm', 'school_id', $school_id, 'fy', $this->session->fy);
 
         $page = 'sbm_form_update';
@@ -2559,7 +2905,6 @@ class Pages extends CI_Controller
         $data['sbm_sub'] = $this->Common->no_cond('sbm_sub_indicator');
 
         // Get school information
-        $school = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
         $data['school_name'] = !empty($school) ? $school->schoolName : '';
 
         $this->load->view('templates/header');
@@ -2571,13 +2916,18 @@ class Pages extends CI_Controller
 
     public function sbm_checklist_update()
     {
+        $this->require_post();
+        $this->school_for_record('sbm', (int) $this->input->post('id', true));
         $this->Page_model->sbm_checklist_update();
         $this->session->set_flashdata('success', 'Successfully saved.');
         redirect(base_url() . 'pages/sbm_checklist');
     }
     function sbm_checklist_final()
     {
-        $this->Page_model->sbm_cecklist_lock_unloc(1);
+        $this->require_post();
+        $checklist_id = (int) $this->input->post('id', true);
+        $this->school_for_record('sbm', $checklist_id);
+        $this->Page_model->sbm_checklist_lock_unloc_by_id($checklist_id, 1, (string) $this->session->username);
         $this->session->set_flashdata('success', 'Checklist finalized. PDF download is starting.');
         redirect(base_url() . 'Pages/sbm_checklist_pdf');
     }
@@ -2597,6 +2947,9 @@ class Pages extends CI_Controller
         if ($view_school_id === '') {
             show_404();
         }
+
+        $view_school = $this->Common->one_cond_row('schools', 'schoolID', $view_school_id);
+        $this->require_school_scope($view_school);
 
         $data['sbmc'] = $this->Common->two_cond_row('sbm', 'school_id', $view_school_id, 'fy', $this->session->fy);
 
@@ -2660,6 +3013,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_ta_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/tapr_form');
@@ -2668,6 +3022,8 @@ class Pages extends CI_Controller
 
     public function tapr_form_update()
     {
+        $this->require_post();
+        $this->school_for_record('sbm_ta', (int) $this->input->post('id', true));
         $record = $this->Common->two_cond_row('sbm_ta', 'school_id', $this->session->username, 'fy', $this->session->fy);
 
         if ($record && isset($record->stat) && (int) $record->stat === 1) {
@@ -2715,6 +3071,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_tana_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/tana_form');
@@ -2778,6 +3135,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_tana_summary_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/tana_summary');
@@ -2819,6 +3177,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_tana_summary_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/tana_summary');
@@ -2860,6 +3219,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_tana_summary_region_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/tana_summary');
@@ -2868,6 +3228,7 @@ class Pages extends CI_Controller
 
     public function tana_summary_update()
     {
+        $this->require_post();
         $this->Page_model->delete_two_cond('tana_summary','fy',$this->session->fy,'school_id',$this->session->username);
         $this->Page_model->sbm_tana_summary_insert();
         $this->session->set_flashdata('success', 'Successfully saved.');
@@ -2876,6 +3237,7 @@ class Pages extends CI_Controller
 
     public function tana_division()
     {
+        $this->require_post();
         $this->Page_model->tana_division_insert();
         $this->session->set_flashdata('success', 'Successfully saved.');
         redirect(base_url() . 'pages/tana_summary_division');
@@ -2883,6 +3245,7 @@ class Pages extends CI_Controller
 
     public function tana_division_autogenerate()
     {
+        $this->require_post();
         $result = $this->Page_model->tana_division_autogenerate();
 
         if (!empty($result['status'])) {
@@ -2902,6 +3265,7 @@ class Pages extends CI_Controller
 
     public function tana_region()
     {
+        $this->require_post();
         $this->Page_model->tana_region_insert();
         $this->session->set_flashdata('success', 'Successfully saved.');
         redirect(base_url() . 'pages/tana_summary_region');
@@ -2909,6 +3273,8 @@ class Pages extends CI_Controller
 
     public function tana_form_update()
     {
+        $this->require_post();
+        $this->school_for_record('tana', (int) $this->input->post('id', true));
         $position = strtolower(trim((string) $this->session->position));
         $is_school_user = $position === 'school';
 
@@ -2926,7 +3292,10 @@ class Pages extends CI_Controller
 
     function sbm_ta_final()
     {
-        $this->Page_model->sbm_ta_lock_unloc(1);
+        $this->require_post();
+        $ta_id = (int) $this->input->post('id', true);
+        $this->school_for_record('sbm_ta', $ta_id);
+        $this->Page_model->sbm_ta_lock_unloc_by_id($ta_id, 1, (string) $this->session->username);
         $this->session->set_flashdata('success', 'TA report finalized successfully. It is now locked until a division reviewer unlocks it.');
         redirect(base_url() . 'Pages/tapr_form');
     }
@@ -2942,7 +3311,9 @@ class Pages extends CI_Controller
 
         $this->ensure_unlock_request_table();
 
-        $ta_id = $this->uri->segment(3);
+        $this->require_post();
+        $ta_id = (int) $this->input->post('id', true);
+        list($ta_record, $school) = $this->school_for_record('sbm_ta', $ta_id);
         if ($ta_id) {
             // Mark any pending unlock requests for this TA as approved
             $this->db->where('ta_id', $ta_id)
@@ -2954,11 +3325,11 @@ class Pages extends CI_Controller
                 ));
         }
 
-        $this->Page_model->sbm_ta_lock_unloc(0);
+        $this->Page_model->sbm_ta_lock_unloc_by_id($ta_id, 0);
         $this->session->set_flashdata('success', 'TA report unlocked successfully. The school can now edit it again.');
 
         // Check if this is called from division view (has school_id parameter)
-        $school_id = $this->uri->segment(4);
+        $school_id = (string) $school->schoolID;
         if ($school_id) {
             redirect(base_url() . 'Pages/tapr_form_district/' . rawurldecode($school_id));
         } else {
@@ -3013,7 +3384,8 @@ class Pages extends CI_Controller
             show_error('Only school users can request TA report unlocks.', 403);
         }
 
-        $ta_id = $this->uri->segment(3);
+        $this->require_post();
+        $ta_id = (int) $this->input->post('id', true);
         if (empty($ta_id)) {
             show_404();
         }
@@ -3025,6 +3397,9 @@ class Pages extends CI_Controller
         $ta_record = $this->Common->one_cond_row('sbm_ta', 'id', $ta_id);
         if (!$ta_record) {
             show_404();
+        }
+        if ((string) $ta_record->school_id !== (string) $this->session->username) {
+            show_error('You can only request an unlock for your own TA report.', 403);
         }
 
         // Get school to get division_id
@@ -3070,7 +3445,8 @@ class Pages extends CI_Controller
             show_error('Only school users can request checklist unlocks.', 403);
         }
 
-        $checklist_id = $this->uri->segment(3);
+        $this->require_post();
+        $checklist_id = (int) $this->input->post('id', true);
         if (empty($checklist_id)) {
             show_404();
         }
@@ -3081,6 +3457,9 @@ class Pages extends CI_Controller
         $checklist_record = $this->Common->one_cond_row('sbm', 'id', $checklist_id);
         if (!$checklist_record) {
             show_404();
+        }
+        if ((string) $checklist_record->school_id !== (string) $this->session->username) {
+            show_error('You can only request an unlock for your own checklist.', 403);
         }
 
         // Get school to get division_id
@@ -3125,6 +3504,7 @@ class Pages extends CI_Controller
         if (!$is_division_user) {
             show_error('Only division users can clear unlock requests.', 403);
         }
+        $this->require_post();
 
         $this->ensure_unlock_request_table();
 
@@ -3218,7 +3598,12 @@ class Pages extends CI_Controller
 
     public function action_plan_delete()
     {
-        $this->Page_model->delete('sgod_action_plan', 'id', 3);
+        $this->require_post();
+        $record_id = (int) $this->input->post('id', true);
+        $this->school_for_record('sgod_action_plan', $record_id);
+        $this->db->where('id', $record_id)
+            ->where('school_id', (string) $this->session->username)
+            ->delete('sgod_action_plan');
         $this->session->set_flashdata('danger', 'Successfully deleted.');
         redirect(base_url() . 'pages/sbm_action_plan');
     }
@@ -3227,6 +3612,8 @@ class Pages extends CI_Controller
     {
         if ($this->form_validation->run() == FALSE) {
             $view_school_id = rawurldecode((string) $this->uri->segment(3));
+            $scope_school = $this->Common->one_cond_row('schools', 'schoolID', $view_school_id);
+            $this->require_school_scope($scope_school);
 
             $data['sbm_remark'] = $this->Common->two_cond_row('sbm_remark_admin', 'school_id', $view_school_id, 'fy', $this->session->fy);
 
@@ -3277,12 +3664,22 @@ class Pages extends CI_Controller
 
     function tapr_admin()
     {
+        $this->require_post();
+        $school = $this->Common->one_cond_row('schools', 'schoolID', $this->input->post('school_id', true));
+        $this->require_school_scope($school);
         $this->Page_model->sbm_cecklist_admin_insert();
         $this->session->set_flashdata('success', 'Saved successfully.');
         redirect(base_url() . 'Pages/tapr_form_district/' . $this->input->post('school_id'));
     }
     function tapr_district_update()
     {
+        $this->require_post();
+        $remark = $this->Common->one_cond_row('sbm_remark_admin', 'id', (int) $this->input->post('id', true));
+        if (!$remark) {
+            show_404();
+        }
+        $school = $this->Common->one_cond_row('schools', 'schoolID', $remark->school_id);
+        $this->require_school_scope($school);
         $this->Page_model->sbm_cecklist_admin_update();
         $this->session->set_flashdata('success', 'Saved successfully.');
         redirect(base_url() . 'Pages/tapr_form_district/' . $this->input->post('school_id'));
@@ -3339,6 +3736,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_tech_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/sbm_district_tech');
@@ -3347,6 +3745,14 @@ class Pages extends CI_Controller
 
     public function sbm_district_tech_edit()
     {
+        $is_post = strtoupper((string) $this->input->method()) === 'POST';
+        $entry_id = (int) ($is_post
+            ? $this->input->post('id', true)
+            : $this->uri->segment(3));
+        $entry = $this->Common->one_cond_row('sbm_tech', 'id', $entry_id);
+        if (!$entry || (int) $entry->district !== (int) $this->session->district) {
+            show_404();
+        }
 
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -3363,7 +3769,7 @@ class Pages extends CI_Controller
                 show_404();
             }
 
-            $data['data'] = $this->Common->one_cond_row('sbm_tech', 'id', $this->uri->segment(3));
+            $data['data'] = $entry;
             $data['title'] = "Update Technical Assistance Entry";
             $data['district'] = $this->Page_model->one_cond_row('district', 'id', $this->session->district);
 
@@ -3373,6 +3779,7 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
             $this->Page_model->sbm_tech_update();
             $this->session->set_flashdata('success', 'Successfully saved.');
             redirect(base_url() . 'pages/sbm_district_tech');
@@ -3381,7 +3788,8 @@ class Pages extends CI_Controller
 
     public function sbm_district_tech_del()
     {
-        $id = (int) $this->uri->segment(3);
+        $this->require_post();
+        $id = (int) $this->input->post('id', true);
         $entry = $this->Common->one_cond_row('sbm_tech', 'id', $id);
 
         if (!$entry || (int) $entry->district !== (int) $this->session->district) {
@@ -3491,7 +3899,8 @@ class Pages extends CI_Controller
         $data['title'] = "Division List";
 
         //$data['data'] = $this->Page_model->one_cond('schools','p_id',$this->session->p_id);
-        $divisions = $this->Page_model->one_cond('division', 'region_id', 12);
+        $region_id = $this->session->position === 'region' ? (int) $this->session->region : 12;
+        $divisions = $this->Page_model->one_cond('division', 'region_id', $region_id);
 
         // Calculate signup statistics for each division
         foreach ($divisions as $division) {
@@ -3815,9 +4224,9 @@ class Pages extends CI_Controller
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         ', '</div>');
-        $this->form_validation->set_rules('schoolID', 'School ID', 'trim|required');
-        $this->form_validation->set_rules('password', 'Password', 'trim|required');
-        $this->form_validation->set_rules('schoolName', 'school Name', 'required');
+        $this->form_validation->set_rules('schoolID', 'School ID', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[12]|max_length[128]');
+        $this->form_validation->set_rules('schoolName', 'School Name', 'trim|required|max_length[255]');
         $this->form_validation->set_rules('schoolEmail', 'School Email', 'trim|required|valid_email');
         $this->form_validation->set_rules('division_id', 'Division', 'trim|required');
         $this->form_validation->set_rules('d_id', 'District/Cluster', 'trim|required');
@@ -3842,15 +4251,10 @@ class Pages extends CI_Controller
             $this->load->view('pages/' . $page, $data);
             } else {
 
-                $recaptcha = $this->input->post('g-recaptcha-response');
-                $secret = trim('6LedsqorAAAAAJLksDbaUK9OIhlM-6bNeR52eXbo');
-
-                $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secret}&response={$recaptcha}");
-                $responseKeys = json_decode($response, true);
-
-                if (!$responseKeys["success"]) {
+                if (!$this->verify_recaptcha_response()) {
                     $this->session->set_flashdata('danger', 'reCAPTCHA verification failed. Please try again.');
                     redirect(base_url() . 'log_in');
+                    return;
                 }
 
 
@@ -3865,6 +4269,12 @@ class Pages extends CI_Controller
             if (!empty($renren) || !empty($ivykate) || !empty($ivankyle) || !empty($ic)) {
                 $this->session->set_flashdata('danger', 'I Got you');
                 redirect(base_url() . 'private');
+                return;
+            }
+
+            $district = $this->Page_model->one_cond_row('district', 'id', (int) $this->input->post('d_id', true));
+            if (!$district || (int) $district->division_id !== (int) $this->input->post('division_id', true)) {
+                show_error('The selected district does not belong to the selected division.', 422);
             }
 
             $check = $this->Common->one_cond_count_row('schools', 'schoolID', $schoolID)->num_rows();
@@ -3872,17 +4282,19 @@ class Pages extends CI_Controller
 
             if ($check == 0 && $user_check == 0) {
                 $this->Page_model->insert_school();
-                $this->Page_model->insert_user();
-                $pass = base_url() . 'Pages/confirm_signup/' . $this->db->insert_id();
+                $new_user_id = $this->Page_model->insert_user();
+                $verification_token = $this->Page_model->create_signup_verification_token($new_user_id);
+                $pass = base_url() . 'Pages/confirm_signup/' . (int) $new_user_id . '/'
+                    . rawurlencode($verification_token);
             } else {
                 $this->session->set_flashdata('failed', 'Duplicate entry found. The record already exists.');
                 redirect(base_url() . 'log_in');
+                return;
             }
 
             $email = $this->input->post('schoolEmail');
             $name = $this->input->post('schoolName');
             $username = $this->input->post('schoolID');
-            $pn = $this->input->post('password');
             
 
             //Email Notification
@@ -3967,7 +4379,6 @@ class Pages extends CI_Controller
 
                         <div class="credentials-box">
                             <p>Username: ' . htmlspecialchars($username) . '</p>
-                            <p>Password: ' . htmlspecialchars($pn) . '</p>
                             <a class="cb" href="' . htmlspecialchars($pass) . '">' . 'Confirm' . '</a>
                         </div>
 
@@ -3990,7 +4401,7 @@ class Pages extends CI_Controller
             $this->email->send();
 
             //$this->session->set_flashdata('success', 'School account has been registered successfully. Your username and password have been sent to your email.');
-            $this->session->set_flashdata('success', 'The school account has been successfully registered. You may now sign in using your credentials.');
+            $this->session->set_flashdata('success', 'Registration received. Check your official email and verify the account before signing in.');
             redirect(base_url() . 'log_in');
         }
     }
@@ -4002,7 +4413,11 @@ class Pages extends CI_Controller
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         ', '</div>');
-        $this->form_validation->set_rules('schoolID', 'Username', 'required');
+        $this->form_validation->set_rules('schoolID', 'Username', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[12]|max_length[128]');
+        $this->form_validation->set_rules('schoolEmail', 'Email', 'trim|required|valid_email|max_length[254]');
+        $this->form_validation->set_rules('division_id', 'Division', 'required|integer');
+        $this->form_validation->set_rules('d_id', 'District', 'required|integer');
 
         if ($this->form_validation->run() == FALSE) {
 
@@ -4017,18 +4432,6 @@ class Pages extends CI_Controller
             $this->load->view('pages/' . $page, $data);
             } else {
 
-                $recaptcha = $this->input->post('g-recaptcha-response');
-                $secret = trim('6LedsqorAAAAAJLksDbaUK9OIhlM-6bNeR52eXbo');
-
-                $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secret}&response={$recaptcha}");
-                $responseKeys = json_decode($response, true);
-
-                if (!$responseKeys["success"]) {
-                    $this->session->set_flashdata('danger', 'reCAPTCHA verification failed. Please try again.');
-                    redirect(base_url() . 'log_in');
-                }
-
-
             $renren = $this->input->post('renren');
             $ivykate = $this->input->post('ivykate');
             $ivankyle = $this->input->post('ivankyle');
@@ -4040,6 +4443,16 @@ class Pages extends CI_Controller
             if (!empty($renren) || !empty($ivykate) || !empty($ivankyle) || !empty($ic)) {
                 $this->session->set_flashdata('danger', 'I Got you');
                 redirect(base_url() . 'private');
+                return;
+            }
+
+            $division_id = (int) $this->input->post('division_id', true);
+            $district = $this->Page_model->one_cond_row('district', 'id', (int) $districtID);
+            if (!$district || (int) $district->division_id !== $division_id) {
+                show_error('The selected district does not belong to the selected division.', 422);
+            }
+            if ($this->session->position === 'division' && $division_id !== (int) $this->session->division) {
+                show_error('You can only create accounts for your division.', 403);
             }
 
             $user = $this->Common->one_cond_count_row('users', 'username', $username)->num_rows();
@@ -4047,16 +4460,17 @@ class Pages extends CI_Controller
             if ($user > 0) { 
                 $this->session->set_flashdata('failed', 'Duplicate entry found. The record already exists.');
                 redirect(base_url('log_in'));
+                return;
             }
 
             $check = $this->Common->two_cond_count_row('users', 'd_id', $districtID,'position','district')->num_rows();
 
             if ($check == 0) {
                 $this->Page_model->insert_district_user(); 
-                $pass = base_url() . 'Pages/confirm_signup/' . $this->db->insert_id();
             } else {
                 $this->session->set_flashdata('failed', 'Duplicate entry found. The record already exists.');
                 redirect(base_url() . 'log_in');
+                return;
             }
 
             $district = $this->Common->one_cond_row('district', 'id',$this->input->post('d_id'));
@@ -4064,7 +4478,6 @@ class Pages extends CI_Controller
             $email = $this->input->post('schoolEmail');
             $name = $district->description;
             $username = $this->input->post('schoolID');
-            $pn = $this->input->post('password');
             
 
             //Email Notification
@@ -4149,8 +4562,7 @@ class Pages extends CI_Controller
 
                         <div class="credentials-box">
                             <p>Username: ' . htmlspecialchars($username) . '</p>
-                            <p>Password: ' . htmlspecialchars($pn) . '</p>
-                            <a class="cb" href="' . htmlspecialchars($pass) . '">' . 'Confirm' . '</a>
+                            <p>Your district account has been created by an authorized administrator.</p>
                         </div>
 
                         <p>Kindly keep this information secure and do not share it with anyone.</p>
@@ -4194,6 +4606,8 @@ class Pages extends CI_Controller
         if (!$data['data']) {
             show_404();
         }
+
+        $this->require_school_scope($data['data']);
 
         $data['division'] = $this->Page_model->one_cond_row('division', 'id', $data['data']->division_id);
         $data['district'] = $this->Page_model->one_cond_row('district', 'id', $data['data']->district_id);
@@ -4260,14 +4674,33 @@ class Pages extends CI_Controller
 
     public function tana_division_delete()
     {
-        $this->Page_model->delete('division_tana', 'id', 3);
+        $this->require_post();
+        $id = (int) $this->input->post('id', true);
+        $record = $this->db->where('id', $id)
+            ->where('division', (int) $this->session->division)
+            ->where('region', (int) $this->session->region)
+            ->where('fy', $this->session->fy)
+            ->get('division_tana')->row();
+        if (!$record) {
+            show_404();
+        }
+        $this->Page_model->delete('division_tana', 'id', $id);
         $this->session->set_flashdata('danger', 'Successfully deleted.');
         redirect(base_url() . 'pages/tana_summary_division');
     }
 
     public function tana_region_delete()
     {
-        $this->Page_model->delete('region_tana', 'id', 3);
+        $this->require_post();
+        $id = (int) $this->input->post('id', true);
+        $record = $this->db->where('id', $id)
+            ->where('region', (int) $this->session->region)
+            ->where('fy', $this->session->fy)
+            ->get('region_tana')->row();
+        if (!$record) {
+            show_404();
+        }
+        $this->Page_model->delete('region_tana', 'id', $id);
         $this->session->set_flashdata('danger', 'Successfully deleted.');
         redirect(base_url() . 'pages/tana_summary_region');
     }
@@ -4297,35 +4730,35 @@ class Pages extends CI_Controller
 
             $this->load->view('pages/' . $page);
         } else {
-            
-            $email_check = $this->Common->one_cond_count_row('users', 'email', $this->input->post('email'));
-            
-            if ($email_check->num_rows() == 0) {
-                if ($this->input->is_ajax_request()) {
-                    echo json_encode(['success' => false, 'message' => 'We could not find your email address.']);
-                    return;
-                }
-                $this->session->set_flashdata('failed', 'We could not find your email address.');
-                redirect(base_url() . 'Pages/forgot_password');
-            } else {
-                $this->Page_model->update_request_password();
-                if ($this->input->is_ajax_request()) {
-                    echo json_encode(['success' => true, 'message' => 'The new password has been sent to your email.']);
-                    return;
-                }
-                $this->session->set_flashdata('success', 'The new password has been sent to your email.');
-                redirect(base_url() . 'log_in');
+            // Public password resets previously changed the password immediately,
+            // enabling account enumeration and reset-denial attacks. Until a
+            // proper single-use reset-token workflow is deployed, keep the
+            // response generic and route resets through authorized managers.
+            $email_hash = hash('sha256', mb_strtolower(trim((string) $this->input->post('email', true)), 'UTF-8'));
+            log_message('error', 'Password assistance requested for email hash ' . $email_hash
+                . ' from ' . $this->input->ip_address());
+            $message = 'If the address is registered, password assistance instructions will be provided by your authorized system administrator.';
+            if ($this->input->is_ajax_request()) {
+                $this->output->set_content_type('application/json')
+                    ->set_output(json_encode(array('success' => true, 'message' => $message)));
+                return;
             }
+            $this->session->set_flashdata('success', $message);
+            redirect(base_url() . 'log_in');
         }
     }
 
     public function school_update()
     {
-        $school_id = $this->uri->segment(3);
-
-        if (empty($school_id)) {
-            $school_id = $this->input->post('schoolID', true);
+        $is_post = strtoupper((string) $this->input->method()) === 'POST';
+        $school_id = $is_post
+            ? (string) $this->input->post('recID', true)
+            : (string) $this->uri->segment(3);
+        $school_record = $this->Common->one_cond_row('schools', $is_post ? 'recID' : 'schoolID', $school_id);
+        if (!$school_record && !$is_post) {
+            $school_record = $this->Common->one_cond_row('schools', 'recID', $school_id);
         }
+        $this->require_school_scope($school_record);
 
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -4342,16 +4775,7 @@ class Pages extends CI_Controller
             }
 
             $data['title'] = "Update School Information";
-            // Try to find by schoolID first, if not found try by recID
-            $data['data'] = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
-            
-            if (!$data['data']) {
-                $data['data'] = $this->Common->one_cond_row('schools', 'recID', $school_id);
-            }
-
-            if (!$data['data']) {
-                show_404();
-            }
+            $data['data'] = $school_record;
 
             $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
             $data['districts'] = $this->Page_model->get_districts_by_division($data['data']->division_id);
@@ -4362,7 +4786,44 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
+            $new_school_id = trim((string) $this->input->post('schoolID', true));
+            if (!preg_match('/^[A-Za-z0-9._-]{1,45}$/', $new_school_id)) {
+                show_error('The school ID contains invalid characters.', 422);
+            }
+            if ((string) $school_record->schoolID !== $new_school_id) {
+                $duplicate = $this->Page_model->one_cond_row('schools', 'schoolID', $new_school_id);
+                if ($duplicate) {
+                    show_error('That school ID is already in use.', 422);
+                }
+            }
 
+            $division_id = (int) $this->input->post('division_id', true);
+            $district_id = (int) $this->input->post('d_id', true);
+            $position = strtolower((string) $this->session->position);
+            if ($position === 'school') {
+                $division_id = (int) $school_record->division_id;
+                $district_id = (int) $school_record->district_id;
+            } elseif (in_array($position, array('division', 'division_head', 'ict'), true)) {
+                $division_id = (int) $this->session->division;
+            } elseif ($position === 'district') {
+                $division_id = (int) $this->session->division;
+                $district_id = (int) $this->session->district;
+            }
+            $district = $this->Page_model->one_cond_row('district', 'id', $district_id);
+            $division = $this->Page_model->one_cond_row('division', 'id', $division_id);
+            if (!$district || !$division || (int) $district->division_id !== $division_id) {
+                show_error('The selected district and division do not match.', 422);
+            }
+            if ($position === 'region' && (int) $division->region_id !== (int) $this->session->region) {
+                show_error('You can only move schools within your region.', 403);
+            }
+
+            // Models consume the legacy POST fields; replace security-sensitive
+            // identifiers only after deriving them from the authorized scope.
+            $_POST['old_schoolID'] = (string) $school_record->schoolID;
+            $_POST['division_id'] = $division_id;
+            $_POST['d_id'] = $district_id;
             $this->Page_model->school_updates();
             $this->Page_model->update_district_id();
             $this->Page_model->user_updates();
@@ -4425,7 +4886,7 @@ class Pages extends CI_Controller
 
     public function district_new()
     {
-        if (!$this->session->logged_in || !in_array($this->session->position, array('division', 'Admin'), true)) {
+        if (!$this->session->logged_in || !in_array($this->session->position, array('division', 'admin'), true)) {
             show_error('Only division and admin users can access district settings.', 403);
         }
 
@@ -4444,7 +4905,7 @@ class Pages extends CI_Controller
 
             $data['title'] = "Add New District";
             
-            if ($this->session->position === 'Admin') {
+            if ($this->session->position === 'admin') {
                 $data['divisions'] = $this->Page_model->no_cond('division');
             } else {
                 $data['division'] = $this->Page_model->one_cond_row('division', 'id', $this->session->division);
@@ -4456,6 +4917,10 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
+            if ($this->session->position === 'division') {
+                $_POST['division_id'] = (int) $this->session->division;
+            }
             $this->Page_model->district_insert();
             $this->session->set_flashdata('success', 'Successfully saved.');
             
@@ -4466,7 +4931,7 @@ class Pages extends CI_Controller
 
     public function district_update()
     {
-        if (!$this->session->logged_in || !in_array($this->session->position, array('division', 'Admin'), true)) {
+        if (!$this->session->logged_in || !in_array($this->session->position, array('division', 'admin'), true)) {
             show_error('Only division and admin users can access district settings.', 403);
         }
 
@@ -4474,6 +4939,14 @@ class Pages extends CI_Controller
 
         if (empty($district_id)) {
             $district_id = $this->input->post('id', true);
+        }
+        $district_record = $this->Page_model->one_cond_row('district', 'id', $district_id);
+        if (!$district_record) {
+            show_404();
+        }
+        if ($this->session->position === 'division'
+            && (int) $district_record->division_id !== (int) $this->session->division) {
+            show_error('You can only update districts under your division.', 403);
         }
 
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -4490,15 +4963,7 @@ class Pages extends CI_Controller
             }
 
             $data['title'] = "Update District";
-            $data['district'] = $this->Page_model->one_cond_row('district', 'id', $district_id);
-
-            if (!$data['district']) {
-                show_404();
-            }
-
-            if ($this->session->position !== 'Admin' && (string) $data['district']->division_id !== (string) $this->session->division) {
-                show_error('You can only update districts under your division.', 403);
-            }
+            $data['district'] = $district_record;
 
             $data['division'] = $this->Page_model->one_cond_row('division', 'id', $data['district']->division_id);
 
@@ -4508,6 +4973,10 @@ class Pages extends CI_Controller
             $this->load->view('templates/footer');
             $this->load->view('templates/footer_basic');
         } else {
+            $this->require_post();
+            if ($this->session->position === 'division') {
+                $_POST['division_id'] = (int) $this->session->division;
+            }
             $this->Page_model->district_update();
             $this->session->set_flashdata('success', 'Successfully updated.');
             
@@ -4518,11 +4987,12 @@ class Pages extends CI_Controller
 
     public function district_delete()
     {
-        if (!$this->session->logged_in || !in_array($this->session->position, array('division', 'Admin'), true)) {
+        if (!$this->session->logged_in || !in_array($this->session->position, array('division', 'admin'), true)) {
             show_error('Only division and admin users can delete districts.', 403);
         }
 
-        $district_id = $this->uri->segment(3);
+        $this->require_post();
+        $district_id = (int) $this->input->post('id', true);
 
         if (empty($district_id)) {
             show_404();
@@ -4637,10 +5107,11 @@ class Pages extends CI_Controller
             return;
         }
 
-        if ($new_logo !== null
-            && strpos($old_logo, 'uploads/division_logos/') === 0
-            && is_file(FCPATH . $old_logo)) {
-            unlink(FCPATH . $old_logo);
+        if ($new_logo !== null && strpos($old_logo, 'uploads/division_logos/') === 0) {
+            $old_logo_file = FCPATH . 'uploads/division_logos/' . basename($old_logo);
+            if (is_file($old_logo_file)) {
+                unlink($old_logo_file);
+            }
         }
 
         $this->session->set_flashdata('success', 'Division setup updated successfully.');
@@ -4862,7 +5333,7 @@ class Pages extends CI_Controller
     }
 
     function sbm_checklist_unlock()
-	{
+		{
         $position = strtolower(trim((string) $this->session->position));
         $is_division_user = $position === 'division';
 
@@ -4872,7 +5343,9 @@ class Pages extends CI_Controller
 
         $this->ensure_unlock_request_table();
 
-        $checklist_id = $this->uri->segment(3);
+	        $this->require_post();
+	        $checklist_id = (int) $this->input->post('id', true);
+	        list($checklist_record, $school) = $this->school_for_record('sbm', $checklist_id);
         if ($checklist_id) {
             // Mark any pending unlock requests for this checklist as approved
             $this->db->where('checklist_id', $checklist_id)
@@ -4884,9 +5357,9 @@ class Pages extends CI_Controller
                 ));
         }
 
-		$this->Page_model->sbm_cecklist_lock_unloc(0);
+		$this->Page_model->sbm_checklist_lock_unloc_by_id($checklist_id, 0);
 		$this->session->set_flashdata('success', 'Checklist unlocked successfully. The school can now edit it again.');
-        redirect($_SERVER['HTTP_REFERER']);
+        redirect(base_url() . 'Pages/unlock_requests');
 	}
 
     public function district_userlist_by_division()
@@ -4923,54 +5396,70 @@ class Pages extends CI_Controller
 
     function update_tana_summary()
 	{
+		$this->require_post();
 		$this->Page_model->tana_summary_del();
 		$this->session->set_flashdata('success', 'Saved successfully.');
-		redirect($_SERVER['HTTP_REFERER']);
+		redirect(base_url() . 'pages/tana_summary');
 	}
 
     function final_tana_summary()
 	{
+		$this->require_post();
 		$this->session->set_flashdata('success', 'TANA summary updates are always editable for school accounts.');
-		redirect($_SERVER['HTTP_REFERER']);
+		redirect(base_url());
 	}
 
-     function change_password_user()
-	{
+	     function change_password_user()
+		{
 		if (!$this->session->logged_in) {
 			redirect(base_url('homepage'));
-			return;
-		}
+				return;
+			}
+			$this->require_post();
 		$this->form_validation->set_rules('current_password', 'Current Password', 'required');
-		$this->form_validation->set_rules('password', 'New Password', 'required|min_length[8]');
+		$this->form_validation->set_rules('password', 'New Password', 'required|min_length[12]|max_length[128]');
 		$this->form_validation->set_rules('password_confirm', 'Confirm New Password', 'required|matches[password]');
 		if ($this->form_validation->run() === FALSE) {
-			$this->session->set_flashdata('danger', 'Provide your current password and matching new passwords of at least 8 characters.');
+			$this->session->set_flashdata('danger', 'Provide your current password and matching new passwords of at least 12 characters.');
 		} elseif (!$this->Page_model->user_password_change()) {
 			$this->session->set_flashdata('danger', 'Your current password is incorrect.');
 		} else {
 			$this->session->set_flashdata('success', 'Password successfully changed.');
 		}
-		redirect($_SERVER['HTTP_REFERER']);
+		redirect(base_url());
 	}
 
     function change_password_user_division()
-	{
-		$this->Page_model->division_user_password_change();
-		$this->session->set_flashdata('success', 'Password successfully changed.');
-		redirect($_SERVER['HTTP_REFERER']);
-	}
+		{
+		// Retired: this legacy endpoint allowed a caller to select an arbitrary
+		// username. Managers must use user_reset_password(), which enforces scope.
+		show_error('This legacy password endpoint has been disabled.', 410);
+		}
 
     function add_school_user()
-	{
-        $schoolName = rawurldecode($this->uri->segment(4));
-        $school_id = $this->uri->segment(3);
-        $district = $this->uri->segment(5);
-        $division = $this->uri->segment(6);
-        
-		$this->Page_model->add_school_user($school_id,$schoolName,$district,$division);
-		$this->session->set_flashdata('success', 'Password successfully changed.');
-		redirect($_SERVER['HTTP_REFERER']);
-	}
+		{
+		$this->require_post();
+	        $school_id = trim((string) $this->input->post('school_id', true));
+	        $school = $this->Page_model->one_cond_row('schools', 'schoolID', $school_id);
+	        $this->require_school_scope($school);
+	        if ($this->Page_model->one_cond_row('users', 'username', $school_id)) {
+	            $this->session->set_flashdata('danger', 'This school already has an account.');
+	            redirect(base_url() . 'pages/district_account/' . (int) $school->division_id);
+	            return;
+	        }
+
+	        $temporary_password = $this->Page_model->random_password();
+		$this->Page_model->add_school_user(
+		    $school_id,
+		    (string) $school->schoolName,
+		    (int) $school->district_id,
+		    (int) $school->division_id,
+		    $temporary_password
+		);
+		$this->session->set_flashdata('success', 'School account created. Temporary password: <strong><code>'
+		    . html_escape($temporary_password) . '</code></strong>');
+		redirect(base_url() . 'pages/district_account/' . (int) $school->division_id);
+		}
     
 
 

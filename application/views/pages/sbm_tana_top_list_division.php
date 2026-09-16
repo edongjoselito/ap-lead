@@ -398,13 +398,9 @@ $analysis_count = count($analysis_rows);
                         <i class="mdi mdi-alert-circle-outline"></i>
                         <?= $concern_count; ?> <?= $concern_count === 1 ? 'concern' : 'concerns'; ?>
                     </span>
-                    <a
-                        href="<?= base_url(); ?>Pages/tana_division_autogenerate"
-                        class="tana-auto-button"
-                        onclick="return confirm('Auto-generate thematic analysis from the current priority concerns with values? This will replace the existing thematic analysis list for this division.');"
-                    >
-                        <i class="mdi mdi-auto-fix"></i> Auto-Generate Analysis
-                    </a>
+                    <?= form_open('Pages/tana_division_autogenerate', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Auto-generate thematic analysis from the current priority concerns with values? This will replace the existing thematic analysis list for this division.');")); ?>
+                        <button type="submit" class="tana-auto-button"><i class="mdi mdi-auto-fix"></i> Auto-Generate Analysis</button>
+                    <?= form_close(); ?>
                     <button type="button" class="tana-add-button" data-toggle="modal" data-target="#tanaAnalysisModal">
                         <i class="mdi mdi-plus-circle-outline"></i> Add Analysis
                     </button>
@@ -501,13 +497,10 @@ $analysis_count = count($analysis_rows);
                                     <div class="tana-concern"><?= html_escape($analysis->tana); ?></div>
                                 </td>
                                 <td data-label="Action">
-                                    <a
-                                        onclick="return confirm('Delete this thematic analysis?');"
-                                        href="<?= base_url(); ?>Pages/tana_division_delete/<?= $analysis->id; ?>"
-                                        class="btn btn-danger btn-sm tana-delete-button"
-                                    >
-                                        <i class="mdi mdi-trash-can-outline"></i> Delete
-                                    </a>
+                                    <?= form_open('Pages/tana_division_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Delete this thematic analysis?');")); ?>
+                                        <input type="hidden" name="id" value="<?= (int) $analysis->id; ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm tana-delete-button"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
+                                    <?= form_close(); ?>
                                 </td>
                             </tr>
                         <?php } ?>

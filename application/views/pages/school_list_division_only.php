@@ -151,9 +151,10 @@
                                         <a href="<?= base_url(); ?>Pages/school_update/<?= html_escape($row->schoolID); ?>" class="btn btn-sm btn-warning" title="Edit">
                                             <i class="mdi mdi-pencil"></i>
                                         </a>
-                                        <a href="<?= base_url(); ?>Pages/school_delete/<?= html_escape($row->recID); ?>" onclick="return confirm('Are you sure you want to delete this school?')" class="btn btn-sm btn-danger" title="Delete">
-                                            <i class="mdi mdi-delete"></i>
-                                        </a>
+                                        <?= form_open('Pages/school_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this school?');")); ?>
+                                        <input type="hidden" name="id" value="<?= (int) $row->recID; ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="mdi mdi-delete"></i></button>
+                                        <?= form_close(); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

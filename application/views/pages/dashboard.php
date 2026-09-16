@@ -755,6 +755,7 @@ $sgc_percentages = array(
             </div>
             <div class="modal-body">
                 <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
+                    <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
                     <label for="dashboardFiscalYear">Fiscal Year</label>
                     <select id="dashboardFiscalYear" name="new_fy" class="form-control" onchange="this.form.submit()">
                         <?php for ($year = 2023; $year <= 2030; $year++) : ?>

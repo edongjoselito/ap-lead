@@ -32,9 +32,13 @@
                             
                             <p style="font-size:20px;">Certificate Verifier</p><br />
                             <h4>Verified</h4>
-                            <h2><?= strtoupper($data->name); ?></h2>
-                            <p>Certificate No.: <span class="text-success"><?= strtoupper($data->docNo); ?> </span><br />
-                            Released Date:  <span class="text-success"><?= strtoupper($data->dateReleased); ?></span></p>
+                            <?php if ($data) : ?>
+                            <h2><?= html_escape(strtoupper($data->name)); ?></h2>
+                            <p>Certificate No.: <span class="text-success"><?= html_escape(strtoupper($data->docNo)); ?> </span><br />
+                            Released Date:  <span class="text-success"><?= html_escape(strtoupper($data->dateReleased)); ?></span></p>
+                            <?php else : ?>
+                            <h2>Record not found</h2>
+                            <?php endif; ?>
                             <br /><br />
 
 

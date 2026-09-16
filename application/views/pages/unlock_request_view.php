@@ -100,17 +100,19 @@
 
                                             <div class="request-actions mt-4">
                                                 <?php if ($request->request_type == 'ta') : ?>
-                                                    <a href="<?= base_url(); ?>Pages/sbm_ta_unlock/<?= $request->ta_id; ?>/<?= rawurlencode($request->school_id); ?>"
-                                                       onclick="return confirm('Are you sure you want to unlock this TA report? The school will be able to edit it again.')"
-                                                       class="btn btn-primary btn-lg">
+                                                    <?= form_open('Pages/sbm_ta_unlock', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to unlock this TA report? The school will be able to edit it again.');")); ?>
+                                                    <input type="hidden" name="id" value="<?= (int) $request->ta_id; ?>">
+                                                    <button type="submit" class="btn btn-primary btn-lg">
                                                         <i class="mdi mdi-lock-open-outline"></i> Unlock TA Report
-                                                    </a>
+                                                    </button>
+                                                    <?= form_close(); ?>
                                                 <?php else : ?>
-                                                    <a href="<?= base_url(); ?>Pages/sbm_checklist_unlock/<?= $request->checklist_id; ?>/<?= rawurlencode($request->school_id); ?>"
-                                                       onclick="return confirm('Are you sure you want to unlock this checklist? The school will be able to edit it again.')"
-                                                       class="btn btn-primary btn-lg">
+                                                    <?= form_open('Pages/sbm_checklist_unlock', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to unlock this checklist? The school will be able to edit it again.');")); ?>
+                                                    <input type="hidden" name="id" value="<?= (int) $request->checklist_id; ?>">
+                                                    <button type="submit" class="btn btn-primary btn-lg">
                                                         <i class="mdi mdi-lock-open-outline"></i> Unlock Checklist
-                                                    </a>
+                                                    </button>
+                                                    <?= form_close(); ?>
                                                 <?php endif; ?>
                                                 <a href="<?= base_url(); ?>Pages/unlock_requests" class="btn btn-secondary btn-lg">
                                                     <i class="mdi mdi-arrow-left"></i> Back to Requests

@@ -35,11 +35,11 @@
                                 <?= form_open('lock_user_screen'); ?>
 
                                     <div class="user-thumb text-center mb-4">
-                                        <img src="<?= base_url(); ?>./uploads/users/<?php if($pro_image == ""){echo "icon/avatar-1.jpg";}else{echo $pro_image;}?>" class="img-fluid rounded-circle avatar-lg" alt="thumbnail">
+                                        <img src="<?= base_url(); ?>uploads/users/<?= $pro_image === '' ? 'icon/avatar-1.jpg' : rawurlencode(basename((string) $pro_image)); ?>" class="img-fluid rounded-circle avatar-lg" alt="thumbnail">
                                     </div>
 
                                     <div class="form-group text-center mb-0">
-                                        <h5><?= $this->session->user; ?></h5>
+                                        <h5><?= html_escape($this->session->user); ?></h5>
                                         <?php if($this->session->flashdata('failed')) : ?>
 
                                         <?= '<div class="alert alert-danger alert-dismissible fade show" role="alert">
