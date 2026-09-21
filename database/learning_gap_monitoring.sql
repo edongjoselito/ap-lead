@@ -30638,6 +30638,7 @@ CREATE TABLE `users` (
   `id` int UNSIGNED NOT NULL,
   `username` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `password` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `must_change_password` tinyint(1) NOT NULL DEFAULT '0',
   `position` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `fname` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `mname` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',

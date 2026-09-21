@@ -57,6 +57,7 @@ $route['signup_district'] = 'pages/signup_district';
 $route['logout'] = 'pages/logout';
 $route['lock'] = 'pages/lock';
 $route['homepage'] = 'pages/homepage';
+$route['password-change-required'] = 'pages/password_change_required';
 
 $route['lock_user_screen'] = 'pages/lock_user_screen';
 

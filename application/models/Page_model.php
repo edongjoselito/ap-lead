@@ -4,13 +4,47 @@
 class Page_model extends CI_Model{
 
     private $learning_gap_archive_schema_ready = false;
+    private $password_change_schema_ready = false;
 
     public function __construct(){
         $this->load->database();
         // Run lightweight, idempotent application migrations automatically.
         // The migration marker makes this a metadata lookup after first deploy.
+        $this->ensure_password_change_schema();
         $this->ensure_learning_gap_archive_schema();
     }
+
+private function ensure_password_change_schema()
+{
+    if ($this->password_change_schema_ready) {
+        return;
+    }
+
+    $this->db->query("CREATE TABLE IF NOT EXISTS `app_schema_migrations` (
+        `migration` VARCHAR(190) NOT NULL,
+        `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`migration`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    $migration = '20260922_users_must_change_password';
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        $this->password_change_schema_ready = true;
+        return;
+    }
+
+    if (!$this->db->field_exists('must_change_password', 'users')) {
+        $this->db->query('ALTER TABLE users ADD must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER password');
+    }
+
+    $this->db->query(
+        'INSERT INTO app_schema_migrations (migration)
+         SELECT ? WHERE NOT EXISTS (
+             SELECT 1 FROM app_schema_migrations WHERE migration = ?
+         )',
+        array($migration, $migration)
+    );
+    $this->password_change_schema_ready = true;
+}
 
 
 public function profile_insert(){
@@ -55,6 +89,7 @@ public function user_insert(){
     $data = array(
     'username' => $this->input->post('username'),
     'password' => $hash,
+    'must_change_password' => 1,
     'position' => $this->input->post('position'),
     'fname' => $this->input->post('fname'),
     'mname' => $this->input->post('mname'),
@@ -106,6 +141,7 @@ public function insert_district_user(){
     $data = array(
     'username' => $this->input->post('schoolID'),
     'password' => $hash,
+    'must_change_password' => 1,
     'position' => 'district',
     'fname' => $district->description,
     'r_id' => 12,
@@ -187,6 +223,7 @@ public function add_school_user($school_id, $schoolName, $district, $division, $
     $data = array(
     'username' => $school_id,
     'password' => $hash,
+    'must_change_password' => 1,
     'position' => 'school',
     'fname' => $schoolName,
     'r_id' => 12,
@@ -204,16 +241,20 @@ public function add_school_user($school_id, $schoolName, $district, $division, $
 public function user_password_change(){
     $user = $this->db->select('id, password')->where('id', $this->session->id)->get('users')->row();
     if (!$user || !password_verify((string) $this->input->post('current_password'), $user->password)) {
-        return false;
+        return 'incorrect_current';
+    }
+    if (password_verify((string) $this->input->post('password'), $user->password)) {
+        return 'same_password';
     }
     $hash = password_hash($this->input->post('password'), PASSWORD_DEFAULT);
     
     $data = array(
     'password' => $hash,
+    'must_change_password' => 0,
     ); 
 
     $this->db->where('id', $user->id);
-    return $this->db->update('users', $data);
+    return $this->db->update('users', $data) ? 'updated' : 'failed';
     
 }
 
@@ -242,6 +283,7 @@ public function user_pass(){
 
     $data = array(
         'password' => $hash,
+        'must_change_password' => 1,
         );
 
     $this->db->where('id', $id);
@@ -250,7 +292,8 @@ public function user_pass(){
 
 public function reset_user_password($id, $password){
     $data = array(
-        'password' => password_hash($password, PASSWORD_DEFAULT)
+        'password' => password_hash($password, PASSWORD_DEFAULT),
+        'must_change_password' => 1
     );
 
     $this->db->where('id', $id);
@@ -1811,8 +1854,8 @@ public function update_request_password(){
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
     $data = array(
-        'Password' => $hash
-
+        'Password' => $hash,
+        'must_change_password' => 1,
     );
 
     $this->db->where('email', $email);

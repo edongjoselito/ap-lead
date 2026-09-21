@@ -40,8 +40,8 @@
                                                             
                                                             <p class="text-muted small">Enter your current password to confirm this change.</p>
                                                             <div class="form-group"><label for="current-password">Current Password</label><input type="password" class="form-control" name="current_password" id="current-password" autocomplete="current-password" required></div>
-                                                            <div class="form-group"><label for="new-password">New Password</label><input type="password" class="form-control" name="password" id="new-password" autocomplete="new-password" minlength="8" required></div>
-                                                            <div class="form-group"><label for="confirm-password">Confirm New Password</label><input type="password" class="form-control" name="password_confirm" id="confirm-password" autocomplete="new-password" minlength="8" required></div>
+                                                            <div class="form-group"><label for="new-password">New Password</label><input type="password" class="form-control" name="password" id="new-password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
+                                                            <div class="form-group"><label for="confirm-password">Confirm New Password</label><input type="password" class="form-control" name="password_confirm" id="confirm-password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
 
                                                     </div>
 

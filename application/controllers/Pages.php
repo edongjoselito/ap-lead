@@ -24,6 +24,15 @@ class Pages extends CI_Controller
             show_error('Authentication is required to access this resource.', 401);
         }
 
+        // Accounts issued a temporary password may only change that password
+        // or sign out. This guard also protects direct dashboard URLs.
+        $password_change_methods = array('password_change_required', 'change_password_user', 'logout');
+        if ($this->session->logged_in && (int) $this->session->must_change_password === 1
+            && !in_array($method, $password_change_methods, true)) {
+            redirect(base_url('password-change-required'));
+            return;
+        }
+
         // High-risk endpoints receive an explicit role policy here in addition
         // to their record-level checks below.
         $role_policies = array(
@@ -2325,6 +2334,9 @@ class Pages extends CI_Controller
                     'division' => $user_id['p_id'],
                     'district' => $user_id['d_id'],
                     'virified' => $user_id['virified'],
+                    'must_change_password' => isset($user_id['must_change_password'])
+                        ? (int) $user_id['must_change_password']
+                        : 0,
                     'logged_in' => true
 
                 );
@@ -2388,6 +2400,9 @@ class Pages extends CI_Controller
                     'division' => $user_id['p_id'],
                     'district' => $user_id['d_id'],
                     'virified' => $user_id['virified'],
+                    'must_change_password' => isset($user_id['must_change_password'])
+                        ? (int) $user_id['must_change_password']
+                        : 0,
                     'logged_in' => true
 
                 );
@@ -5510,25 +5525,51 @@ class Pages extends CI_Controller
 		redirect(base_url());
 	}
 
-	     function change_password_user()
-		{
-		if (!$this->session->logged_in) {
-			redirect(base_url('homepage'));
-				return;
-			}
-			$this->require_post();
-		$this->form_validation->set_rules('current_password', 'Current Password', 'required');
-		$this->form_validation->set_rules('password', 'New Password', 'required|min_length[12]|max_length[128]');
-		$this->form_validation->set_rules('password_confirm', 'Confirm New Password', 'required|matches[password]');
-		if ($this->form_validation->run() === FALSE) {
-			$this->session->set_flashdata('danger', 'Provide your current password and matching new passwords of at least 12 characters.');
-		} elseif (!$this->Page_model->user_password_change()) {
-			$this->session->set_flashdata('danger', 'Your current password is incorrect.');
-		} else {
-			$this->session->set_flashdata('success', 'Password successfully changed.');
-		}
-		redirect(base_url());
-	}
+    public function password_change_required()
+    {
+        if (!$this->session->logged_in) {
+            redirect(base_url('homepage'));
+            return;
+        }
+
+        if ((int) $this->session->must_change_password !== 1) {
+            redirect(base_url());
+            return;
+        }
+
+        $this->load->view('pages/change_password_required');
+    }
+
+    public function change_password_user()
+    {
+        if (!$this->session->logged_in) {
+            redirect(base_url('homepage'));
+            return;
+        }
+
+        $this->require_post();
+        $this->form_validation->set_rules('current_password', 'Current Password', 'required');
+        $this->form_validation->set_rules('password', 'New Password', 'required|min_length[12]|max_length[128]');
+        $this->form_validation->set_rules('password_confirm', 'Confirm New Password', 'required|matches[password]');
+        if ($this->form_validation->run() === FALSE) {
+            $this->session->set_flashdata('danger', 'Provide your current password and matching new passwords of at least 12 characters.');
+        } else {
+            $result = $this->Page_model->user_password_change();
+            if ($result === 'incorrect_current') {
+                $this->session->set_flashdata('danger', 'Your current password is incorrect.');
+            } elseif ($result === 'same_password') {
+                $this->session->set_flashdata('danger', 'Your new password must be different from your temporary password.');
+            } elseif ($result !== 'updated') {
+                $this->session->set_flashdata('danger', 'The password could not be changed. Please try again.');
+            } else {
+                $this->session->set_userdata('must_change_password', 0);
+                $this->session->set_flashdata('success', 'Password successfully changed.');
+            }
+        }
+        redirect((int) $this->session->must_change_password === 1
+            ? base_url('password-change-required')
+            : base_url());
+    }
 
     function change_password_user_division()
 		{
