@@ -1343,10 +1343,15 @@ class Pages extends CI_Controller
         $this->form_validation->set_rules('term', 'Term', 'trim|required|in_list[Term 1,Term 2,Term 3]');
         if ($this->form_validation->run() === FALSE) {
             $this->session->set_flashdata('danger', validation_errors('', ' '));
-        } elseif ($this->Page_model->add_learning_competency((int) $this->session->region, $area)) {
-            $this->session->set_flashdata('success', 'Learning competency added.');
         } else {
-            $this->session->set_flashdata('danger', 'That learning competency is already added for the selected term.');
+            $saved = $this->Page_model->add_learning_competency((int) $this->session->region, $area);
+            if ($saved === 'duplicate') {
+                $this->session->set_flashdata('danger', 'That learning competency is already added for the selected term.');
+            } elseif ($saved) {
+                $this->session->set_flashdata('success', 'Learning competency added.');
+            } else {
+                $this->session->set_flashdata('danger', 'The learning competency could not be saved. Please try again, and report it to the system administrator if it keeps failing.');
+            }
         }
         redirect('Pages/learning_competency_setup/' . (int) $area->id . '?division_id=' . $division_id);
     }

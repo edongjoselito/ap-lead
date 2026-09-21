@@ -2653,8 +2653,10 @@ public function add_learning_competency($region_id, $area)
         ->where('competency', $competency)
         ->count_all_results('learning_competencies') > 0;
     if ($exists) {
-        return false;
+        return 'duplicate';
     }
+    // Returns FALSE only when the write itself fails, which the caller reports
+    // separately so a failed save is never mistaken for a duplicate entry.
     return $this->db->insert('learning_competencies', array(
         // Retained for compatibility with older installations; regional fields
         // below are the source of truth for competency lookup.
@@ -2707,6 +2709,29 @@ private function ensure_learning_competencies_table()
         KEY `idx_learning_competency_term` (`term`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
+    // Installations restored from a dump can arrive without the primary key, so
+    // `id` carries neither AUTO_INCREMENT nor a default. Under strict mode every
+    // insert then fails, and rows written while strict mode was off all share
+    // id = 0, which leaves them impossible to remove or retag. Restore the key
+    // before anything else touches the table.
+    $id_column = $this->db->query('SELECT EXTRA, COLUMN_KEY FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = \'learning_competencies\'
+        AND COLUMN_NAME = \'id\'')->row();
+    if ($id_column && stripos((string) $id_column->EXTRA, 'auto_increment') === false) {
+        // Give every unusable id (0, or one shared by several rows) a fresh value
+        // above the highest id already in use so the primary key can be added.
+        $this->db->query('SET @learning_competency_id = COALESCE((SELECT MAX(id) FROM learning_competencies), 0)');
+        $this->db->query('UPDATE learning_competencies lc
+            LEFT JOIN (SELECT id FROM learning_competencies GROUP BY id HAVING COUNT(*) > 1) dupes
+                ON dupes.id = lc.id
+            SET lc.id = (@learning_competency_id := @learning_competency_id + 1)
+            WHERE lc.id = 0 OR dupes.id IS NOT NULL');
+        if ((string) $id_column->COLUMN_KEY === '') {
+            $this->db->query('ALTER TABLE learning_competencies ADD PRIMARY KEY (id)');
+        }
+        $this->db->query('ALTER TABLE learning_competencies MODIFY id INT UNSIGNED NOT NULL AUTO_INCREMENT');
+    }
+
     $central_columns_added = false;
     if (!$this->db->field_exists('term', 'learning_competencies')) {
         $this->db->query('ALTER TABLE learning_competencies ADD term VARCHAR(50) NOT NULL DEFAULT \'All Terms\' AFTER competency');
@@ -2733,6 +2758,21 @@ private function ensure_learning_competencies_table()
         JOIN division d ON d.id = las.division_id
         SET lc.region_id = d.region_id, lc.grade_level = las.grade_level, lc.learning_area = las.learning_area
         WHERE lc.region_id = 0 OR lc.grade_level = \'\' OR lc.learning_area = \'\'');
+    // A restore that drops the primary key drops the lookup indexes with it.
+    $indexes = array(
+        'idx_learning_competency_area' => '(learning_area_setting_id)',
+        'idx_learning_competency_division' => '(division_id)',
+        'idx_learning_competency_region_grade_area' => '(region_id, grade_level, learning_area)',
+        'idx_learning_competency_term' => '(term)',
+    );
+    foreach ($indexes as $index_name => $index_columns) {
+        $index_exists = $this->db->query('SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = \'learning_competencies\'
+            AND INDEX_NAME = ?', array($index_name))->num_rows() > 0;
+        if (!$index_exists) {
+            $this->db->query('ALTER TABLE learning_competencies ADD KEY ' . $index_name . ' ' . $index_columns);
+        }
+    }
     // Competencies encoded before term-based filtering are usable in every term
     // until the regional user assigns their precise term in the setup screen.
     $this->db->where('term', '')->update('learning_competencies', array('term' => 'All Terms'));
