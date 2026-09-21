@@ -914,7 +914,7 @@ class Pages extends CI_Controller
      */
     public function region()
     {
-        $this->render_dashboard('dashboard_scope_learning_gap', $this->region_scope_data());
+        $this->render_dashboard('dashboard_region_learning_gap', $this->region_scope_data());
     }
 
     public function division()
@@ -1246,6 +1246,9 @@ class Pages extends CI_Controller
         $data['divisions'] = $this->Page_model->regional_divisions((int) $this->session->region);
         $data['selected_division_id'] = $division_id;
         $data['areas'] = $this->Page_model->learning_area_settings($division_id);
+        $data['competency_counts'] = $this->Page_model->learning_competency_counts(
+            (int) $this->session->region
+        );
         $this->load->view('templates/header');
         $this->load->view('templates/menu');
         $this->load->view('pages/learning_area_setup', $data);

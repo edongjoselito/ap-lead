@@ -2425,6 +2425,32 @@ public function learning_area_setting($id, $division_id)
         ->get('learning_area_settings')->row();
 }
 
+/**
+ * Encoded competency totals for a whole region, keyed by "grade|learning area".
+ * The setup screen needs a count beside every configured area, so this answers
+ * all of them in one query instead of one per row.
+ */
+public function learning_competency_counts($region_id)
+{
+    $this->ensure_learning_competencies_table();
+    $rows = $this->db
+        ->select('grade_level, learning_area, COUNT(*) AS competency_count, COUNT(DISTINCT term) AS term_count', false)
+        ->where('region_id', (int) $region_id)
+        ->group_by('grade_level, learning_area')
+        ->get('learning_competencies')
+        ->result();
+
+    $counts = array();
+    foreach ($rows as $row) {
+        $counts[$row->grade_level . '|' . $row->learning_area] = array(
+            'competency_count' => (int) $row->competency_count,
+            'term_count' => (int) $row->term_count,
+        );
+    }
+
+    return $counts;
+}
+
 public function learning_competencies($region_id, $grade_level, $learning_area)
 {
     $this->ensure_learning_competencies_table();

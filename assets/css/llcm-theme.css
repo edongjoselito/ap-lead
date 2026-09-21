@@ -1,15 +1,59 @@
+/* DM Sans is the interface typeface. It is declared here, in the theme the
+   three app headers load, so the printable and PDF views — which load neither
+   this file nor app.min.css — keep the typography they were built around.
+   One variable file per style covers every weight the UI uses. */
+@font-face {
+    font-family: "DM Sans";
+    src: url("../fonts/DM_Sans/DMSans-VariableFont_opsz%2Cwght.ttf") format("truetype-variations"),
+         url("../fonts/DM_Sans/DMSans-VariableFont_opsz%2Cwght.ttf") format("truetype");
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "DM Sans";
+    src: url("../fonts/DM_Sans/DMSans-Italic-VariableFont_opsz%2Cwght.ttf") format("truetype-variations"),
+         url("../fonts/DM_Sans/DMSans-Italic-VariableFont_opsz%2Cwght.ttf") format("truetype");
+    font-weight: 100 1000;
+    font-style: italic;
+    font-display: swap;
+}
+
 :root {
     --llcm-navy: #123d61;
     --llcm-blue: #2877a9;
     --llcm-sky: #eaf5fc;
     --llcm-border: #d7e5ef;
     --llcm-ink: #233342;
+    --llcm-font: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-body { color: var(--llcm-ink); background: #f4f8fb; }
+body {
+    color: var(--llcm-ink);
+    background: #f4f8fb;
+    font-family: var(--llcm-font);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+}
+/* Bootstrap and the admin template pin "Lato" on these individually, so the
+   body rule alone does not reach them. */
+h1, h2, h3, h4, h5, h6,
+.btn, .form-control, .custom-select, .custom-file-label,
+.input-group-text, .nav, .dropdown-menu, .modal-title,
+.table, .badge, .alert, .card, .page-title, label, legend {
+    font-family: var(--llcm-font);
+}
 .navbar-custom { background: #fff; box-shadow: 0 1px 0 var(--llcm-border); }
 .left-side-menu { background: linear-gradient(180deg, var(--llcm-navy), #0e304d); }
 #sidebar-menu > ul > li > a, #sidebar-menu .menu-title, #sidebar-menu .nav-second-level li a { color: rgba(255,255,255,.86); }
+/* The stock template sets 15px here, which reads oversized next to the page
+   content; these bring the sidebar back in scale with the rest of the UI. */
+#sidebar-menu > ul > li > a { padding: 10px 18px; font-size: 13px; }
+#sidebar-menu > ul > li > a i { width: 18px; margin: 0 9px 0 2px; font-size: 16px; }
+#sidebar-menu > ul > li > ul { padding-left: 29px; }
+#sidebar-menu .nav-second-level li a { padding: 7px 18px; font-size: 12.5px; }
+#sidebar-menu .menu-title { padding: 9px 18px; font-size: 10px; }
+#sidebar-menu .menu-arrow { right: 18px; line-height: 1.35rem; }
 #sidebar-menu > ul > li > a:hover, #sidebar-menu .nav-second-level li a:hover, #sidebar-menu .nav-second-level li a:focus { color: #fff; background: rgba(255,255,255,.10); }
 #sidebar-menu > ul > li > a i { color: #9dd7f2; }
 .btn-primary, .btn-primary:not(:disabled):not(.disabled):active, .btn-primary:focus { border-color: var(--llcm-blue); background-color: var(--llcm-blue); box-shadow: none; }
