@@ -11,7 +11,7 @@ $school_name = $school && trim((string) $school->schoolName) !== '' ? $school->s
 <div class="lg-home">
     <div class="hero">
         <h1>Welcome, <?= html_escape($school_name); ?></h1>
-        <p>Learning Gap Monitoring dashboard — encode competency gaps, interventions, and progress for your school.</p>
+        <p>Learning Gap Monitoring dashboard for Fiscal Year <?= (int) $this->session->fy; ?> — encode competency gaps, interventions, and progress for your school.</p>
         <a href="<?= base_url('Pages/learning_gap'); ?>" class="btn btn-light mt-3"><i class="mdi mdi-plus-circle-outline"></i> Encode Learning Gap Data</a>
     </div>
     <div class="row">

@@ -1495,6 +1495,7 @@ CREATE TABLE `learning_gap_records` (
   `region_id` int DEFAULT NULL,
   `division_id` int DEFAULT NULL,
   `district_id` int DEFAULT NULL,
+  `fiscal_year` int NOT NULL,
   `grade_level` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `learning_area` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `term` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1519,12 +1520,12 @@ CREATE TABLE `learning_gap_records` (
 -- Dumping data for table `learning_gap_records`
 --
 
-INSERT INTO `learning_gap_records` (`id`, `school_id`, `region_id`, `division_id`, `district_id`, `grade_level`, `learning_area`, `term`, `melc_competency`, `least_learned_competency`, `class_proficiency_level`, `proficiency_level`, `percent_not_meeting`, `learners_assessed`, `learners_with_gap`, `learning_difficulty`, `possible_causes`, `intervention_action`, `intervention_status`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
-(4, '304336', 12, 61, 9, 'Grade 10', 'Araling Panlipunan', 'Term 1', NULL, 'Naipaliliwanag ang kalagayang pang-ekonomiya ng bansa at ang mga isyung kinakaharap nito bunga ng globalisasyon\nNatatalakay ang kahalagahan ng kaalaman sa mga kontemporaryong isyu', NULL, NULL, 10.00, 100, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:29:19', NULL),
-(5, '304336', 12, 61, 9, 'Grade 8', 'Araling Panlipunan', 'Term 1', NULL, 'Nailalarawan ang katangiang pisikal ng daigdig at implikasyon nito sa pamumuhay ng mga tao\nNaipaliliwanag ang papel ng relihiyon at ibang paniniwala sa paghubog sa pagkakakilanlang kultural ng tao', NULL, NULL, 10.00, 100, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:34:41', NULL),
-(6, '304336', 12, 61, 9, 'Grade 9', 'Araling Panlipunan', 'Term 1', NULL, 'Natatalakay ang mga salik ng produksiyon at ang implikasyon nito sa pang-araw-araw na pamumuhay\nNatataya ang kahalagahan ng pagsusulong ng likas-kayang pag-unlad bilang mekanismo sa pagtamo ng pambansa at pandaigdigang kaunlaran', NULL, NULL, 5.00, 200, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:35:46', NULL),
-(7, '304336', 12, 61, 9, 'Grade 7', 'Araling Panlipunan', 'Term 1', NULL, 'Naipaghahambing ang una at ikalawang yugto ng imperyalismong Kanluranin\nNaipaliliwanag ang konsepto ng kolonyalismo at imperyalismo\nNaiuugnay ang sinaunang kabihasnan ng Pilipinas sa mga bansa sa Timog Silangang Asya, China, at India\nNapahahalagahan ang ugnayan ng heograpiya at sinaunang kasaysayan ng mga bansa sa Timog Silangang Asya', NULL, NULL, 6.67, 150, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:36:15', NULL),
-(8, '304316', 12, 61, 1, 'Grade 10', 'Araling Panlipunan', 'Term 1', NULL, 'Naipaliliwanag ang kalagayang pang-ekonomiya ng bansa at ang mga isyung kinakaharap nito bunga ng globalisasyon\nNasusuri ang kahalagahan ng Community-Based Disaster Risk Reduction and Management Approach sa pagtugon sa mga hamon at suliraning pangkapaligiran', NULL, NULL, 10.00, 200, 20, '', '', '', 'Planned', '', '304316', '2026-09-02 16:45:58', NULL);
+INSERT INTO `learning_gap_records` (`id`, `school_id`, `region_id`, `division_id`, `district_id`, `fiscal_year`, `grade_level`, `learning_area`, `term`, `melc_competency`, `least_learned_competency`, `class_proficiency_level`, `proficiency_level`, `percent_not_meeting`, `learners_assessed`, `learners_with_gap`, `learning_difficulty`, `possible_causes`, `intervention_action`, `intervention_status`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(4, '304336', 12, 61, 9, 2026, 'Grade 10', 'Araling Panlipunan', 'Term 1', NULL, 'Naipaliliwanag ang kalagayang pang-ekonomiya ng bansa at ang mga isyung kinakaharap nito bunga ng globalisasyon\nNatatalakay ang kahalagahan ng kaalaman sa mga kontemporaryong isyu', NULL, NULL, 10.00, 100, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:29:19', NULL),
+(5, '304336', 12, 61, 9, 2026, 'Grade 8', 'Araling Panlipunan', 'Term 1', NULL, 'Nailalarawan ang katangiang pisikal ng daigdig at implikasyon nito sa pamumuhay ng mga tao\nNaipaliliwanag ang papel ng relihiyon at ibang paniniwala sa paghubog sa pagkakakilanlang kultural ng tao', NULL, NULL, 10.00, 100, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:34:41', NULL),
+(6, '304336', 12, 61, 9, 2026, 'Grade 9', 'Araling Panlipunan', 'Term 1', NULL, 'Natatalakay ang mga salik ng produksiyon at ang implikasyon nito sa pang-araw-araw na pamumuhay\nNatataya ang kahalagahan ng pagsusulong ng likas-kayang pag-unlad bilang mekanismo sa pagtamo ng pambansa at pandaigdigang kaunlaran', NULL, NULL, 5.00, 200, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:35:46', NULL),
+(7, '304336', 12, 61, 9, 2026, 'Grade 7', 'Araling Panlipunan', 'Term 1', NULL, 'Naipaghahambing ang una at ikalawang yugto ng imperyalismong Kanluranin\nNaipaliliwanag ang konsepto ng kolonyalismo at imperyalismo\nNaiuugnay ang sinaunang kabihasnan ng Pilipinas sa mga bansa sa Timog Silangang Asya, China, at India\nNapahahalagahan ang ugnayan ng heograpiya at sinaunang kasaysayan ng mga bansa sa Timog Silangang Asya', NULL, NULL, 6.67, 150, 10, '', '', '', 'Planned', '', '304336', '2026-09-02 16:36:15', NULL),
+(8, '304316', 12, 61, 1, 2026, 'Grade 10', 'Araling Panlipunan', 'Term 1', NULL, 'Naipaliliwanag ang kalagayang pang-ekonomiya ng bansa at ang mga isyung kinakaharap nito bunga ng globalisasyon\nNasusuri ang kahalagahan ng Community-Based Disaster Risk Reduction and Management Approach sa pagtugon sa mga hamon at suliraning pangkapaligiran', NULL, NULL, 10.00, 200, 20, '', '', '', 'Planned', '', '304316', '2026-09-02 16:45:58', NULL);
 
 -- --------------------------------------------------------
 
@@ -32501,7 +32502,8 @@ ALTER TABLE `learning_gap_records`
   ADD KEY `idx_lgr_school` (`school_id`),
   ADD KEY `idx_lgr_division` (`division_id`),
   ADD KEY `idx_lgr_region` (`region_id`),
-  ADD KEY `idx_lgr_scope` (`region_id`,`division_id`,`school_id`);
+  ADD KEY `idx_lgr_scope` (`region_id`,`division_id`,`school_id`),
+  ADD KEY `idx_learning_gap_fiscal_scope` (`fiscal_year`,`region_id`,`division_id`,`school_id`);
 
 --
 -- Indexes for table `position`

@@ -1173,11 +1173,6 @@ if (!$checklist) {
         </div>
 
         <div class="hero-side">
-            <a href="#" class="hero-year-button" data-toggle="modal" data-target="#myModal">
-                <i class="mdi mdi-calendar-range"></i>
-                <?= html_escape($fiscal_year_label); ?>
-                <i class="mdi mdi-chevron-down"></i>
-            </a>
             <div class="hero-action-stack">
                 <a href="<?= $profile_url; ?>" class="hero-button hero-button-primary">
                     <i class="mdi mdi-account-school-outline"></i>
@@ -1425,29 +1420,4 @@ if (!$checklist) {
         </div>
     </div>
 
-    <div id="myModal" class="modal fade dashboard-modal" tabindex="-1" role="dialog" aria-labelledby="schoolDashboardFiscalYearModal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="schoolDashboardFiscalYearModal">Change Fiscal Year</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
-                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
-                        <label for="schoolDashboardFiscalYear">Fiscal Year</label>
-                        <select id="schoolDashboardFiscalYear" name="new_fy" class="form-control" onchange="this.form.submit()">
-                            <?php for ($year = 2023; $year <= 2030; $year++) : ?>
-                                <option value="<?= $year; ?>" <?= (string) $this->session->fy === (string) $year ? 'selected' : ''; ?>>
-                                    <?= $year; ?>
-                                </option>
-                            <?php endfor; ?>
-                        </select>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>

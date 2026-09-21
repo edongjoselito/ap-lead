@@ -93,6 +93,26 @@
                     </li>
                 <?php endif; ?>
 
+                <?php
+                $selected_fiscal_year = isset($this->session->fy) ? (int) $this->session->fy : (int) date('Y');
+                $last_fiscal_year = max((int) date('Y') + 1, $selected_fiscal_year);
+                ?>
+                <li class="topbar-fiscal-year">
+                    <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
+                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
+                        <input type="hidden" name="return_to" value="<?= html_escape($this->uri->uri_string()); ?>">
+                        <label for="globalFiscalYear">
+                            <i class="mdi mdi-calendar-range" aria-hidden="true"></i>
+                            <span>Fiscal Year</span>
+                        </label>
+                        <select id="globalFiscalYear" name="new_fy" aria-label="Change fiscal year" onchange="this.form.submit()">
+                            <?php for ($year = 2023; $year <= $last_fiscal_year; $year++) : ?>
+                                <option value="<?= $year; ?>" <?= $selected_fiscal_year === $year ? 'selected' : ''; ?>><?= $year; ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </form>
+                </li>
+
                 <li class="dropdown notification-list">
                     <a class="nav-link dropdown-toggle nav-user mr-0 waves-effect" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                         <?php $image = $this->Common->one_cond_row_select('users','username,image','username',$this->session->username); if (empty($image->image ?? null)) {?>
@@ -262,6 +282,7 @@
 
                             <li><a href="<?= base_url(); ?>Pages/learning_gap" class="waves-effect"><i class="fas fa-chart-bar"></i><span> Learning Gap Monitoring</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_records" class="waves-effect"><i class="fas fa-list"></i><span> My Learning Gap Records</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_archives" class="waves-effect"><i class="mdi mdi-archive"></i><span> Archived Records</span></a></li>
 
                             <li><a href="#" class="waves-effect" data-toggle="modal" data-target="#renren"><i class="fas fa-lock"></i><span>Change Password</span></a></li>
                         <?php } ?>
@@ -273,6 +294,7 @@
                             </li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_school_summary" class="waves-effect"><i class="fas fa-school"></i><span> Learning Gap Summary</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_records" class="waves-effect"><i class="fas fa-list"></i><span> Submitted Learning Gap</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_archives" class="waves-effect"><i class="mdi mdi-archive"></i><span> Archived Records</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/school_submission_monitoring" class="waves-effect"><i class="mdi mdi-clipboard-check-outline"></i><span> School Submissions</span></a></li>
                             <li>
                                 <a href="javascript: void(0);" class="waves-effect">
@@ -297,6 +319,7 @@
                             <li><a href="<?= base_url(); ?>Pages/learning_gap" class="waves-effect"><i class="fas fa-chart-bar"></i><span> Learning Gap Overview</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_school_summary" class="waves-effect"><i class="fas fa-school"></i><span> Learning Gap Summary</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_records" class="waves-effect"><i class="fas fa-list"></i><span> Submitted Learning Gap</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_archives" class="waves-effect"><i class="mdi mdi-archive"></i><span> Archived Records</span></a></li>
                             <li><a href="#" class="waves-effect" data-toggle="modal" data-target="#renren"><i class="fas fa-lock"></i><span>Change Password</span></a></li>
 
                         <?php } ?>
@@ -306,6 +329,7 @@
                             <li><a href="<?= base_url(); ?>Pages/learning_gap" class="waves-effect"><i class="fas fa-chart-bar"></i><span> Learning Gap Overview</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_school_summary" class="waves-effect"><i class="fas fa-school"></i><span> Learning Gap Summary</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_records" class="waves-effect"><i class="fas fa-list"></i><span> Submitted Learning Gap</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_archives" class="waves-effect"><i class="mdi mdi-archive"></i><span> Archived Records</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_area_setup" class="waves-effect"><i class="mdi mdi-tune"></i><span> Learning Area Setup</span></a></li>
                             <li><a href="#" class="waves-effect" data-toggle="modal" data-target="#renren"><i class="fas fa-lock"></i><span>Change Password</span></a></li>
 

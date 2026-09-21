@@ -70,6 +70,7 @@ $school_coverage = $network_schools > 0 ? ($reporting_school_count / $network_sc
             <h1>Regional Learning Gap Overview</h1>
             <p class="rd-header-meta">
                 <span>Welcome, <?= html_escape($display_name); ?></span>
+                <span class="rd-num">Fiscal Year <?= (int) $this->session->fy; ?></span>
                 <span class="rd-num"><?= number_format($divisions_total); ?> division<?= $divisions_total === 1 ? '' : 's'; ?></span>
                 <span class="rd-num"><?= number_format($network_districts); ?> district<?= $network_districts === 1 ? '' : 's'; ?></span>
                 <span class="rd-num"><?= number_format($network_schools); ?> registered school<?= $network_schools === 1 ? '' : 's'; ?></span>

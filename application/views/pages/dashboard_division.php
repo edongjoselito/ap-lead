@@ -445,11 +445,6 @@ $rate_details = array(
             <h1>Welcome, <?= html_escape(mb_convert_case($this->session->user, MB_CASE_TITLE, 'UTF-8')); ?></h1>
             <p>Monitor School-Based Management progress, governance status, and assessment results across your division.</p>
         </div>
-        <a href="#" class="dashboard-year-button" data-toggle="modal" data-target="#myModal">
-            <i class="mdi mdi-calendar-range"></i>
-            Fiscal Year <?= html_escape($this->session->fy); ?>
-            <i class="mdi mdi-chevron-down"></i>
-        </a>
     </div>
 
     <div class="row dashboard-stats">
@@ -723,28 +718,4 @@ $rate_details = array(
             </div>
         </div>
     </section>
-</div>
-
-<div id="myModal" class="modal fade dashboard-modal" tabindex="-1" role="dialog" aria-labelledby="fiscalYearModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-white" id="fiscalYearModalLabel">Change Fiscal Year</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-hidden="true">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
-                    <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
-                    <label for="dashboardFiscalYear">Fiscal Year</label>
-                    <select id="dashboardFiscalYear" name="new_fy" class="form-control" onchange="this.form.submit()">
-                        <?php for ($year = 2023; $year <= 2030; $year++) : ?>
-                            <option value="<?= $year; ?>" <?= (string) $this->session->fy === (string) $year ? 'selected' : ''; ?>>
-                                <?= $year; ?>
-                            </option>
-                        <?php endfor; ?>
-                    </select>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>

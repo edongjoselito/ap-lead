@@ -17,7 +17,8 @@ $status_styles = array(
     'Completed' => 'completed',
     'For monitoring' => 'monitoring',
 );
-$records_url = base_url('Pages/learning_gap_records');
+$records_path = base_url('Pages/learning_gap_records');
+$records_url = $has_year_filter ? $records_path . '?year=' . (int) $record_year : $records_path;
 
 /* Totals describe the rows actually on screen, so they stay consistent with
    whatever filters are applied. */
@@ -46,16 +47,25 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
             <h1><?= $is_school ? 'My Learning Gap Records' : 'Submitted Learning Gap Records'; ?></h1>
             <p class="rec-header-meta">
                 <span>Review assessment results and the actions taken against them</span>
+                <span class="rec-num">Fiscal Year <?= (int) $record_year; ?></span>
                 <?php if (!$is_school) : ?><span class="rec-num"><?= number_format($breadth_count); ?> school<?= $breadth_count === 1 ? '' : 's'; ?></span><?php endif; ?>
             </p>
         </div>
         <div class="rec-header-actions">
             <a class="btn btn-outline-light" href="<?= base_url('Pages/learning_gap'); ?>"><i class="mdi mdi-chart-bar" aria-hidden="true"></i> Learning gap summary</a>
-            <?php if ($is_school) : ?>
+            <a class="btn btn-outline-light" href="<?= base_url('Pages/learning_gap_archives'); ?>"><i class="mdi mdi-archive-outline" aria-hidden="true"></i> Yearly archives</a>
+            <?php if ($is_school && !$is_archive_year) : ?>
                 <a class="btn btn-light" href="<?= base_url('Pages/learning_gap_entry'); ?>"><i class="mdi mdi-plus" aria-hidden="true"></i> Data entry</a>
             <?php endif; ?>
         </div>
     </header>
+
+    <?php if ($is_archive_year) : ?>
+        <div class="alert alert-info d-flex align-items-center" role="status">
+            <i class="mdi mdi-lock-outline mr-2" aria-hidden="true"></i>
+            <span>You are viewing the read-only archive for Fiscal Year <?= (int) $record_year; ?>.</span>
+        </div>
+    <?php endif; ?>
 
     <div class="rec-metrics">
         <div class="rec-metric">
@@ -86,6 +96,9 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
             <p>Filters apply within your assigned scope.</p>
         </div>
         <form class="rec-filter" method="get" action="<?= $records_url; ?>">
+            <?php if ($has_year_filter) : ?>
+                <input type="hidden" name="year" value="<?= (int) $record_year; ?>">
+            <?php endif; ?>
             <?php if ($division_filter > 0) : ?>
                 <input type="hidden" name="division_id" value="<?= (int) $division_filter; ?>">
             <?php endif; ?>
@@ -149,7 +162,7 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                 <p><?= $has_record_filters ? 'Try another grade, learning area, or trimester, or clear your filters.' : 'Learning gap records will appear here once they have been encoded.'; ?></p>
                 <?php if ($has_record_filters) : ?>
                     <a class="btn btn-outline-primary" href="<?= $records_url; ?>">Clear filters</a>
-                <?php elseif ($is_school) : ?>
+                <?php elseif ($is_school && !$is_archive_year) : ?>
                     <a class="btn btn-primary" href="<?= base_url('Pages/learning_gap_entry'); ?>">Create a record</a>
                 <?php endif; ?>
             </div>
@@ -214,7 +227,7 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                            <?php if ($is_school) : ?>
+                            <?php if ($is_school && !$is_archive_year) : ?>
                                 <div class="rec-actions">
                                     <a class="btn btn-sm btn-outline-primary" href="<?= base_url('Pages/learning_gap_entry?edit=' . (int) $row->id); ?>"><i class="mdi mdi-pencil" aria-hidden="true"></i> Edit record</a>
                                     <?= form_open('Pages/learning_gap_delete', array('onsubmit' => "return confirm('Remove this record?');")); ?>

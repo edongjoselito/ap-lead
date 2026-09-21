@@ -5,344 +5,379 @@ $dashboard_url = base_url();
 
 <style>
     .schools-page {
-        --schools-primary: #164b73;
-        --schools-primary-dark: #123d61;
-        --schools-border: #dce6ef;
-        --schools-muted: #6b7280;
+        --sl-navy: var(--llcm-navy, #123d61);
+        --sl-blue: var(--llcm-blue, #2877a9);
+        --sl-sky: var(--llcm-sky, #eaf5fc);
+        --sl-line: var(--llcm-border, #d7e5ef);
+        --sl-ink: var(--llcm-ink, #233342);
+        --sl-muted: #6b7f92;
+        --sl-radius: 10px;
+        --sl-shadow: 0 4px 16px rgba(20, 62, 94, .05);
+        margin-bottom: 24px;
+        color: var(--sl-ink);
     }
 
-    .schools-hero {
+    .schools-page .alert {
+        border: 0;
+        border-radius: var(--sl-radius);
+        box-shadow: var(--sl-shadow);
+    }
+
+    /* ---------- Page header ---------- */
+    .sl-header {
         display: flex;
+        flex-wrap: wrap;
+        gap: 14px 18px;
         align-items: center;
         justify-content: space-between;
-        gap: 24px;
-        margin: 18px 0 22px;
-        padding: 30px;
-        border-radius: 20px;
+        margin: 16px 0 18px;
+        padding: 18px 22px;
+        border-radius: var(--sl-radius);
         color: #fff;
-        background:
-            radial-gradient(circle at 90% 15%, rgba(255, 255, 255, .2), transparent 25%),
-            linear-gradient(135deg, #123d61 0%, #2877a9 100%);
-        box-shadow: 0 14px 34px rgba(20, 62, 94, .16);
-        overflow: hidden;
+        background: linear-gradient(118deg, var(--sl-navy), var(--sl-blue));
     }
 
-    .schools-hero h1 {
-        margin: 0 0 7px;
-        color: #fff;
-        font-size: 27px;
-        font-weight: 700;
+    .sl-eyebrow {
+        display: block;
+        margin-bottom: 3px;
+        color: rgba(255, 255, 255, .75);
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .09em;
+        text-transform: uppercase;
     }
 
-    .schools-hero p {
-        max-width: 720px;
+    .sl-header h1 {
         margin: 0;
-        color: rgba(255, 255, 255, .84);
+        color: #fff;
+        font-size: 1.45rem;
+        font-weight: 600;
+        line-height: 1.25;
     }
 
-    .schools-hero-actions {
+    .sl-header-meta {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, .85);
+        font-size: .85rem;
+    }
+
+    .sl-header-meta span + span::before {
+        content: "\00b7";
+        margin: 0 .5rem;
+        color: rgba(255, 255, 255, .5);
+    }
+
+    .sl-header-actions {
         display: flex;
-        align-items: center;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
     }
 
-    .schools-hero-link {
+    .sl-btn {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 11px 16px;
-        border: 1px solid rgba(255, 255, 255, .24);
-        border-radius: 999px;
-        color: #fff;
-        background: rgba(255, 255, 255, .14);
-        font-size: 13px;
-        font-weight: 700;
-        backdrop-filter: blur(5px);
+        gap: 6px;
+        padding: 8px 13px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-size: .83rem;
+        font-weight: 600;
         text-decoration: none;
-        transition: all 0.3s ease;
+        white-space: nowrap;
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
 
-    .schools-hero-link:hover {
-        color: var(--schools-primary-dark);
+    .sl-btn-solid {
+        color: var(--sl-navy);
         background: #fff;
+        border-color: #fff;
     }
 
-    .schools-card {
-        border: 1px solid var(--schools-border);
-        border-radius: 16px;
+    .sl-btn-solid:hover {
+        color: var(--sl-navy);
+        background: var(--sl-sky);
+        border-color: var(--sl-sky);
+        text-decoration: none;
+    }
+
+    /* ---------- Table panel ---------- */
+    .sl-panel {
+        border: 1px solid var(--sl-line);
+        border-radius: var(--sl-radius);
         background: #fff;
-        box-shadow: 0 8px 28px rgba(31, 45, 75, .07);
+        box-shadow: var(--sl-shadow);
         overflow: hidden;
     }
 
-    .schools-card .card-body {
-        padding: 0;
-    }
-
-    .schools-card-header {
+    .sl-panel-head {
         display: flex;
-        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        align-items: baseline;
         justify-content: space-between;
-        gap: 16px;
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--schools-border);
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--sl-line);
     }
 
-    .schools-card-header h4 {
-        margin: 0 0 3px;
-        color: #233342;
-        font-size: 17px;
-        font-weight: 700;
-    }
-
-    .schools-card-header p {
+    .sl-panel-head h4 {
         margin: 0;
-        color: var(--schools-muted);
-        font-size: 12px;
+        color: var(--sl-navy);
+        font-size: 1.02rem;
+        font-weight: 600;
     }
 
-    .schools-table-wrap {
-        padding: 8px 24px 24px;
+    .sl-panel-head p {
+        flex: 1 0 100%;
+        margin: 0;
+        color: var(--sl-muted);
+        font-size: .84rem;
+    }
+
+    .sl-table-wrap { padding: 4px 20px 18px; }
+
+    .schools-page .dataTables_wrapper .row:first-child {
+        align-items: center;
+        padding: 10px 0 4px;
+    }
+
+    .schools-page .dataTables_filter input,
+    .schools-page .dataTables_length select {
+        min-height: 34px;
+        border: 1px solid var(--sl-line);
+        border-radius: 8px;
+        box-shadow: none;
     }
 
     .schools-page table.dataTable {
-        margin-top: 12px !important;
-        border-collapse: separate !important;
-        border-spacing: 0 8px !important;
+        margin-top: 8px !important;
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
     }
 
     .schools-page table.dataTable thead th {
-        padding: 11px 14px;
+        padding: 9px 12px;
         border: 0;
-        color: #687086;
-        font-size: 10px;
+        border-bottom: 1px solid var(--sl-line);
+        color: var(--sl-muted);
+        background: #f7fbfe;
+        font-size: .7rem;
         font-weight: 700;
-        letter-spacing: .06em;
+        letter-spacing: .05em;
         text-transform: uppercase;
         white-space: nowrap;
     }
 
     .schools-page table.dataTable tbody td {
-        padding: 14px;
-        border-top: 1px solid var(--schools-border);
-        border-bottom: 1px solid var(--schools-border);
+        padding: 10px 12px;
+        border: 0;
+        border-bottom: 1px solid #edf3f8;
         vertical-align: middle;
         background: #fff;
+        font-size: .86rem;
     }
 
-    .schools-page table.dataTable tbody td:first-child {
-        border-left: 1px solid var(--schools-border);
-        border-radius: 11px 0 0 11px;
+    .schools-page table.dataTable tbody tr:last-child td { border-bottom: 0; }
+
+    .schools-page table.dataTable tbody tr:hover td { background: #f7fafc; }
+
+    .sl-school-id {
+        color: var(--sl-muted);
+        font-family: Consolas, Monaco, monospace;
+        font-size: .8rem;
+        white-space: nowrap;
     }
 
-    .schools-page table.dataTable tbody td:last-child {
-        border-right: 1px solid var(--schools-border);
-        border-radius: 0 11px 11px 0;
-    }
-
-    .schools-page table.dataTable tbody tr:hover td {
-        background: #f5faff;
-    }
-
-    .school-id-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 8px;
-        background: #eaf5fc;
-        color: var(--schools-primary-dark);
-        font-size: 11px;
-        font-weight: 700;
-    }
-
-    .school-name {
-        color: #233342;
-        font-size: 13px;
+    .sl-school-name {
+        color: var(--sl-navy);
+        font-size: .88rem;
         font-weight: 600;
     }
 
-    .district-name {
-        color: var(--schools-muted);
-        font-size: 12px;
+    .sl-district-name {
+        color: var(--sl-muted);
+        font-size: .82rem;
     }
 
-    .action-buttons {
+    .sl-actions {
         display: flex;
         align-items: center;
         gap: 6px;
         flex-wrap: wrap;
     }
 
-    .action-btn {
+    .sl-action {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 11px;
+        gap: 4px;
+        padding: 5px 10px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        font-size: .76rem;
         font-weight: 600;
         text-decoration: none;
-        transition: all 0.2s ease;
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
 
-    .action-btn-view {
-        background: #e8f5e9;
-        color: #2e7d32;
+    .sl-action-view {
+        color: var(--sl-blue);
+        background: var(--sl-sky);
     }
 
-    .action-btn-view:hover {
-        background: #c8e6c9;
+    .sl-action-view:hover {
+        color: #fff;
+        background: var(--sl-blue);
+        text-decoration: none;
     }
 
-    .action-btn-edit {
-        background: #fff3e0;
-        color: #e65100;
+    .sl-action-edit {
+        color: #5b6b7a;
+        background: #f1f4f7;
     }
 
-    .action-btn-edit:hover {
-        background: #ffe0b2;
+    .sl-action-edit:hover {
+        color: var(--sl-navy);
+        background: #e3eaf0;
+        text-decoration: none;
     }
 
-    .action-btn-delete {
-        background: #ffebee;
-        color: #c62828;
+    .sl-action-delete {
+        color: #a33b32;
+        background: #fbeeec;
+        cursor: pointer;
     }
 
-    .action-btn-delete:hover {
-        background: #ffcdd2;
+    .sl-action-delete:hover {
+        color: #fff;
+        background: #b04a41;
     }
 
-    .schools-empty {
-        padding: 48px 24px;
-        color: var(--schools-muted);
+    .sl-empty {
+        padding: 44px 24px;
+        color: var(--sl-muted);
         text-align: center;
     }
 
-    .schools-empty i {
+    .sl-empty i {
         display: block;
         margin-bottom: 10px;
-        color: #aab2c3;
-        font-size: 38px;
+        color: #b9cdde;
+        font-size: 2.2rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .sl-header { padding: 16px 18px; }
+        .sl-header h1 { font-size: 1.25rem; }
+        .sl-header-actions { width: 100%; }
+        .sl-header-actions .sl-btn { flex: 1 1 auto; justify-content: center; }
+        .sl-panel-head { padding: 14px 16px; }
+        .sl-table-wrap { padding: 4px 14px 14px; }
+
+        .schools-page .dataTables_wrapper .row:first-child > div {
+            width: 100%;
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
+
+        .schools-page .dataTables_filter,
+        .schools-page .dataTables_length { text-align: left; }
+
+        .schools-page .dataTables_filter input {
+            width: calc(100% - 58px);
+            margin-left: 6px;
+        }
     }
 </style>
 
 <div class="schools-page">
-    <div class="row">
-        <div class="col-12">
-            <div class="schools-hero">
-                <div>
-                    <h1><i class="mdi mdi-school mr-2"></i>School List</h1>
-                    <p>Manage and view all schools within the division.</p>
-                </div>
-                <div class="schools-hero-actions">
-                    <span class="schools-hero-link">
-                        <i class="mdi mdi-school"></i>
-                        <?= $school_count; ?> <?= $school_count === 1 ? 'school' : 'schools'; ?>
-                    </span>
-                    <?php if($this->session->position == 'Admin'){?>
-                    <a href="<?= base_url(); ?>pages/school_new" class="schools-hero-link">
-                        <i class="mdi mdi-plus"></i>
-                        Add New School
-                    </a>
-                    <?php } ?>
-                </div>
-            </div>
-
-            <?php if($this->session->flashdata('success')) : ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <?= $this->session->flashdata('success'); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if($this->session->flashdata('danger')) : ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <?= $this->session->flashdata('danger'); ?>
-                </div>
-            <?php endif; ?>
+    <header class="sl-header">
+        <div>
+            <span class="sl-eyebrow"><i class="mdi mdi-school-outline"></i> School Directory</span>
+            <h1>School List</h1>
+            <p class="sl-header-meta">
+                <span><?= $school_count; ?> <?= $school_count === 1 ? 'school' : 'schools'; ?></span>
+                <span>View and manage school records</span>
+            </p>
         </div>
-    </div>
+        <div class="sl-header-actions">
+            <?php if($this->session->position == 'Admin'){?>
+            <a href="<?= base_url(); ?>pages/school_new" class="sl-btn sl-btn-solid">
+                <i class="mdi mdi-plus"></i> Add New School
+            </a>
+            <?php } ?>
+        </div>
+    </header>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card schools-card">
-                <div class="card-body">
-                    <div class="schools-card-header">
-                        <div>
-                            <h4><?= html_escape($title); ?></h4>
-                            <p>View and manage school records.</p>
-                        </div>
-                    </div>
+    <?php if($this->session->flashdata('success')) : ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <?= $this->session->flashdata('success'); ?>
+        </div>
+    <?php endif; ?>
 
-                    <?php if (!empty($data)) { ?>
-                        <div class="schools-table-wrap table-responsive">
-                            <table id="datatable" class="table dt-responsive" style="width: 100%;">
-                                <thead>
-                                    <tr>
-                                        <th>School ID</th>
-                                        <th>School Name</th>
-                                        <th>District</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach($data as $row){?>
-                                    <tr>
-                                        <td>
-                                            <span class="school-id-badge">
-                                                <i class="mdi mdi-identifier"></i>
-                                                <?= html_escape($row->schoolID); ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="school-name"><?= html_escape(strtoupper($row->schoolName)); ?></span>
-                                        </td>
-                                        <td>
-                                            <span class="district-name"><?= html_escape($row->description); ?></span>
-                                        </td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <a href="<?=base_url(); ?>school/<?= $row->schoolID; ?>" class="action-btn action-btn-view">
-                                                    <i class="mdi mdi-file-document-box-check-outline"></i>
-                                                    View
-                                                </a>
-                                                <a href="<?=base_url(); ?>Pages/school_update/<?= $row->recID; ?>" class="action-btn action-btn-edit">
-                                                    <i class="mdi mdi-pencil-outline"></i>
-                                                    Edit
-                                                </a>
-                                                <?php if (strtolower((string) $this->session->position) !== 'district') { ?>
-                                                    <?= form_open('Pages/school_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this school?');")); ?>
-                                                    <input type="hidden" name="id" value="<?= (int) $row->recID; ?>">
-                                                    <button type="submit" class="action-btn action-btn-delete">
-                                                        <i class="mdi mdi-trash-can-outline"></i>
-                                                        Delete
-                                                    </button>
-                                                    <?= form_close(); ?>
-                                                <?php } ?>
-                                            </div>
-                                        </td>
-                                    </tr>
+    <?php if($this->session->flashdata('danger')) : ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <?= $this->session->flashdata('danger'); ?>
+        </div>
+    <?php endif; ?>
+
+    <section class="sl-panel">
+        <div class="sl-panel-head">
+            <h4><?= html_escape($title); ?></h4>
+            <p>View and manage school records.</p>
+        </div>
+
+        <?php if (!empty($data)) { ?>
+            <div class="sl-table-wrap table-responsive">
+                <table id="datatable" class="table dt-responsive" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>School ID</th>
+                            <th>School Name</th>
+                            <th>District</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($data as $row){?>
+                        <tr>
+                            <td><span class="sl-school-id"><?= html_escape($row->schoolID); ?></span></td>
+                            <td><span class="sl-school-name"><?= html_escape(strtoupper($row->schoolName)); ?></span></td>
+                            <td><span class="sl-district-name"><?= html_escape($row->description); ?></span></td>
+                            <td>
+                                <div class="sl-actions">
+                                    <a href="<?=base_url(); ?>school/<?= $row->schoolID; ?>" class="sl-action sl-action-view">
+                                        <i class="mdi mdi-file-document-box-check-outline"></i> View
+                                    </a>
+                                    <a href="<?=base_url(); ?>Pages/school_update/<?= $row->recID; ?>" class="sl-action sl-action-edit">
+                                        <i class="mdi mdi-pencil-outline"></i> Edit
+                                    </a>
+                                    <?php if (strtolower((string) $this->session->position) !== 'district') { ?>
+                                        <?= form_open('Pages/school_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this school?');")); ?>
+                                        <input type="hidden" name="id" value="<?= (int) $row->recID; ?>">
+                                        <button type="submit" class="sl-action sl-action-delete">
+                                            <i class="mdi mdi-trash-can-outline"></i> Delete
+                                        </button>
+                                        <?= form_close(); ?>
                                     <?php } ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php } else { ?>
-                        <div class="schools-empty">
-                            <i class="mdi mdi-school-outline"></i>
-                            No schools found for this division.
-                        </div>
-                    <?php } ?>
-                </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </div>
+        <?php } else { ?>
+            <div class="sl-empty">
+                <i class="mdi mdi-school-outline"></i>
+                No schools found for this division.
+            </div>
+        <?php } ?>
+    </section>
 </div>
 
 <script>

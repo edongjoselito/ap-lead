@@ -25,11 +25,12 @@ $value = function ($field) use ($form) { return isset($form->{$field}) ? (string
     <div class="lgm-hero">
         <span class="lgm-eyebrow"><i class="mdi mdi-chart-donut-variant"></i><?= html_escape($scope_label); ?></span>
         <h1><i class="mdi mdi-chart-box-outline mr-2"></i>Learning Gap Monitoring</h1>
-        <p><?= html_escape($scope_label); ?> · Track least learned competencies, learner gaps, and interventions.</p>
+        <p><?= html_escape($scope_label); ?> · Fiscal Year <?= (int) $this->session->fy; ?> · Track least learned competencies, learner gaps, and interventions.</p>
     </div>
 
     <?php if ($this->session->flashdata('success')): ?><div class="alert alert-success"><?= $this->session->flashdata('success'); ?></div><?php endif; ?>
     <?php if ($this->session->flashdata('danger')): ?><div class="alert alert-danger"><?= $this->session->flashdata('danger'); ?></div><?php endif; ?>
+    <?php if ($is_archive_year): ?><div class="alert alert-info"><i class="mdi mdi-lock-outline mr-1" aria-hidden="true"></i> Fiscal Year <?= (int) $this->session->fy; ?> is archived and read-only.</div><?php endif; ?>
     <?php if (!$entry_mode): ?><div class="row">
         <div class="col-md-6"><a class="lgm-stat-link" href="<?= base_url('Pages/learning_gap_records'); ?>"><div class="lgm-stat"><span class="lgm-stat-icon"><i class="mdi mdi-file-document-outline"></i></span><small>Encoded records</small><strong><?= (int) $summary->record_count; ?></strong><span class="lgm-stat-hint">View submitted learning gap records <i class="mdi mdi-arrow-right"></i></span></div></a></div>
         <div class="col-md-6"><a class="lgm-stat-link" href="<?= base_url('Pages/learning_gap_records'); ?>"><div class="lgm-stat"><span class="lgm-stat-icon"><i class="mdi mdi-account-group-outline"></i></span><small>Recorded assessed count</small><strong><?= number_format((int) $summary->learners_assessed); ?></strong><span class="lgm-stat-hint">Sum across submitted records <i class="mdi mdi-arrow-right"></i></span></div></a></div>

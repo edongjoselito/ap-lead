@@ -22,7 +22,7 @@ $render_text_block = static function ($value, $placeholder = 'Not provided yet.'
     $empty_class = $value === '' ? ' is-empty' : '';
     $display_value = $value === '' ? $placeholder : $value;
 
-    return '<div class="district-tech-text' . $empty_class . '">' . nl2br($escape($display_value)) . '</div>';
+    return '<div class="ta-text' . $empty_class . '">' . nl2br($escape($display_value)) . '</div>';
 };
 
 $district_name = isset($district) && !empty($district->description)
@@ -50,586 +50,565 @@ foreach ($entries as $entry) {
         $team_count++;
     }
 }
+
+$ta_metrics = array(
+    array('count' => $entry_count, 'label' => 'TA Entries', 'note' => 'Saved for the active fiscal year.', 'icon' => 'mdi-clipboard-list-outline'),
+    array('count' => $scheduled_count, 'label' => 'With Schedule', 'note' => 'Entries with a set schedule or timeline.', 'icon' => 'mdi-calendar-clock-outline'),
+    array('count' => $scope_count, 'label' => 'With Scope', 'note' => 'Entries with concerned districts / SDO coordination.', 'icon' => 'mdi-map-marker-check-outline'),
+    array('count' => $team_count, 'label' => 'With Team', 'note' => 'Entries with management or composite teams.', 'icon' => 'mdi-account-group-outline'),
+);
 ?>
 
 <style>
     .district-tech-page {
-        --tech-primary: #8b1e3f;
-        --tech-primary-dark: #64142d;
-        --tech-border: #e8ecf4;
-        --tech-muted: #6b7280;
-        --tech-surface: #fff7f9;
-        --tech-panel: #fbfcff;
+        --ta-navy: var(--llcm-navy, #123d61);
+        --ta-blue: var(--llcm-blue, #2877a9);
+        --ta-sky: var(--llcm-sky, #eaf5fc);
+        --ta-line: var(--llcm-border, #d7e5ef);
+        --ta-ink: var(--llcm-ink, #233342);
+        --ta-muted: #6b7f92;
+        --ta-radius: 10px;
+        --ta-shadow: 0 4px 16px rgba(20, 62, 94, .05);
+        margin-bottom: 24px;
+        color: var(--ta-ink);
     }
 
     .district-tech-page .alert {
         border: 0;
-        border-radius: 12px;
-        box-shadow: 0 6px 18px rgba(31, 45, 75, .07);
+        border-radius: var(--ta-radius);
+        box-shadow: var(--ta-shadow);
     }
 
-    .district-tech-hero {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 24px;
-        margin: 18px 0 22px;
-        padding: 30px;
-        border-radius: 20px;
-        color: #fff;
-        background:
-            radial-gradient(circle at 90% 15%, rgba(255, 255, 255, .2), transparent 25%),
-            linear-gradient(135deg, #64142d 0%, #a83255 100%);
-        box-shadow: 0 14px 34px rgba(139, 30, 63, .22);
-        overflow: hidden;
-    }
-
-    .district-tech-hero h1 {
-        margin: 0 0 7px;
-        color: #fff;
-        font-size: 27px;
-        font-weight: 700;
-    }
-
-    .district-tech-hero p {
-        max-width: 720px;
-        margin: 0;
-        color: rgba(255, 255, 255, .84);
-        line-height: 1.7;
-    }
-
-    .district-tech-actions {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .district-tech-link,
-    .district-tech-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 11px 16px;
-        border: 1px solid rgba(255, 255, 255, .24);
-        border-radius: 999px;
-        color: #fff;
-        background: rgba(255, 255, 255, .14);
-        font-size: 13px;
-        font-weight: 700;
-        backdrop-filter: blur(5px);
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .district-tech-link:hover {
-        color: var(--tech-primary-dark);
-        background: #fff;
-        text-decoration: none;
-    }
-
-    .district-tech-stats {
-        margin-bottom: 22px;
-    }
-
-    .district-tech-stat {
-        height: calc(100% - 20px);
-        margin-bottom: 20px;
-        padding: 20px;
-        border: 1px solid var(--tech-border);
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 8px 24px rgba(31, 45, 75, .06);
-    }
-
-    .district-tech-stat-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 14px;
-    }
-
-    .district-tech-stat h3 {
-        margin: 0;
-        color: #27324a;
-        font-size: 27px;
-        font-weight: 700;
-    }
-
-    .district-tech-stat p {
-        margin: 10px 0 0;
-        color: var(--tech-muted);
-        font-size: 13px;
-        line-height: 1.65;
-    }
-
-    .district-tech-stat-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 46px;
-        height: 46px;
-        border-radius: 14px;
-        color: #fff;
-        background: linear-gradient(135deg, #8b1e3f, #c65a77);
-        font-size: 21px;
-    }
-
-    .district-tech-panel {
-        border: 1px solid var(--tech-border);
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 8px 28px rgba(31, 45, 75, .07);
-        overflow: hidden;
-    }
-
-    .district-tech-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--tech-border);
-    }
-
-    .district-tech-panel-header h4 {
-        margin: 0 0 3px;
-        color: #27324a;
-        font-size: 17px;
-        font-weight: 700;
-    }
-
-    .district-tech-panel-header p {
-        margin: 0;
-        color: var(--tech-muted);
-        font-size: 12px;
-    }
-
-    .district-tech-panel-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 11px;
-        border-radius: 999px;
-        color: var(--tech-primary-dark);
-        background: #f9e9ee;
-        font-size: 11px;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .district-tech-list {
-        padding: 22px 24px 24px;
-    }
-
-    .district-tech-card {
-        margin-bottom: 18px;
-        border: 1px solid var(--tech-border);
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 8px 24px rgba(31, 45, 75, .05);
-        overflow: hidden;
-    }
-
-    .district-tech-card:last-child {
-        margin-bottom: 0;
-    }
-
-    .district-tech-card-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 18px 20px;
-        background: linear-gradient(135deg, #fff7f9 0%, #ffffff 100%);
-        border-bottom: 1px solid var(--tech-border);
-    }
-
-    .district-tech-card-header h5 {
-        margin: 0 0 6px;
-        color: #27324a;
-        font-size: 16px;
-        font-weight: 700;
-    }
-
-    .district-tech-entry-meta {
+    /* ---------- Page header ---------- */
+    .ta-header {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .district-tech-entry-meta span {
-        display: inline-flex;
+        gap: 14px 18px;
         align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        color: var(--tech-primary-dark);
-        background: #f9e9ee;
-        font-size: 11px;
-        font-weight: 700;
+        justify-content: space-between;
+        margin: 16px 0 18px;
+        padding: 18px 22px;
+        border-radius: var(--ta-radius);
+        color: #fff;
+        background: linear-gradient(118deg, var(--ta-navy), var(--ta-blue));
     }
 
-    .district-tech-manage {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: flex-end;
-    }
-
-    .district-tech-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 12px;
-        border-radius: 10px;
-        border: 1px solid transparent;
-        font-size: 11px;
-        font-weight: 700;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .district-tech-button:hover {
-        text-decoration: none;
-        transform: translateY(-1px);
-    }
-
-    .district-tech-button-update {
-        color: #8a4b00;
-        background: #fff3e0;
-    }
-
-    .district-tech-button-update:hover {
-        color: #8a4b00;
-        background: #ffe0b2;
-    }
-
-    .district-tech-button-delete {
-        color: #b42318;
-        background: #fdecec;
-    }
-
-    .district-tech-button-delete:hover {
-        color: #b42318;
-        background: #fbd5d5;
-    }
-
-    .district-tech-card-body {
-        padding: 20px;
-    }
-
-    .district-tech-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-    }
-
-    .district-tech-section {
-        padding: 16px;
-        border: 1px solid var(--tech-border);
-        border-radius: 14px;
-        background: var(--tech-panel);
-    }
-
-    .district-tech-section.full-width {
-        grid-column: 1 / -1;
-    }
-
-    .district-tech-section small {
+    .ta-eyebrow {
         display: block;
-        margin-bottom: 6px;
-        color: var(--tech-muted);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
+        margin-bottom: 3px;
+        color: rgba(255, 255, 255, .75);
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .09em;
         text-transform: uppercase;
     }
 
-    .district-tech-section strong {
-        display: block;
-        margin-bottom: 8px;
-        color: #27324a;
-        font-size: 14px;
-        font-weight: 700;
+    .ta-header h1 {
+        margin: 0;
+        color: #fff;
+        font-size: 1.45rem;
+        font-weight: 600;
+        line-height: 1.25;
     }
 
-    .district-tech-text {
+    .ta-header-meta {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, .85);
+        font-size: .85rem;
+    }
+
+    .ta-header-meta span + span::before {
+        content: "\00b7";
+        margin: 0 .5rem;
+        color: rgba(255, 255, 255, .5);
+    }
+
+    .ta-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 13px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-size: .83rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .ta-btn-ghost {
+        color: #fff;
+        border-color: rgba(255, 255, 255, .45);
+        background: transparent;
+    }
+
+    .ta-btn-ghost:hover {
+        color: var(--ta-navy);
+        background: #fff;
+        border-color: #fff;
+        text-decoration: none;
+    }
+
+    .ta-btn-solid {
+        color: var(--ta-navy);
+        background: #fff;
+        border-color: #fff;
+    }
+
+    .ta-btn-solid:hover {
+        color: var(--ta-navy);
+        background: var(--ta-sky);
+        border-color: var(--ta-sky);
+        text-decoration: none;
+    }
+
+    /* ---------- Metric tiles ---------- */
+    .ta-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .ta-metric {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 14px 16px;
+        border: 1px solid var(--ta-line);
+        border-radius: var(--ta-radius);
+        background: #fff;
+        box-shadow: var(--ta-shadow);
+    }
+
+    .ta-metric-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--ta-sky);
+        color: var(--ta-blue);
+        font-size: 1rem;
+    }
+
+    .ta-metric-value {
+        display: block;
+        color: var(--ta-navy);
+        font-size: 1.35rem;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ta-metric small {
+        display: block;
+        color: var(--ta-muted);
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    /* ---------- Entries panel ---------- */
+    .ta-panel {
+        border: 1px solid var(--ta-line);
+        border-radius: var(--ta-radius);
+        background: #fff;
+        box-shadow: var(--ta-shadow);
+        overflow: hidden;
+    }
+
+    .ta-panel-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--ta-line);
+    }
+
+    .ta-panel-head .ta-head-text { flex: 1 1 auto; min-width: 200px; }
+
+    .ta-panel-head h4 {
+        margin: 0;
+        color: var(--ta-navy);
+        font-size: 1.02rem;
+        font-weight: 600;
+    }
+
+    .ta-panel-head p {
+        margin: 2px 0 0;
+        color: var(--ta-muted);
+        font-size: .84rem;
+    }
+
+    .ta-tag {
+        display: inline-flex;
+        gap: 5px;
+        align-items: center;
+        padding: 3px 11px;
+        border-radius: 999px;
+        background: var(--ta-sky);
+        color: var(--ta-navy);
+        font-size: .74rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .ta-list { padding: 14px 20px 18px; }
+
+    .ta-card {
+        margin-bottom: 14px;
+        border: 1px solid var(--ta-line);
+        border-radius: var(--ta-radius);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .ta-card:last-child { margin-bottom: 0; }
+
+    .ta-card-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px 16px;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--ta-line);
+        background: #fbfdff;
+    }
+
+    .ta-card-head h5 {
+        margin: 0 0 5px;
+        color: var(--ta-navy);
+        font-size: .95rem;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    .ta-entry-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .ta-entry-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: #f1f5f8;
+        color: var(--ta-muted);
+        font-size: .72rem;
+        font-weight: 600;
+    }
+
+    .ta-manage {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .ta-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        font-size: .76rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background .15s ease, color .15s ease;
+    }
+
+    .ta-action-update {
+        color: var(--ta-blue);
+        background: var(--ta-sky);
+    }
+
+    .ta-action-update:hover {
+        color: #fff;
+        background: var(--ta-blue);
+        text-decoration: none;
+    }
+
+    .ta-action-delete {
+        color: #a33b32;
+        background: #fbeeec;
+        cursor: pointer;
+    }
+
+    .ta-action-delete:hover {
+        color: #fff;
+        background: #b04a41;
+    }
+
+    .ta-card-body { padding: 4px 16px 14px; }
+
+    .ta-field {
+        display: grid;
+        grid-template-columns: 190px minmax(0, 1fr);
+        gap: 8px 16px;
+        padding: 11px 0;
+        border-top: 1px solid #edf3f8;
+    }
+
+    .ta-field:first-child { border-top: 0; }
+
+    .ta-field-label small {
+        display: block;
+        color: var(--ta-muted);
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    .ta-field-label strong {
+        display: block;
+        margin-top: 2px;
+        color: var(--ta-navy);
+        font-size: .82rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .ta-text {
         color: #445065;
-        line-height: 1.7;
-        white-space: normal;
+        font-size: .85rem;
+        line-height: 1.6;
         word-break: break-word;
     }
 
-    .district-tech-text.is-empty {
-        color: var(--tech-muted);
+    .ta-text.is-empty {
+        color: var(--ta-muted);
         font-style: italic;
     }
 
-    .district-tech-empty {
-        padding: 48px 24px;
-        color: var(--tech-muted);
+    .ta-empty {
+        padding: 44px 24px;
+        color: var(--ta-muted);
         text-align: center;
     }
 
-    .district-tech-empty i {
+    .ta-empty > i {
         display: block;
-        margin-bottom: 12px;
-        color: #aab2c3;
-        font-size: 40px;
+        margin-bottom: 10px;
+        color: #b9cdde;
+        font-size: 2.2rem;
     }
 
-    .district-tech-empty h5 {
-        margin-bottom: 8px;
-        color: #27324a;
-        font-size: 18px;
-        font-weight: 700;
+    .ta-empty h5 {
+        margin-bottom: 6px;
+        color: var(--ta-navy);
+        font-size: 1rem;
+        font-weight: 600;
     }
 
-    .district-tech-empty p {
-        max-width: 520px;
-        margin: 0 auto 18px;
-        line-height: 1.7;
+    .ta-empty p {
+        max-width: 46ch;
+        margin: 0 auto 16px;
+        font-size: .87rem;
+        line-height: 1.6;
     }
 
-    .district-tech-empty .district-tech-link {
-        border-color: transparent;
+    .ta-empty .ta-btn-primary {
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 7px;
+        font-size: .74rem;
+        font-weight: 600;
         color: #fff;
-        background: linear-gradient(135deg, #8b1e3f 0%, #a83255 100%);
-        box-shadow: 0 10px 22px rgba(139, 30, 63, .18);
+        background: var(--ta-blue);
+        border-color: var(--ta-blue);
     }
 
-    .district-tech-empty .district-tech-link:hover {
+    .ta-empty .ta-btn-primary:hover {
         color: #fff;
-        background: linear-gradient(135deg, #741735 0%, #8b1e3f 100%);
+        background: var(--ta-navy);
+        border-color: var(--ta-navy);
+        text-decoration: none;
     }
 
-    @media (max-width: 991.98px) {
-        .district-tech-grid {
-            grid-template-columns: 1fr;
-        }
+    @media (max-width: 1199.98px) {
+        .ta-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 767.98px) {
-        .district-tech-hero,
-        .district-tech-card-header,
-        .district-tech-panel-header {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .district-tech-hero {
-            padding: 22px;
-            border-radius: 14px;
-        }
-
-        .district-tech-actions,
-        .district-tech-manage {
-            width: 100%;
-        }
-
-        .district-tech-link,
-        .district-tech-pill,
-        .district-tech-button {
-            justify-content: center;
-            width: 100%;
-        }
-
-        .district-tech-list,
-        .district-tech-card-body {
-            padding: 16px;
-        }
+        .ta-header { padding: 16px 18px; }
+        .ta-header h1 { font-size: 1.25rem; }
+        .ta-header-actions { width: 100%; }
+        .ta-header-actions .ta-btn { flex: 1 1 auto; justify-content: center; }
+        .ta-metrics { grid-template-columns: 1fr; gap: 10px; }
+        .ta-panel-head { padding: 14px 16px; }
+        .ta-list { padding: 12px 14px 14px; }
+        .ta-field { grid-template-columns: 1fr; gap: 4px; }
+        .ta-manage { width: 100%; }
     }
 </style>
 
 <div class="district-tech-page">
-    <div class="row">
-        <div class="col-12">
-            <div class="district-tech-hero">
+    <header class="ta-header">
+        <div>
+            <span class="ta-eyebrow"><i class="mdi mdi-wrench-outline"></i> Technical Assistance</span>
+            <h1>District TA Workspace</h1>
+            <p class="ta-header-meta">
+                <span><?= $escape($district_name); ?></span>
+                <span>Fiscal Year <?= $escape($fiscal_year); ?></span>
+                <span><?= $entry_count; ?> <?= $entry_count === 1 ? 'entry' : 'entries'; ?></span>
+            </p>
+        </div>
+        <div class="ta-header-actions">
+            <a href="<?= $dashboard_url; ?>" class="ta-btn ta-btn-ghost">
+                <i class="mdi mdi-view-dashboard-outline"></i> Dashboard
+            </a>
+            <a href="<?= $new_entry_url; ?>" class="ta-btn ta-btn-solid">
+                <i class="mdi mdi-plus-circle-outline"></i> Add TA Entry
+            </a>
+        </div>
+    </header>
+
+    <?php if ($this->session->flashdata('success')) : ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <?= $this->session->flashdata('success'); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($this->session->flashdata('danger')) : ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <?= $this->session->flashdata('danger'); ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="ta-metrics">
+        <?php foreach ($ta_metrics as $metric) : ?>
+            <div class="ta-metric">
+                <span class="ta-metric-icon"><i class="mdi <?= $escape($metric['icon']); ?>"></i></span>
                 <div>
-                    <h1><i class="mdi mdi-wrench-outline mr-2"></i>District Technical Assistance Workspace</h1>
-                    <p>Track district-level technical assistance recommendations, schedules, and management teams for <?= $escape($district_name); ?> during Fiscal Year <?= $escape($fiscal_year); ?>.</p>
-                </div>
-                <div class="district-tech-actions">
-                    <span class="district-tech-pill">
-                        <i class="mdi mdi-clipboard-text-outline"></i>
-                        <?= $entry_count; ?> <?= $entry_count === 1 ? 'entry' : 'entries'; ?>
-                    </span>
-                    <a href="<?= $dashboard_url; ?>" class="district-tech-link">
-                        <i class="mdi mdi-view-dashboard-outline"></i>
-                        Dashboard
-                    </a>
-                    <a href="<?= $new_entry_url; ?>" class="district-tech-link">
-                        <i class="mdi mdi-plus-circle-outline"></i>
-                        Add TA Entry
-                    </a>
+                    <span class="ta-metric-value"><?= (int) $metric['count']; ?></span>
+                    <small><?= $escape($metric['label']); ?></small>
                 </div>
             </div>
-
-            <?php if ($this->session->flashdata('success')) : ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <?= $this->session->flashdata('success'); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($this->session->flashdata('danger')) : ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <?= $this->session->flashdata('danger'); ?>
-                </div>
-            <?php endif; ?>
-        </div>
+        <?php endforeach; ?>
     </div>
 
-    <div class="row district-tech-stats">
-        <div class="col-lg-3 col-sm-6">
-            <div class="district-tech-stat">
-                <div class="district-tech-stat-top">
-                    <div>
-                        <h3><?= $entry_count; ?></h3>
-                        <p>Total technical assistance entries saved for the active fiscal year.</p>
-                    </div>
-                    <span class="district-tech-stat-icon"><i class="mdi mdi-clipboard-list-outline"></i></span>
-                </div>
+    <section class="ta-panel">
+        <div class="ta-panel-head">
+            <div class="ta-head-text">
+                <h4><?= $escape($title); ?></h4>
+                <p>District-level recommendations, activity plans, coordination scope, and team assignments.</p>
             </div>
+            <span class="ta-tag"><i class="mdi mdi-filter-outline"></i> Fiscal Year <?= $escape($fiscal_year); ?></span>
         </div>
-        <div class="col-lg-3 col-sm-6">
-            <div class="district-tech-stat">
-                <div class="district-tech-stat-top">
-                    <div>
-                        <h3><?= $scheduled_count; ?></h3>
-                        <p>Entries that already include a schedule or timeline.</p>
-                    </div>
-                    <span class="district-tech-stat-icon"><i class="mdi mdi-calendar-clock-outline"></i></span>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-sm-6">
-            <div class="district-tech-stat">
-                <div class="district-tech-stat-top">
-                    <div>
-                        <h3><?= $scope_count; ?></h3>
-                        <p>Entries with defined concerned districts or SDO coordination scope.</p>
-                    </div>
-                    <span class="district-tech-stat-icon"><i class="mdi mdi-map-marker-check-outline"></i></span>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-sm-6">
-            <div class="district-tech-stat">
-                <div class="district-tech-stat-top">
-                    <div>
-                        <h3><?= $team_count; ?></h3>
-                        <p>Entries with identified management or composite teams.</p>
-                    </div>
-                    <span class="district-tech-stat-icon"><i class="mdi mdi-account-group-outline"></i></span>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="district-tech-panel">
-                <div class="district-tech-panel-header">
-                    <div>
-                        <h4><?= $escape($title); ?></h4>
-                        <p>Review district-level recommendations, activity plans, coordination scope, and team assignments in a more readable workspace.</p>
-                    </div>
-                    <span class="district-tech-panel-badge">
-                        <i class="mdi mdi-filter-outline"></i>
-                        Fiscal Year <?= $escape($fiscal_year); ?>
-                    </span>
-                </div>
-
-                <?php if (!empty($entries)) { ?>
-                    <div class="district-tech-list">
-                        <?php foreach ($entries as $index => $row) :
-                            $entry_number = $index + 1;
-                            $schedule_text = trim((string) $row->schedule) !== '' ? (string) $row->schedule : 'Schedule not set';
-                        ?>
-                            <article class="district-tech-card">
-                                <div class="district-tech-card-header">
-                                    <div>
-                                        <h5><?= $escape(trim((string) $row->ta_rec) !== '' ? (string) $row->ta_rec : 'Technical Assistance Entry ' . $entry_number); ?></h5>
-                                        <div class="district-tech-entry-meta">
-                                            <span><i class="mdi mdi-pound"></i>Entry <?= $entry_number; ?></span>
-                                            <span><i class="mdi mdi-calendar-range"></i><?= $escape($schedule_text); ?></span>
-                                            <span><i class="mdi mdi-map-marker-outline"></i><?= trim((string) $row->cd) !== '' ? 'Scope set' : 'Scope pending'; ?></span>
-                                        </div>
-                                    </div>
-                                    <div class="district-tech-manage">
-                                        <a href="<?= base_url(); ?>Pages/sbm_district_tech_edit/<?= (int) $row->id; ?>" class="district-tech-button district-tech-button-update">
-                                            <i class="mdi mdi-pencil-outline"></i>
-                                            Update
-                                        </a>
-                                        <?= form_open('Pages/sbm_district_tech_del', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this technical assistance entry?');")); ?>
-                                            <input type="hidden" name="id" value="<?= (int) $row->id; ?>">
-                                            <button type="submit" class="district-tech-button district-tech-button-delete"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
-                                        <?= form_close(); ?>
-                                    </div>
+        <?php if (!empty($entries)) { ?>
+            <div class="ta-list">
+                <?php foreach ($entries as $index => $row) :
+                    $entry_number = $index + 1;
+                    $schedule_text = trim((string) $row->schedule) !== '' ? (string) $row->schedule : 'Schedule not set';
+                ?>
+                    <article class="ta-card">
+                        <div class="ta-card-head">
+                            <div>
+                                <h5><?= $escape(trim((string) $row->ta_rec) !== '' ? (string) $row->ta_rec : 'Technical Assistance Entry ' . $entry_number); ?></h5>
+                                <div class="ta-entry-meta">
+                                    <span><i class="mdi mdi-pound"></i>Entry <?= $entry_number; ?></span>
+                                    <span><i class="mdi mdi-calendar-range"></i><?= $escape($schedule_text); ?></span>
+                                    <span><i class="mdi mdi-map-marker-outline"></i><?= trim((string) $row->cd) !== '' ? 'Scope set' : 'Scope pending'; ?></span>
                                 </div>
+                            </div>
+                            <div class="ta-manage">
+                                <a href="<?= base_url(); ?>Pages/sbm_district_tech_edit/<?= (int) $row->id; ?>" class="ta-action ta-action-update">
+                                    <i class="mdi mdi-pencil-outline"></i> Update
+                                </a>
+                                <?= form_open('Pages/sbm_district_tech_del', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Are you sure you want to delete this technical assistance entry?');")); ?>
+                                    <input type="hidden" name="id" value="<?= (int) $row->id; ?>">
+                                    <button type="submit" class="ta-action ta-action-delete"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
+                                <?= form_close(); ?>
+                            </div>
+                        </div>
 
-                                <div class="district-tech-card-body">
-                                    <div class="district-tech-grid">
-                                        <section class="district-tech-section full-width">
-                                            <small>Recommendation</small>
-                                            <strong>Technical assistance recommendation</strong>
-                                            <?= $render_text_block($row->ta_rec, 'No recommendation recorded yet.'); ?>
-                                        </section>
-
-                                        <section class="district-tech-section full-width">
-                                            <small>Strategies / Activities</small>
-                                            <strong>Planned interventions and activities</strong>
-                                            <?= $render_text_block($row->sa, 'No strategies or activities recorded yet.'); ?>
-                                        </section>
-
-                                        <section class="district-tech-section">
-                                            <small>Concerned Districts / SDO</small>
-                                            <strong>Coordination scope</strong>
-                                            <?= $render_text_block($row->cd, 'No concerned districts or SDO scope recorded yet.'); ?>
-                                        </section>
-
-                                        <section class="district-tech-section">
-                                            <small>Management Team</small>
-                                            <strong>Management team district / SDO</strong>
-                                            <?= $render_text_block($row->mtd, 'No management team recorded yet.'); ?>
-                                        </section>
-
-                                        <section class="district-tech-section">
-                                            <small>Schedule</small>
-                                            <strong>Planned implementation schedule</strong>
-                                            <?= $render_text_block($row->schedule, 'No schedule recorded yet.'); ?>
-                                        </section>
-
-                                        <section class="district-tech-section">
-                                            <small>Composite Team</small>
-                                            <strong>Assigned composite team</strong>
-                                            <?= $render_text_block($row->ct, 'No composite team recorded yet.'); ?>
-                                        </section>
-                                    </div>
+                        <div class="ta-card-body">
+                            <div class="ta-field">
+                                <div class="ta-field-label">
+                                    <small>Recommendation</small>
+                                    <strong>Technical assistance recommendation</strong>
                                 </div>
-                            </article>
-                        <?php endforeach; ?>
-                    </div>
-                <?php } else { ?>
-                    <div class="district-tech-empty">
-                        <i class="mdi mdi-wrench-clock"></i>
-                        <h5>No district technical assistance entries yet</h5>
-                        <p>Start building your district technical assistance plan by adding recommendations, strategies, schedules, and team assignments for the active fiscal year.</p>
-                        <a href="<?= $new_entry_url; ?>" class="district-tech-link">
-                            <i class="mdi mdi-plus-circle-outline"></i>
-                            Add First TA Entry
-                        </a>
-                    </div>
-                <?php } ?>
+                                <?= $render_text_block($row->ta_rec, 'No recommendation recorded yet.'); ?>
+                            </div>
+
+                            <div class="ta-field">
+                                <div class="ta-field-label">
+                                    <small>Strategies / Activities</small>
+                                    <strong>Planned interventions and activities</strong>
+                                </div>
+                                <?= $render_text_block($row->sa, 'No strategies or activities recorded yet.'); ?>
+                            </div>
+
+                            <div class="ta-field">
+                                <div class="ta-field-label">
+                                    <small>Concerned Districts / SDO</small>
+                                    <strong>Coordination scope</strong>
+                                </div>
+                                <?= $render_text_block($row->cd, 'No concerned districts or SDO scope recorded yet.'); ?>
+                            </div>
+
+                            <div class="ta-field">
+                                <div class="ta-field-label">
+                                    <small>Management Team</small>
+                                    <strong>Management team district / SDO</strong>
+                                </div>
+                                <?= $render_text_block($row->mtd, 'No management team recorded yet.'); ?>
+                            </div>
+
+                            <div class="ta-field">
+                                <div class="ta-field-label">
+                                    <small>Schedule</small>
+                                    <strong>Planned implementation schedule</strong>
+                                </div>
+                                <?= $render_text_block($row->schedule, 'No schedule recorded yet.'); ?>
+                            </div>
+
+                            <div class="ta-field">
+                                <div class="ta-field-label">
+                                    <small>Composite Team</small>
+                                    <strong>Assigned composite team</strong>
+                                </div>
+                                <?= $render_text_block($row->ct, 'No composite team recorded yet.'); ?>
+                            </div>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
             </div>
-        </div>
-    </div>
+        <?php } else { ?>
+            <div class="ta-empty">
+                <i class="mdi mdi-wrench-clock"></i>
+                <h5>No district technical assistance entries yet</h5>
+                <p>Start building your district technical assistance plan by adding recommendations, strategies, schedules, and team assignments for the active fiscal year.</p>
+                <a href="<?= $new_entry_url; ?>" class="ta-btn ta-btn-primary">
+                    <i class="mdi mdi-plus-circle-outline"></i> Add First TA Entry
+                </a>
+            </div>
+        <?php } ?>
+    </section>
 </div>

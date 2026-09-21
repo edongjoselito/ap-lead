@@ -1,168 +1,160 @@
 <style>
     .school-update-page {
-        --school-primary: #7f1d1d;
-        --school-primary-light: #b83a4b;
-        --school-accent: #d6a84b;
-        --school-ink: #172033;
-        --school-muted: #687386;
-        --school-border: #e4e9f0;
-        --school-surface: #f6f8fb;
+        --school-primary: var(--llcm-blue, #2877a9);
+        --school-primary-light: var(--llcm-blue, #2877a9);
+        --school-navy: var(--llcm-navy, #123d61);
+        --school-sky: var(--llcm-sky, #eaf5fc);
+        --school-ink: var(--llcm-ink, #233342);
+        --school-muted: #6b7f92;
+        --school-border: var(--llcm-border, #d7e5ef);
+        --school-surface: #f7fafc;
         padding-bottom: 2rem;
     }
 
     .school-update-page .school-hero {
-        position: relative;
-        overflow: hidden;
-        margin: 1rem 0 1.5rem;
-        padding: 1.75rem 2rem;
-        border-radius: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 18px;
+        align-items: center;
+        justify-content: space-between;
+        margin: 1rem 0 1.25rem;
+        padding: 1.15rem 1.4rem;
+        border-radius: 10px;
         color: #fff;
-        background:
-            radial-gradient(circle at 88% 18%, rgba(255, 255, 255, .18) 0, rgba(255, 255, 255, .18) 80px, transparent 81px),
-            linear-gradient(135deg, #54131d 0%, #7f1d2d 55%, #9f2940 100%);
-        box-shadow: 0 14px 35px rgba(127, 29, 45, .2);
-    }
-
-    .school-update-page .school-hero::after {
-        content: "";
-        position: absolute;
-        right: 7%;
-        bottom: -68px;
-        width: 165px;
-        height: 165px;
-        border: 28px solid rgba(255, 255, 255, .08);
-        border-radius: 50%;
+        background: linear-gradient(118deg, var(--school-navy), var(--school-primary));
+        box-shadow: 0 4px 16px rgba(20, 62, 94, .05);
     }
 
     .school-update-page .hero-content {
-        position: relative;
-        z-index: 1;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1.5rem;
+        width: 100%;
     }
 
     .school-update-page .hero-eyebrow {
         display: inline-flex;
         align-items: center;
         gap: .4rem;
-        margin-bottom: .5rem;
+        margin-bottom: .3rem;
         font-size: .72rem;
-        font-weight: 700;
-        letter-spacing: .12em;
+        font-weight: 600;
+        letter-spacing: .09em;
         text-transform: uppercase;
-        color: #f8d7dc;
+        color: rgba(255, 255, 255, .75);
     }
 
     .school-update-page .school-hero h2 {
-        margin: 0 0 .35rem;
+        margin: 0;
         color: #fff;
-        font-size: 1.65rem;
-        font-weight: 700;
+        font-size: 1.45rem;
+        font-weight: 600;
+        line-height: 1.25;
     }
 
     .school-update-page .school-hero p {
         max-width: 650px;
-        margin: 0;
-        color: rgba(255, 255, 255, .78);
+        margin: .3rem 0 0;
+        color: rgba(255, 255, 255, .85);
+        font-size: .85rem;
     }
 
     .school-update-page .school-id-badge {
         flex: 0 0 auto;
-        padding: .7rem 1rem;
-        border: 1px solid rgba(255, 255, 255, .2);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, .12);
-        backdrop-filter: blur(6px);
+        padding: .5rem .95rem;
+        border: 1px solid rgba(255, 255, 255, .3);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .1);
         text-align: center;
     }
 
     .school-update-page .school-id-badge small {
         display: block;
-        margin-bottom: .15rem;
-        font-size: .67rem;
+        margin-bottom: .1rem;
+        font-size: .64rem;
         letter-spacing: .08em;
         text-transform: uppercase;
         color: rgba(255, 255, 255, .7);
     }
 
     .school-update-page .school-id-badge strong {
-        font-size: 1rem;
+        font-size: .95rem;
         color: #fff;
     }
 
     .school-update-page .update-card {
         overflow: hidden;
         border: 1px solid var(--school-border);
-        border-radius: 18px;
+        border-radius: 10px;
         background: #fff;
-        box-shadow: 0 8px 28px rgba(24, 36, 56, .07);
+        box-shadow: 0 4px 16px rgba(20, 62, 94, .05);
     }
 
     .school-update-page .form-section {
-        padding: 1.65rem 1.8rem;
+        padding: 1.3rem 1.4rem;
         border-bottom: 1px solid var(--school-border);
     }
 
     .school-update-page .section-heading {
         display: flex;
         align-items: center;
-        gap: .8rem;
-        margin-bottom: 1.35rem;
+        gap: .7rem;
+        margin-bottom: 1.1rem;
     }
 
     .school-update-page .section-icon {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        flex: 0 0 40px;
-        border-radius: 11px;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-radius: 8px;
         color: var(--school-primary);
-        background: #fbecef;
-        font-size: 1.2rem;
+        background: var(--school-sky);
+        font-size: 1rem;
     }
 
     .school-update-page .section-heading h4 {
-        margin: 0 0 .15rem;
-        color: var(--school-ink);
-        font-size: 1rem;
-        font-weight: 700;
+        margin: 0 0 .1rem;
+        color: var(--school-navy);
+        font-size: .98rem;
+        font-weight: 600;
     }
 
     .school-update-page .section-heading p {
         margin: 0;
         color: var(--school-muted);
-        font-size: .82rem;
+        font-size: .8rem;
     }
 
     .school-update-page .form-group {
-        margin-bottom: 1.2rem;
+        margin-bottom: 1rem;
     }
 
     .school-update-page label {
-        margin-bottom: .45rem;
-        color: #344054;
+        margin-bottom: .4rem;
+        color: var(--school-navy);
         font-size: .78rem;
-        font-weight: 700;
+        font-weight: 600;
     }
 
     .school-update-page .form-control {
-        min-height: 44px;
-        border: 1px solid #d9e0e8;
-        border-radius: 10px;
+        min-height: 38px;
+        border: 1px solid var(--school-border);
+        border-radius: 8px;
         color: var(--school-ink);
-        background-color: #fbfcfd;
+        background-color: #fbfdff;
         box-shadow: none;
-        transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        font-size: .87rem;
+        transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
     }
 
     .school-update-page .form-control:focus {
-        border-color: var(--school-primary-light);
+        border-color: var(--school-primary);
         background-color: #fff;
-        box-shadow: 0 0 0 3px rgba(184, 58, 75, .12);
+        box-shadow: 0 0 0 .15rem rgba(40, 119, 169, .16);
     }
 
     .school-update-page select.form-control {
@@ -171,8 +163,8 @@
 
     .school-update-page .field-note {
         display: block;
-        margin-top: .35rem;
-        color: #8b95a5;
+        margin-top: .3rem;
+        color: var(--school-muted);
         font-size: .72rem;
     }
 
@@ -181,7 +173,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding: 1.25rem 1.8rem;
+        padding: 1rem 1.4rem;
         background: var(--school-surface);
     }
 
@@ -193,63 +185,69 @@
 
     .school-update-page .btn-school-secondary,
     .school-update-page .btn-school-primary {
-        min-width: 120px;
-        padding: .68rem 1.15rem;
-        border-radius: 10px;
-        font-weight: 700;
-        transition: all .2s ease;
+        min-width: 110px;
+        padding: .5rem 1rem;
+        border-radius: 8px;
+        font-size: .85rem;
+        font-weight: 600;
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
 
     .school-update-page .btn-school-secondary {
-        border: 1px solid #d4dbe4;
+        border: 1px solid var(--school-border);
         color: #475467;
         background: #fff;
+    }
+
+    .school-update-page .btn-school-secondary:hover {
+        border-color: var(--school-primary);
+        color: var(--school-navy);
     }
 
     .school-update-page .btn-school-primary {
         border: 1px solid var(--school-primary);
         color: #fff;
         background: var(--school-primary);
-        box-shadow: 0 6px 16px rgba(127, 29, 45, .2);
     }
 
     .school-update-page .btn-school-primary:hover {
-        border-color: #651724;
+        border-color: var(--school-navy);
         color: #fff;
-        background: #651724;
-        transform: translateY(-1px);
+        background: var(--school-navy);
     }
 
     .school-update-page .alert {
         border: 0;
-        border-radius: 12px;
-        box-shadow: 0 5px 18px rgba(24, 36, 56, .07);
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(20, 62, 94, .05);
     }
 
     @media (max-width: 767.98px) {
         .school-update-page .school-hero {
-            padding: 1.4rem;
-            border-radius: 14px;
+            padding: 1rem 1.1rem;
+        }
+
+        .school-update-page .school-hero h2 {
+            font-size: 1.25rem;
         }
 
         .school-update-page .hero-content {
-            display: block;
+            align-items: flex-start;
+            flex-direction: column;
         }
 
         .school-update-page .school-id-badge {
-            display: inline-block;
-            margin-top: 1rem;
             text-align: left;
         }
 
         .school-update-page .form-section {
-            padding: 1.35rem 1.15rem;
+            padding: 1.1rem 1rem;
         }
 
         .school-update-page .form-actions {
             align-items: stretch;
             flex-direction: column;
-            padding: 1.15rem;
+            padding: 1rem;
         }
 
         .school-update-page .action-buttons {

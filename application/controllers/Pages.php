@@ -33,6 +33,7 @@ class Pages extends CI_Controller
             'division' => array('division', 'division_head', 'ict'),
             'district' => array('district'),
             'school_dashboard' => array('school'),
+            'learning_gap_archives' => array('school', 'division', 'division_head', 'region'),
             'profilelist' => array('admin'),
             'profile_new' => array('admin'),
             'qr' => array('admin'),
@@ -963,6 +964,12 @@ class Pages extends CI_Controller
         $data['entry_mode'] = (bool) $entry_mode;
         $data['scope'] = $scope;
         $data['is_school'] = $position === 'school';
+        $data['is_archive_year'] = (int) $this->session->fy < (int) date('Y');
+        if ($data['is_school'] && $data['entry_mode'] && $data['is_archive_year']) {
+            $this->session->set_flashdata('danger', 'Archived fiscal years are read-only. Return to the current fiscal year to encode or edit records.');
+            redirect('Pages/learning_gap_archives');
+            return;
+        }
         $data['grade_filter'] = trim((string) $this->input->get('grade_level', true));
         $data['records'] = $this->Page_model->learning_gap_records($scope);
         if ($data['grade_filter'] !== '') {
@@ -1063,6 +1070,28 @@ class Pages extends CI_Controller
     }
 
     /** Display submitted learning-gap records separately from the summary page. */
+    public function learning_gap_archives()
+    {
+        $position = (string) $this->session->position;
+        $scope = array('type' => 'school', 'id' => (string) $this->session->username);
+        if (in_array($position, array('division', 'division_head'), true)) {
+            $scope = array('type' => 'division', 'id' => (int) $this->session->division);
+        } elseif ($position === 'region') {
+            $scope = array('type' => 'region', 'id' => (int) $this->session->region);
+        }
+
+        $data['title'] = 'Archived Learning Gap Records';
+        $data['archive_years'] = $this->Page_model->learning_gap_archive_years($scope);
+        $data['is_school'] = $position === 'school';
+        $data['current_year'] = (int) date('Y');
+
+        $this->load->view('templates/header');
+        $this->load->view('templates/menu');
+        $this->load->view('pages/learning_gap_archives', $data);
+        $this->load->view('templates/footer');
+        $this->load->view('templates/footer_basic');
+    }
+
     public function learning_gap_records()
     {
         if (!$this->session->logged_in) {
@@ -1083,6 +1112,14 @@ class Pages extends CI_Controller
 
         $data['title'] = 'Submitted Learning Gap Records';
         $data['is_school'] = $position === 'school';
+        $requested_year = (int) $this->input->get('year', true);
+        if ($requested_year !== 0 && ($requested_year < 2000 || $requested_year > (int) date('Y') + 1)) {
+            show_error('The requested archive year is invalid.', 400);
+            return;
+        }
+        $data['record_year'] = $requested_year > 0 ? $requested_year : (int) $this->session->fy;
+        $data['has_year_filter'] = $requested_year > 0;
+        $data['is_archive_year'] = $data['record_year'] < (int) date('Y');
         $data['grade_filter'] = trim((string) $this->input->get('grade_level', true));
         $data['division_filter'] = $scope['type'] === 'region'
             ? (int) $this->input->get('division_id', true)
@@ -1095,7 +1132,7 @@ class Pages extends CI_Controller
             || $data['learning_area_filter'] !== ''
             || $data['term_filter'] !== ''
             || $data['competency_filter'] !== '';
-        $data['records'] = $this->Page_model->learning_gap_records($scope);
+        $data['records'] = $this->Page_model->learning_gap_records($scope, $data['record_year']);
         // Build filter choices from this user's authorized scope before applying filters.
         $data['record_filter_options'] = array('grade_level' => array(), 'learning_area' => array(), 'term' => array());
         foreach ($data['records'] as $record) {
@@ -1177,6 +1214,10 @@ class Pages extends CI_Controller
             show_error('Only school users can encode learning gap records.', 403);
         }
         $this->require_post();
+        if ((int) $this->session->fy < (int) date('Y')) {
+            show_error('Archived fiscal years are read-only.', 403);
+            return;
+        }
 
         $this->form_validation->set_rules('grade_level', 'Grade Level', 'trim|required|max_length[50]');
         $this->form_validation->set_rules('learning_area', 'Learning Area / Subject', 'trim|required|max_length[150]');
@@ -1229,6 +1270,10 @@ class Pages extends CI_Controller
         }
 
         $this->require_post();
+        if ((int) $this->session->fy < (int) date('Y')) {
+            show_error('Archived fiscal years are read-only.', 403);
+            return;
+        }
         $id = (int) $this->input->post('id', true);
         if ($id < 1) {
             show_404();
@@ -2694,7 +2739,12 @@ class Pages extends CI_Controller
         if ($new_fy >= 2000 && $new_fy <= (int) date('Y') + 1) {
             $this->session->set_userdata('fy', $new_fy);
         }
-        redirect(base_url());
+        $return_to = trim((string) $this->input->post('return_to', true), '/');
+        $has_safe_return = $return_to !== ''
+            && strpos($return_to, '..') === false
+            && strpos($return_to, '//') === false
+            && preg_match('/^[A-Za-z0-9_\.\/-]+$/', $return_to);
+        redirect($has_safe_return ? base_url($return_to) : base_url());
     }
 
     public function school_new()

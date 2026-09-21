@@ -3,9 +3,13 @@
 
 class Page_model extends CI_Model{
 
+    private $learning_gap_archive_schema_ready = false;
+
     public function __construct(){
         $this->load->database();
-
+        // Run lightweight, idempotent application migrations automatically.
+        // The migration marker makes this a metadata lookup after first deploy.
+        $this->ensure_learning_gap_archive_schema();
     }
 
 
@@ -1880,22 +1884,152 @@ public function log_audit_trail($action, $table_name, $record_id = null, $old_va
 }
 
 /* Learning Gap Monitoring ------------------------------------------------ */
-public function learning_gap_records($scope)
+private function ensure_learning_gap_archive_schema()
 {
+    if ($this->learning_gap_archive_schema_ready) {
+        return;
+    }
+
+    $migration = '20260921_learning_gap_fiscal_year_archives';
+    $this->db->query("CREATE TABLE IF NOT EXISTS `app_schema_migrations` (
+        `migration` VARCHAR(190) NOT NULL,
+        `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`migration`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        $this->learning_gap_archive_schema_ready = true;
+        return;
+    }
+
+    // Serialize the first production requests so two users cannot run the
+    // same ALTER TABLE statements while the application is being deployed.
+    $lock = $this->db->query(
+        "SELECT GET_LOCK(CONCAT('ap_lead_learning_gap_archive_', DATABASE()), 30) AS acquired"
+    )->row();
+    $lock_acquired = $lock && (int) $lock->acquired === 1;
+
+    if (!$lock_acquired) {
+        throw new RuntimeException('The Learning Gap database upgrade is currently busy. Please reload the page.');
+    }
+
+    try {
+        // Another request may have completed the migration while this request
+        // was waiting for the database lock.
+        if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+            $this->learning_gap_archive_schema_ready = true;
+            return;
+        }
+
+        $this->db->query("CREATE TABLE IF NOT EXISTS `learning_gap_records` (
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `school_id` VARCHAR(45) NOT NULL,
+            `region_id` INT DEFAULT NULL,
+            `division_id` INT DEFAULT NULL,
+            `district_id` INT DEFAULT NULL,
+            `fiscal_year` INT NOT NULL,
+            `grade_level` VARCHAR(50) NOT NULL,
+            `learning_area` VARCHAR(150) NOT NULL,
+            `term` VARCHAR(50) NOT NULL,
+            `melc_competency` TEXT NULL,
+            `least_learned_competency` TEXT NOT NULL,
+            `class_proficiency_level` DECIMAL(5,2) DEFAULT NULL,
+            `proficiency_level` VARCHAR(100) DEFAULT NULL,
+            `percent_not_meeting` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            `learners_assessed` INT UNSIGNED NOT NULL DEFAULT 0,
+            `learners_with_gap` INT UNSIGNED NOT NULL DEFAULT 0,
+            `learning_difficulty` TEXT NULL,
+            `possible_causes` TEXT NULL,
+            `intervention_action` TEXT NULL,
+            `intervention_status` VARCHAR(50) DEFAULT NULL,
+            `remarks` TEXT NULL,
+            `created_by` VARCHAR(45) NOT NULL,
+            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `idx_lgr_school` (`school_id`),
+            KEY `idx_lgr_division` (`division_id`),
+            KEY `idx_lgr_region` (`region_id`),
+            KEY `idx_lgr_scope` (`region_id`, `division_id`, `school_id`),
+            KEY `idx_learning_gap_fiscal_scope` (`fiscal_year`, `region_id`, `division_id`, `school_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        if (!$this->db->field_exists('fiscal_year', 'learning_gap_records')) {
+            $this->db->query('ALTER TABLE learning_gap_records ADD fiscal_year INT NULL AFTER district_id');
+        }
+
+        // Records created before archive support inherit the year they were encoded.
+        $this->db->query('UPDATE learning_gap_records SET fiscal_year = COALESCE(YEAR(created_at), YEAR(CURRENT_DATE)) WHERE fiscal_year IS NULL OR fiscal_year = 0');
+
+        $column = $this->db->query(
+            "SELECT IS_NULLABLE FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'learning_gap_records'
+               AND COLUMN_NAME = 'fiscal_year' LIMIT 1"
+        )->row();
+        if ($column && strtoupper((string) $column->IS_NULLABLE) === 'YES') {
+            $this->db->query('ALTER TABLE learning_gap_records MODIFY fiscal_year INT NOT NULL');
+        }
+
+        $index_exists = $this->db->query(
+            "SELECT 1 FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'learning_gap_records'
+               AND INDEX_NAME = 'idx_learning_gap_fiscal_scope' LIMIT 1"
+        )->num_rows() > 0;
+        if (!$index_exists) {
+            $this->db->query('ALTER TABLE learning_gap_records ADD KEY idx_learning_gap_fiscal_scope (fiscal_year, region_id, division_id, school_id)');
+        }
+
+        $this->db->query(
+            'INSERT IGNORE INTO app_schema_migrations (migration) VALUES (?)',
+            array($migration)
+        );
+        $this->learning_gap_archive_schema_ready = true;
+    } finally {
+        $this->db->query("SELECT RELEASE_LOCK(CONCAT('ap_lead_learning_gap_archive_', DATABASE()))");
+    }
+}
+
+private function learning_gap_year($year = null)
+{
+    return $year === null ? (int) $this->session->fy : (int) $year;
+}
+
+private function apply_learning_gap_scope($scope, $alias = 'lgr')
+{
+    $prefix = $alias === '' ? '' : $alias . '.';
+    if ($scope['type'] === 'school') {
+        $this->db->where($prefix . 'school_id', $scope['id']);
+    } elseif ($scope['type'] === 'division') {
+        $this->db->where($prefix . 'division_id', $scope['id']);
+    } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
+        $this->db->where($prefix . 'region_id', $scope['id']);
+    }
+}
+
+public function learning_gap_records($scope, $year = null)
+{
+    $this->ensure_learning_gap_archive_schema();
     $this->db->select('lgr.*, s.schoolName, d.description AS division_name')
         ->from('learning_gap_records lgr')
         ->join('schools s', 's.schoolID = lgr.school_id', 'left')
-        ->join('division d', 'd.id = lgr.division_id', 'left');
+        ->join('division d', 'd.id = lgr.division_id', 'left')
+        ->where('lgr.fiscal_year', $this->learning_gap_year($year));
 
-    if ($scope['type'] === 'school') {
-        $this->db->where('lgr.school_id', $scope['id']);
-    } elseif ($scope['type'] === 'division') {
-        $this->db->where('lgr.division_id', $scope['id']);
-    } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
-        $this->db->where('lgr.region_id', $scope['id']);
-    }
+    $this->apply_learning_gap_scope($scope);
 
     return $this->db->order_by('lgr.created_at', 'DESC')->get()->result();
+}
+
+public function learning_gap_archive_years($scope)
+{
+    $this->ensure_learning_gap_archive_schema();
+    $this->db->select('lgr.fiscal_year, COUNT(*) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, COALESCE(SUM(lgr.learners_assessed), 0) AS learners_assessed, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap, MAX(lgr.created_at) AS latest_submission')
+        ->from('learning_gap_records lgr');
+    $this->apply_learning_gap_scope($scope);
+    return $this->db->where('lgr.fiscal_year IS NOT NULL', null, false)
+        ->group_by('lgr.fiscal_year')
+        ->order_by('lgr.fiscal_year', 'DESC')
+        ->get()->result();
 }
 
 public function learning_gap_school_competency_summary($scope, $grade = '')
@@ -1939,15 +2073,11 @@ public function learning_gap_school_competency_summary($scope, $grade = '')
 
 public function learning_gap_summary($scope)
 {
+    $this->ensure_learning_gap_archive_schema();
     $this->db->select('COUNT(*) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, COALESCE(SUM(lgr.learners_assessed), 0) AS learners_assessed, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
-        ->from('learning_gap_records lgr');
-    if ($scope['type'] === 'school') {
-        $this->db->where('lgr.school_id', $scope['id']);
-    } elseif ($scope['type'] === 'division') {
-        $this->db->where('lgr.division_id', $scope['id']);
-    } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
-        $this->db->where('lgr.region_id', $scope['id']);
-    }
+        ->from('learning_gap_records lgr')
+        ->where('lgr.fiscal_year', $this->learning_gap_year());
+    $this->apply_learning_gap_scope($scope);
     return $this->db->get()->row();
 }
 
@@ -1958,6 +2088,7 @@ public function learning_gap_summary($scope)
  */
 public function learning_gap_term_performance($scope)
 {
+    $this->ensure_learning_gap_archive_schema();
     $terms = array(
         'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
         'Term 2' => array('term' => 'Term 2', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
@@ -1966,14 +2097,9 @@ public function learning_gap_term_performance($scope)
 
     $this->db->select('lgr.school_id, lgr.grade_level, lgr.term, lgr.learners_assessed, lgr.learners_with_gap, lgr.class_proficiency_level')
         ->from('learning_gap_records lgr')
-        ->where_in('lgr.term', array_keys($terms));
-    if ($scope['type'] === 'school') {
-        $this->db->where('lgr.school_id', $scope['id']);
-    } elseif ($scope['type'] === 'division') {
-        $this->db->where('lgr.division_id', $scope['id']);
-    } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
-        $this->db->where('lgr.region_id', $scope['id']);
-    }
+        ->where_in('lgr.term', array_keys($terms))
+        ->where('lgr.fiscal_year', $this->learning_gap_year());
+    $this->apply_learning_gap_scope($scope);
 
     $cpl_weighted_totals = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
     $cpl_learner_totals = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
@@ -2012,6 +2138,7 @@ public function learning_gap_term_performance($scope)
  */
 public function learning_gap_thematic_analysis($scope, $limit = 6)
 {
+    $this->ensure_learning_gap_archive_schema();
     $catalog = array(
         'Remediation and academic support' => array(
             'remedial', 'remediation', 'tutorial', 'tutoring', 'reteach', 're-teach',
@@ -2065,14 +2192,9 @@ public function learning_gap_thematic_analysis($scope, $limit = 6)
     }
 
     $this->db->select('lgr.school_id, lgr.intervention_action, lgr.remarks')
-        ->from('learning_gap_records lgr');
-    if ($scope['type'] === 'school') {
-        $this->db->where('lgr.school_id', $scope['id']);
-    } elseif ($scope['type'] === 'division') {
-        $this->db->where('lgr.division_id', $scope['id']);
-    } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {
-        $this->db->where('lgr.region_id', $scope['id']);
-    }
+        ->from('learning_gap_records lgr')
+        ->where('lgr.fiscal_year', $this->learning_gap_year());
+    $this->apply_learning_gap_scope($scope);
 
     $source_count = 0;
     $source_schools = array();
@@ -2151,6 +2273,7 @@ public function learning_gap_thematic_analysis($scope, $limit = 6)
 /** Overall CPL and learner-gap percentage for every division in a region. */
 public function learning_gap_division_performance($region_id)
 {
+    $this->ensure_learning_gap_archive_schema();
     $rows = array();
     foreach ($this->regional_divisions($region_id) as $division) {
         $rows[(int) $division->id] = array(
@@ -2169,6 +2292,7 @@ public function learning_gap_division_performance($region_id)
     $records = $this->db
         ->select('division_id, school_id, grade_level, learners_assessed, learners_with_gap, class_proficiency_level')
         ->where('region_id', (int) $region_id)
+        ->where('fiscal_year', $this->learning_gap_year())
         ->get('learning_gap_records')
         ->result();
     foreach ($records as $record) {
@@ -2202,9 +2326,10 @@ public function learning_gap_division_performance($region_id)
 
 public function learning_gap_division_summary($region_id)
 {
+    $this->ensure_learning_gap_archive_schema();
     $this->db->select('d.id AS division_id, d.description AS division_name, COUNT(lgr.id) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, (SELECT COUNT(*) FROM schools school_totals WHERE school_totals.division_id = d.id) AS total_school_count, COALESCE(SUM(lgr.learners_assessed), 0) AS learners_assessed, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
         ->from('division d')
-        ->join('learning_gap_records lgr', 'lgr.division_id = d.id', 'left')
+        ->join('learning_gap_records lgr', 'lgr.division_id = d.id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year(), 'left')
         ->where('d.region_id', (int) $region_id)
         ->group_by('d.id, d.description')
         ->order_by('learners_with_gap', 'DESC');
@@ -2218,8 +2343,10 @@ public function learning_gap_division_summary($region_id)
  */
 public function learning_gap_competency_ranking($division_id, $learning_area = '', $term = '')
 {
+    $this->ensure_learning_gap_archive_schema();
     $records = $this->db->select('id, school_id, grade_level, learning_area, term, least_learned_competency')
         ->where('division_id', (int) $division_id)
+        ->where('fiscal_year', $this->learning_gap_year())
         ->get('learning_gap_records')->result();
     $ranked = array();
 
@@ -2298,10 +2425,11 @@ public function division_learning_area_options($division_id)
  */
 public function learning_gap_school_submission_summary($division_id)
 {
+    $this->ensure_learning_gap_archive_schema();
     return $this->db
         ->select('s.schoolID, s.schoolName, COUNT(lgr.id) AS record_count, MAX(lgr.created_at) AS latest_submission')
         ->from('schools s')
-        ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID', 'left')
+        ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID AND lgr.fiscal_year = ' . (int) $this->learning_gap_year(), 'left')
         ->where('s.division_id', (int) $division_id)
         ->group_by('s.schoolID, s.schoolName')
         ->order_by('s.schoolName', 'ASC')
@@ -2312,6 +2440,7 @@ public function learning_gap_school_submission_summary($division_id)
 public function save_learning_gap_record($school_id)
 {
     $this->ensure_learning_gap_proficiency_columns();
+    $this->ensure_learning_gap_archive_schema();
     $school = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
     if (!$school) {
         return false;
@@ -2329,6 +2458,7 @@ public function save_learning_gap_record($school_id)
         'region_id' => (int) $school->region_id,
         'division_id' => (int) $school->division_id,
         'district_id' => (int) $school->district_id,
+        'fiscal_year' => $this->learning_gap_year(),
         'grade_level' => $this->input->post('grade_level', true),
         'learning_area' => $this->input->post('learning_area', true),
         'term' => $this->input->post('term', true),
@@ -2347,6 +2477,7 @@ public function save_learning_gap_record($school_id)
     $record_id = (int) $this->input->post('record_id', true);
     if ($record_id > 0) {
         return $this->db->where('id', $record_id)->where('school_id', $school_id)
+            ->where('fiscal_year', $this->learning_gap_year())
             ->update('learning_gap_records', $data);
     }
     return $this->db->insert('learning_gap_records', $data);
@@ -2367,13 +2498,18 @@ private function ensure_learning_gap_proficiency_columns()
 
 public function learning_gap_record($id, $school_id)
 {
+    $this->ensure_learning_gap_archive_schema();
     return $this->db->where('id', (int) $id)->where('school_id', $school_id)
+        ->where('fiscal_year', $this->learning_gap_year())
         ->get('learning_gap_records')->row();
 }
 
 public function delete_learning_gap_record($id, $school_id)
 {
-    return $this->db->where('id', (int) $id)->where('school_id', $school_id)->delete('learning_gap_records');
+    $this->ensure_learning_gap_archive_schema();
+    return $this->db->where('id', (int) $id)->where('school_id', $school_id)
+        ->where('fiscal_year', $this->learning_gap_year())
+        ->delete('learning_gap_records');
 }
 
 public function learning_area_settings($division_id)

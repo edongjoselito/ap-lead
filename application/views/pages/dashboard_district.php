@@ -822,9 +822,6 @@ $work_queue_cards = array(
             </p>
         </div>
         <div class="dd-header-actions">
-            <a href="#" class="dd-btn dd-btn-ghost" data-toggle="modal" data-target="#myModal">
-                <i class="mdi mdi-calendar-edit"></i> Change Fiscal Year
-            </a>
             <a href="<?= $schools_url; ?>" class="dd-btn dd-btn-ghost">
                 <i class="mdi mdi-format-list-bulleted-square"></i> School Directory
             </a>
@@ -1054,30 +1051,4 @@ $work_queue_cards = array(
         </div>
     </section>
 
-    <div id="myModal" class="modal fade district-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="myModalLabel">Change Fiscal Year</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-hidden="true">×</button>
-                </div>
-                <div class="modal-body">
-                    <form action="<?= base_url('Pages/change_fy'); ?>" method="post">
-                        <input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">
-                        <div class="form-group mb-0">
-                            <label for="district-dashboard-fy" class="font-weight-bold text-muted">Select fiscal year</label>
-                            <select id="district-dashboard-fy" name="new_fy" class="form-control" onchange="this.form.submit()">
-                                <option disabled selected>Change FY</option>
-                                <?php for ($y = 2023; $y <= 2030; $y++) : ?>
-                                    <option value="<?= $y; ?>" <?= ($this->session->userdata('fy') == $y) ? 'selected' : ''; ?>>
-                                        <?= $y; ?>
-                                    </option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
