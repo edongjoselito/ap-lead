@@ -44,6 +44,42 @@ h1, h2, h3, h4, h5, h6,
     font-family: var(--llcm-font);
 }
 .navbar-custom { background: #fff; box-shadow: 0 1px 0 var(--llcm-border); }
+.navbar-custom .global-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    margin: 16px 0 16px 2px;
+    padding: 0 14px;
+    color: var(--llcm-navy);
+    background: #f7fafc;
+    border: 1px solid var(--llcm-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.navbar-custom .global-back-button i { font-size: 19px; }
+.navbar-custom .global-back-button:hover {
+    color: #fff;
+    background: var(--llcm-blue);
+    border-color: var(--llcm-blue);
+    text-decoration: none;
+}
+.navbar-custom .global-back-button:focus {
+    color: var(--llcm-navy);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(40,119,169,.18);
+}
+@media (max-width: 575.98px) {
+    .navbar-custom .global-back-button {
+        width: 38px;
+        padding: 0;
+        justify-content: center;
+    }
+    .navbar-custom .global-back-button span { display: none; }
+}
 .left-side-menu { background: linear-gradient(180deg, var(--llcm-navy), #0e304d); }
 #sidebar-menu > ul > li > a, #sidebar-menu .menu-title, #sidebar-menu .nav-second-level li a { color: rgba(255,255,255,.86); }
 /* The stock template sets 15px here, which reads oversized next to the page

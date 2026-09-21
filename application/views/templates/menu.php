@@ -174,13 +174,57 @@
 
             <ul class="list-unstyled topnav-menu topnav-menu-left m-0">
                 <li>
-                    <button class="button-menu-mobile waves-effect">
+                    <button class="button-menu-mobile waves-effect" type="button" aria-label="Toggle navigation menu" title="Toggle navigation menu">
                         <i class="mdi mdi-menu"></i>
                     </button>
+                </li>
+                <li>
+                    <a class="global-back-button waves-effect"
+                       href="<?= base_url(); ?>"
+                       data-app-base="<?= base_url(); ?>"
+                       aria-label="Go back to the previous page"
+                       title="Go back">
+                        <i class="mdi mdi-arrow-left" aria-hidden="true"></i>
+                        <span>Back</span>
+                    </a>
                 </li>
 
 
             </ul>
+
+            <script>
+                (function () {
+                    var backButton = document.querySelector('.global-back-button');
+
+                    if (!backButton) {
+                        return;
+                    }
+
+                    backButton.addEventListener('click', function (event) {
+                        var referrer = document.referrer;
+
+                        if (!referrer) {
+                            return;
+                        }
+
+                        try {
+                            var previousUrl = new URL(referrer);
+                            var currentUrl = new URL(window.location.href);
+                            var appBaseUrl = new URL(backButton.getAttribute('data-app-base'));
+                            var cameFromThisApp = previousUrl.origin === appBaseUrl.origin
+                                && previousUrl.pathname.indexOf(appBaseUrl.pathname) === 0;
+                            var isDifferentPage = previousUrl.href !== currentUrl.href;
+
+                            if (cameFromThisApp && isDifferentPage) {
+                                event.preventDefault();
+                                window.history.back();
+                            }
+                        } catch (error) {
+                            // Keep the link's dashboard fallback if a URL cannot be parsed.
+                        }
+                    });
+                }());
+            </script>
         </div>
         <!-- end Topbar --> <!-- ========== Left Sidebar Start ========== -->
 
