@@ -26,6 +26,51 @@ $div_submission_url = base_url('Pages/school_submission_monitoring');
 $div_setup_url = base_url('Pages/division_setup');
 $div_districts_url = base_url('pages/district_account/' . (int) $this->session->division);
 $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->division);
+
+$this->load->helper('learning_gap');
+$term_interp = lg_term_interpretation($term_performance, $record_count);
+
+$theme_interp = array();
+if (!empty($thematic_analysis['themes'])) {
+    $source_count = (int) $thematic_analysis['source_count'];
+    $theme_schools = (int) $thematic_analysis['school_count'];
+    $lead = $thematic_analysis['themes'][0];
+    $lead_records = (int) $lead->record_count;
+    $lead_schools = (int) $lead->school_count;
+    if ($source_count > 0) {
+        $theme_interp[] = '<strong>' . html_escape($lead->theme) . '</strong> appears in ' . number_format(($lead_records / $source_count) * 100, 1) . '% of analyzed records.';
+    }
+    if ($lead_schools <= 1) {
+        $theme_interp[] = 'It comes from a single school, so it may reflect one school\'s situation rather than a division-wide pattern.';
+    } elseif ($theme_schools > 0 && $lead_schools / $theme_schools >= 0.5) {
+        $theme_interp[] = 'It is reported by ' . number_format($lead_schools) . ' of ' . number_format($theme_schools) . ' reporting schools, which points to a division-wide priority for technical assistance.';
+    } else {
+        $theme_interp[] = 'It is reported by ' . number_format($lead_schools) . ' of ' . number_format($theme_schools) . ' reporting schools, so support can be targeted to those schools first.';
+    }
+    if ((int) $lead->intervention_count > (int) $lead->remarks_count) {
+        $theme_interp[] = 'Most mentions are under Intervention / Action, meaning schools are already acting on it; monitor whether these actions lower the gap rate.';
+    } elseif ((int) $lead->remarks_count > (int) $lead->intervention_count) {
+        $theme_interp[] = 'Most mentions are under Remarks, meaning schools raise it as a concern more often than they report an action for it; this may need division guidance.';
+    }
+}
+
+$reg_interp = array();
+if ($div_encoded_total > 0) {
+    $reg_remaining = $div_encoded_total - $div_registered;
+    if ($reg_remaining < 0) {
+        $reg_interp[] = 'Registered schools exceed the encoded total by ' . number_format(-$reg_remaining) . '. Update the total number of schools in Division Setup.';
+    } elseif ($reg_remaining === 0) {
+        $reg_interp[] = 'All encoded schools are registered, so registration is complete.';
+    } else {
+        $reg_status = $div_signup_pct >= 90 ? 'Registration is nearly complete' : ($div_signup_pct >= 50 ? 'Registration is in progress' : 'Registration is still low');
+        $reg_interp[] = $reg_status . ': <strong>' . lg_count_label($reg_remaining, 'school') . '</strong> still need to register before their data can be included in division results.';
+    }
+    if ($div_registered > 0) {
+        $not_reporting = max(0, $div_registered - $school_count);
+        $reg_interp[] = number_format(min($school_count, $div_registered)) . ' of ' . lg_count_label($div_registered, 'registered school') . ' (' . number_format((min($school_count, $div_registered) / $div_registered) * 100, 1) . '%) ' . (min($school_count, $div_registered) === 1 ? 'has' : 'have') . ' submitted learning gap records for FY ' . $div_fy . '.'
+            . ($not_reporting > 0 ? ' Follow up with the remaining ' . number_format($not_reporting) . ' through School Submissions.' : '');
+    }
+}
 ?>
 <style>
     .scope-lg { --navy:#123f63; --blue:#217dac; --sky:#eaf6fb; --line:#dce8ef; --ink:#243447; --muted:#6d7e8e; --amber:#c98616; --green:#21815c; }
@@ -128,6 +173,14 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
         .divd-quick-grid { grid-template-columns:1fr; }
     }
     @media (max-width:479.98px) { .divd-glance { gap:12px; flex-wrap:wrap; } }
+
+    /* Interpretation panels */
+    .lg-interp { display:flex; align-items:flex-start; gap:10px; margin-top:20px; padding:13px 16px; border:1px solid #d6e9f2; border-radius:12px; background:#f4fafd; }
+    .lg-interp > i { flex:0 0 auto; color:var(--amber); font-size:18px; line-height:1.1; }
+    .lg-interp ul { flex:1; min-width:0; margin:0; padding-left:16px; }
+    .lg-interp li { margin-bottom:5px; color:#38556a; font-size:13px; line-height:1.55; }
+    .lg-interp li:last-child { margin-bottom:0; }
+    .lg-interp strong { color:var(--navy); }
 </style>
 <div class="scope-lg division-workspace">
     <section class="lg-hero"><div class="lg-hero-copy"><span class="lg-eyebrow">Least Learned Competencies Monitoring<?= $div_setup_name !== '' ? ' · ' . $div_setup_name : ''; ?></span><h1>Division Dashboard</h1><p>Track submitted assessment results and learning needs across your division.</p><span class="lg-fy-badge"><i class="mdi mdi-calendar-month-outline"></i> Fiscal Year <?= html_escape($div_fy); ?></span></div><div class="lg-hero-actions"><a class="btn btn-light" href="<?= $overview_url; ?>"><i class="mdi mdi-chart-bar mr-1"></i> Learning Gap Summary</a><a class="btn btn-outline-light" href="<?= $records_url; ?>"><i class="mdi mdi-format-list-bulleted mr-1"></i> View Records</a></div></section>
@@ -148,6 +201,7 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
                 <canvas id="scopeTermPerformanceChart" role="img" aria-label="CPL and percentage of learners with gap per term"></canvas>
                 <div id="scopeTermPerformanceEmpty" class="chart-empty"><div><i class="mdi mdi-chart-line-variant"></i>No per-term assessment data has been submitted yet.</div></div>
             </div>
+            <?= lg_interpretation_box($term_interp); ?>
         </div>
     </section>
 
@@ -177,6 +231,7 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
                         </article>
                     <?php endforeach; ?>
                 </div>
+                <?= lg_interpretation_box($theme_interp); ?>
                 <p class="analysis-note">Themes are generated locally using transparent education-focused language-analysis rules. Results are decision-support indicators and should be validated against the source records.</p>
             <?php endif; ?>
         </div>
@@ -199,6 +254,7 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
                             <span><strong><?= number_format($div_registered); ?></strong> registered</span>
                             <span><strong><?= number_format($div_encoded_total); ?></strong> encoded total</span>
                         </div>
+                        <?= lg_interpretation_box($reg_interp); ?>
                     <?php else : ?>
                         <div class="divd-reg-number">Not configured</div>
                         <p class="divd-reg-label">Set your total number of schools in Division Setup to track registration progress.</p>
@@ -212,7 +268,7 @@ $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->di
                 <div class="divd-card-head"><div><h4>Division network</h4><p>Districts and schools under your division.</p></div></div>
                 <div class="divd-card-body">
                     <div class="divd-glance">
-                        <span class="divd-glance-icon navy"><i class="mdi mdi-map-marker-multiple-outline"></i></span>
+                        <span class="divd-glance-icon navy"><i class="mdi mdi-map-marker-multiple"></i></span>
                         <div class="divd-glance-text"><strong><?= number_format($div_district_count); ?></strong><small>District<?= $div_district_count === 1 ? '' : 's'; ?></small></div>
                         <a class="divd-glance-link" href="<?= $div_districts_url; ?>">Manage <i class="mdi mdi-arrow-right"></i></a>
                     </div>

@@ -222,7 +222,7 @@ $school_coverage = $network_schools > 0 ? ($reporting_school_count / $network_sc
         <div class="rd-card-body">
             <?php if (empty($thematic_analysis['themes'])) : ?>
                 <div class="rd-empty">
-                    <i class="mdi mdi-text-search" aria-hidden="true"></i>
+                    <i class="mdi mdi-file-search-outline" aria-hidden="true"></i>
                     <p>No intervention or remarks text has been submitted yet, so there is nothing to analyse.</p>
                 </div>
             <?php else : ?>
@@ -275,7 +275,7 @@ $school_coverage = $network_schools > 0 ? ($reporting_school_count / $network_sc
         <div class="rd-card-body rd-card-body-flush">
             <?php if (empty($division_rows)) : ?>
                 <div class="rd-empty">
-                    <i class="mdi mdi-office-building-outline" aria-hidden="true"></i>
+                    <i class="mdi mdi-office-building" aria-hidden="true"></i>
                     <p>No divisions are configured for this regional account.</p>
                 </div>
             <?php else : ?>
