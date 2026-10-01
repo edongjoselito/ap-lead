@@ -201,6 +201,33 @@ if ($div_encoded_total > 0) {
                 <canvas id="scopeTermPerformanceChart" role="img" aria-label="CPL and percentage of learners with gap per term"></canvas>
                 <div id="scopeTermPerformanceEmpty" class="chart-empty"><div><i class="mdi mdi-chart-line-variant"></i>No per-term assessment data has been submitted yet.</div></div>
             </div>
+            <?php
+            $has_summative = false;
+            foreach ($term_performance as $term_row) {
+                if (isset($term_row->cpl_summative_avg) && $term_row->cpl_summative_avg !== null) {
+                    $has_summative = true;
+                    break;
+                }
+            }
+            ?>
+            <?php if ($has_summative) : ?>
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Term</th><th class="text-center">CPL &ndash; Summative 1</th><th class="text-center">CPL &ndash; Summative 2</th><th class="text-center">Term CPL (summative avg)</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($term_performance as $term_row) : ?>
+                                <tr>
+                                    <td><strong><?= html_escape($term_row->term); ?></strong></td>
+                                    <td class="text-center"><?= $term_row->cpl_summative_1 !== null ? number_format((float) $term_row->cpl_summative_1, 2) . '%' : '—'; ?></td>
+                                    <td class="text-center"><?= $term_row->cpl_summative_2 !== null ? number_format((float) $term_row->cpl_summative_2, 2) . '%' : '—'; ?></td>
+                                    <td class="text-center"><strong><?= $term_row->cpl_summative_avg !== null ? number_format((float) $term_row->cpl_summative_avg, 2) . '%' : '—'; ?></strong></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <p class="analysis-note">Summative CPL is encoded only by schools with the feature enabled; term average is the mean of the encoded summatives, weighted by assessed learners.</p>
+                </div>
+            <?php endif; ?>
             <?= lg_interpretation_box($term_interp); ?>
         </div>
     </section>
@@ -319,6 +346,8 @@ if ($div_encoded_total > 0) {
             return array(
                 'term' => (string) $row->term,
                 'cpl' => $row->class_proficiency_level === null ? null : round((float) $row->class_proficiency_level, 2),
+                's1' => $row->cpl_summative_1 === null ? null : round((float) $row->cpl_summative_1, 2),
+                's2' => $row->cpl_summative_2 === null ? null : round((float) $row->cpl_summative_2, 2),
                 'gapPercentage' => $assessed > 0 ? round(((int) $row->learners_with_gap / $assessed) * 100, 2) : null,
                 'assessed' => $assessed,
             );
@@ -326,15 +355,23 @@ if ($div_encoded_total > 0) {
         var termCanvas = document.getElementById('scopeTermPerformanceChart');
         var termEmpty = document.getElementById('scopeTermPerformanceEmpty');
         var hasTermData = termRows.some(function (row) { return row.assessed > 0 || row.cpl !== null; });
-        if (termCanvas && hasTermData) {
+        var hasSummative = termRows.some(function (row) { return row.s1 !== null || row.s2 !== null; });
+        if (termCanvas && (hasTermData || hasSummative)) {
+            var termDatasets = [
+                { label: 'Recorded Gap Rate (%)', data: termRows.map(function (row) { return row.gapPercentage; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 },
+                { type: 'line', label: 'CPL (%)', data: termRows.map(function (row) { return row.cpl; }), borderColor: '#20805c', backgroundColor: 'rgba(32,128,92,.10)', pointBackgroundColor: '#20805c', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
+            ];
+            if (hasSummative) {
+                termDatasets.push(
+                    { type: 'line', label: 'CPL Summative 1 (%)', data: termRows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25 },
+                    { type: 'line', label: 'CPL Summative 2 (%)', data: termRows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25 }
+                );
+            }
             new Chart(termCanvas.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: termRows.map(function (row) { return row.term; }),
-                    datasets: [
-                        { label: 'Recorded Gap Rate (%)', data: termRows.map(function (row) { return row.gapPercentage; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 },
-                        { type: 'line', label: 'CPL (%)', data: termRows.map(function (row) { return row.cpl; }), borderColor: '#20805c', backgroundColor: 'rgba(32,128,92,.10)', pointBackgroundColor: '#20805c', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
-                    ]
+                    datasets: termDatasets
                 },
                 options: {
                     responsive: true,

@@ -110,6 +110,9 @@ class Pages extends CI_Controller
             'signup_district' => array('admin', 'division'),
             'add_school_user' => array('admin', 'division', 'ict'),
             'change_password_user_division' => array('admin', 'division', 'ict'),
+            // Per-school Summative CPL feature is controlled by admin (sa) only.
+            'summative_cpl_access' => array('admin'),
+            'summative_cpl_toggle' => array('admin'),
         );
 
         if (isset($role_policies[$method])) {
@@ -973,6 +976,9 @@ class Pages extends CI_Controller
         $data['entry_mode'] = (bool) $entry_mode;
         $data['scope'] = $scope;
         $data['is_school'] = $position === 'school';
+        $data['summative_cpl_enabled'] = $data['is_school']
+            ? $this->Page_model->school_summative_cpl_enabled((string) $this->session->username)
+            : false;
         $data['is_archive_year'] = (int) $this->session->fy < (int) date('Y');
         if ($data['is_school'] && $data['entry_mode'] && $data['is_archive_year']) {
             $this->session->set_flashdata('danger', 'Archived fiscal years are read-only. Return to the current fiscal year to encode or edit records.');
@@ -1217,6 +1223,43 @@ class Pages extends CI_Controller
         $this->load->view('templates/footer_dt');
     }
 
+    /**
+     * Admin-only switchboard for the Summative CPL feature. Schools default to
+     * OFF; enabling one lets that school encode CPL for Summative 1 and
+     * Summative 2 on each learning gap term record, which then rolls up in the
+     * division views.
+     */
+    public function summative_cpl_access()
+    {
+        $data['title'] = 'Summative CPL Access';
+        $data['schools'] = $this->Page_model->summative_cpl_schools();
+        $data['enabled_count'] = count(array_filter($data['schools'], function ($school) {
+            return (int) $school->cpl_summative_enabled === 1;
+        }));
+
+        $this->load->view('templates/header_dt');
+        $this->load->view('templates/menu');
+        $this->load->view('pages/summative_cpl_schools', $data);
+        $this->load->view('templates/footer_dt');
+    }
+
+    public function summative_cpl_toggle()
+    {
+        $this->require_post();
+        $school_id = trim((string) $this->input->post('school_id', true));
+        $enabled = (int) $this->input->post('enabled') === 1;
+        $school = $this->Page_model->one_cond_row('schools', 'schoolID', $school_id);
+        if (!$school) {
+            show_404();
+            return;
+        }
+        $this->Page_model->set_school_summative_cpl($school_id, $enabled);
+        $this->session->set_flashdata('success', 'Summative CPL encoding '
+            . ($enabled ? 'enabled' : 'disabled') . ' for '
+            . html_escape($school->schoolName) . '.');
+        redirect('Pages/summative_cpl_access');
+    }
+
     public function learning_gap_save()
     {
         if (!$this->session->logged_in || $this->session->position !== 'school') {
@@ -1233,6 +1276,10 @@ class Pages extends CI_Controller
         $this->form_validation->set_rules('term', 'Trimester', 'trim|required|max_length[50]');
         $this->form_validation->set_rules('class_proficiency_level', 'Class Proficiency Level', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[100]');
         $this->form_validation->set_rules('proficiency_level', 'Proficiency Level', 'trim|max_length[100]');
+        if ($this->Page_model->school_summative_cpl_enabled((string) $this->session->username)) {
+            $this->form_validation->set_rules('cpl_summative_1', 'CPL - Summative 1', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[100]');
+            $this->form_validation->set_rules('cpl_summative_2', 'CPL - Summative 2', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[100]');
+        }
         $this->form_validation->set_rules('learners_assessed', 'Number of Learners Assessed', 'trim|required|integer|greater_than_equal_to[0]');
         $this->form_validation->set_rules('learners_with_gap', 'Number of Learners with Learning Gap', 'trim|required|integer|greater_than_equal_to[0]');
 

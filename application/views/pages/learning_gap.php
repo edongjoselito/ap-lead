@@ -8,6 +8,13 @@ $form = !empty($edit_record) ? $edit_record : (object) array();
 $value = function ($field) use ($form) { return isset($form->{$field}) ? (string) $form->{$field} : ''; };
 $this->load->helper('learning_gap');
 $term_interp = $entry_mode ? array() : lg_term_interpretation($term_performance, (int) $summary->record_count);
+$has_summative = false;
+foreach ($term_performance as $term_row) {
+    if (isset($term_row->cpl_summative_avg) && $term_row->cpl_summative_avg !== null) {
+        $has_summative = true;
+        break;
+    }
+}
 $division_interp = $entry_mode ? array() : lg_division_summary_interpretation($division_summary);
 $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_interpretation($competency_ranking, $learning_area_filter, $term_filter);
 ?>
@@ -53,6 +60,23 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                 <canvas id="termPerformanceChart" role="img" aria-label="Chart of class proficiency level, learners assessed, and learners with learning gap for each term"></canvas>
                 <div id="termPerformanceEmpty" class="term-chart-empty"><div><i class="mdi mdi-chart-bar-stacked"></i>No per-term assessment data has been submitted yet.</div></div>
             </div>
+            <?php if ($has_summative): ?>
+            <div class="table-responsive mt-3">
+                <table class="table summary-table mb-0">
+                    <thead><tr><th>Term</th><th>CPL &ndash; Summative 1</th><th>CPL &ndash; Summative 2</th><th>Term CPL (summative avg)</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($term_performance as $term_row): ?>
+                        <tr>
+                            <td><strong><?= html_escape($term_row->term); ?></strong></td>
+                            <td><?= $term_row->cpl_summative_1 !== null ? number_format((float) $term_row->cpl_summative_1, 2) . '%' : '—'; ?></td>
+                            <td><?= $term_row->cpl_summative_2 !== null ? number_format((float) $term_row->cpl_summative_2, 2) . '%' : '—'; ?></td>
+                            <td><strong><?= $term_row->cpl_summative_avg !== null ? number_format((float) $term_row->cpl_summative_avg, 2) . '%' : '—'; ?></strong></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
             <?= lg_interpretation_box($term_interp); ?>
         </div>
     </div>
@@ -73,6 +97,13 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                 <div class="col-md-3 form-group"><label>Proficiency Level</label><select name="proficiency_level" class="custom-select"><option value="">Select level</option><?php foreach (array('Beginning','Developing','Approaching Proficient','Proficient','Advanced') as $proficiency_level): ?><option value="<?= $proficiency_level; ?>" <?= $value('proficiency_level') === $proficiency_level ? 'selected' : ''; ?>><?= $proficiency_level; ?></option><?php endforeach; ?></select></div>
                 <div class="col-12 form-group"><label>Least Learned Competency *</label><div id="learningCompetencies" class="competency-options"><p class="text-muted">Select grade level, learning area, and term first</p></div><small class="form-text text-muted">Check one or more competencies that were least learned.</small></div>
             </div>
+            <?php if (!empty($summative_cpl_enabled)): ?>
+            <div class="row">
+                <div class="col-md-3 form-group"><label>CPL &ndash; Summative 1</label><div class="input-group"><input type="number" min="0" max="100" step="0.01" name="cpl_summative_1" class="form-control" value="<?= html_escape($value('cpl_summative_1')); ?>"><div class="input-group-append"><span class="input-group-text">%</span></div></div></div>
+                <div class="col-md-3 form-group"><label>CPL &ndash; Summative 2</label><div class="input-group"><input type="number" min="0" max="100" step="0.01" name="cpl_summative_2" class="form-control" value="<?= html_escape($value('cpl_summative_2')); ?>"><div class="input-group-append"><span class="input-group-text">%</span></div></div></div>
+                <div class="col-md-6 form-group"><label>&nbsp;</label><small class="form-text text-muted mt-2 mb-0">Optional per-term summative CPL. Both values are averaged into the term CPL shown to your division.</small></div>
+            </div>
+            <?php endif; ?>
             <div class="row">
                 <div class="col-md-4 form-group"><label>Number of Learners Assessed *</label><input type="number" min="0" name="learners_assessed" id="learnersAssessed" class="form-control" value="<?= html_escape($value('learners_assessed')); ?>" required></div>
                 <div class="col-md-4 form-group"><label>Learners with Learning Gap *</label><input type="number" min="0" name="learners_with_gap" id="learnersWithGap" class="form-control" value="<?= html_escape($value('learners_with_gap')); ?>" required></div>
@@ -134,32 +165,42 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                 'assessed' => (int) $row->record_count > 0 ? (int) $row->learners_assessed : null,
                 'gap' => (int) $row->record_count > 0 ? (int) $row->learners_with_gap : null,
                 'cpl' => $row->class_proficiency_level === null ? null : (float) $row->class_proficiency_level,
+                's1' => $row->cpl_summative_1 === null ? null : (float) $row->cpl_summative_1,
+                's2' => $row->cpl_summative_2 === null ? null : (float) $row->cpl_summative_2,
             );
         }, $term_performance), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         var canvas = document.getElementById('termPerformanceChart');
         var empty = document.getElementById('termPerformanceEmpty');
         if (!canvas || typeof Chart === 'undefined') return;
         var hasData = rows.some(function (row) { return row.assessed > 0 || row.gap > 0 || row.cpl !== null; });
-        if (!hasData) {
+        var hasSummative = rows.some(function (row) { return row.s1 !== null || row.s2 !== null; });
+        if (!hasData && !hasSummative) {
             canvas.style.display = 'none';
             empty.style.display = 'flex';
             return;
+        }
+        var datasets = [
+            { label: 'Recorded Assessed Count', data: rows.map(function (row) { return row.assessed; }), backgroundColor: '#2877a9', borderColor: '#2877a9', borderWidth: 1, yAxisID: 'learners-axis' },
+            { label: 'Recorded Gap Count', data: rows.map(function (row) { return row.gap; }), backgroundColor: '#ef9f3d', borderColor: '#d9821b', borderWidth: 1, yAxisID: 'learners-axis' },
+            { type: 'line', label: 'CPL (%)', data: rows.map(function (row) { return row.cpl; }), borderColor: '#23835f', backgroundColor: 'rgba(35,131,95,.12)', pointBackgroundColor: '#23835f', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' }
+        ];
+        if (hasSummative) {
+            datasets.push(
+                { type: 'line', label: 'CPL Summative 1 (%)', data: rows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' },
+                { type: 'line', label: 'CPL Summative 2 (%)', data: rows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' }
+            );
         }
         new Chart(canvas.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: rows.map(function (row) { return row.term; }),
-                datasets: [
-                    { label: 'Recorded Assessed Count', data: rows.map(function (row) { return row.assessed; }), backgroundColor: '#2877a9', borderColor: '#2877a9', borderWidth: 1, yAxisID: 'learners-axis' },
-                    { label: 'Recorded Gap Count', data: rows.map(function (row) { return row.gap; }), backgroundColor: '#ef9f3d', borderColor: '#d9821b', borderWidth: 1, yAxisID: 'learners-axis' },
-                    { type: 'line', label: 'CPL (%)', data: rows.map(function (row) { return row.cpl; }), borderColor: '#23835f', backgroundColor: 'rgba(35,131,95,.12)', pointBackgroundColor: '#23835f', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' }
-                ]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
-                tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { var label = data.datasets[item.datasetIndex].label || ''; return label + ': ' + (label === 'CPL (%)' ? (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(2) + '%') : Number(item.yLabel).toLocaleString()); } } },
+                tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { var label = data.datasets[item.datasetIndex].label || ''; var isPercent = data.datasets[item.datasetIndex].yAxisID === 'cpl-axis'; return label + ': ' + (isPercent ? (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(2) + '%') : Number(item.yLabel).toLocaleString()); } } },
                 scales: {
                     xAxes: [{ gridLines: { display: false }, barPercentage: .72, categoryPercentage: .68 }],
                     yAxes: [

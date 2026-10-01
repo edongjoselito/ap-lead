@@ -345,6 +345,7 @@
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li><a href="<?= base_url(); ?>pages/school_by_district">Schools By Division</a></li>
                                     <li><a href="<?= base_url(); ?>pages/school_list">List of Schools</a></li>
+                                    <li><a href="<?= base_url(); ?>pages/summative_cpl_access">Summative CPL Access</a></li>
                                 </ul>
                             </li>
                             <li><a href="<?= base_url(); ?>pages/userlist" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
