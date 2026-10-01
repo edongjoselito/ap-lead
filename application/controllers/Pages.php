@@ -14,7 +14,7 @@ class Pages extends CI_Controller
             // The default controller lands on view(), which performs its own
             // guest-only redirect to homepage before rendering any data.
             'view', 'homepage', 'log_in', 'signup', 'forgot_password', 'confirm_signup',
-            'lock_user_screen',
+            'lock_user_screen', 'logout',
             'get_provinces', 'get_districts', 'get_district_by_division',
             'data_privacy', 'authors', 'about', 'verify',
             'division_checklist_completed_shared'
@@ -42,7 +42,7 @@ class Pages extends CI_Controller
             'division' => array('division', 'division_head', 'ict'),
             'district' => array('district'),
             'school_dashboard' => array('school'),
-            'learning_gap_archives' => array('school', 'division', 'division_head', 'region'),
+            'learning_gap_archives' => array('school', 'division', 'division_head', 'region', 'district'),
             'profilelist' => array('admin'),
             'profile_new' => array('admin'),
             'qr' => array('admin'),
@@ -121,12 +121,24 @@ class Pages extends CI_Controller
 
         // Legacy SBM modules are not available in the Learning Gap system.
         // This prevents direct URL access after their menus are removed.
-        $learning_gap_roles = array('school', 'division', 'division_head', 'region');
+        $learning_gap_roles = array('school', 'division', 'division_head', 'region', 'admin', 'district');
         $legacy_sbm_methods = array(
             'district_list', 'school_list_division_only', 'division_checklist_completed_details',
             'division_list', 'school_list_region', 'report_division_submission',
             'report_overall_accomplishments', 'region_checklist_completed_report', 'report_sgc'
         );
+        if (in_array($this->session->position, array('admin', 'district'), true)) {
+            $legacy_sbm_methods = array_merge($legacy_sbm_methods, array(
+                'school_profile_region', 'school_profile_division', 'checklist_district',
+                'action_plan_new', 'action_plan_delete', 'update_tana_summary', 'final_tana_summary',
+                'division_sgc_details', 'division_sgc_category_printable',
+                'division_checklist_completed_printable', 'division_checklist_completed_shared',
+                'unlock_requests', 'unlock_request_view', 'clear_unlock_requests'
+            ));
+        }
+        if ($this->session->position === 'district') {
+            $legacy_sbm_methods = array_merge($legacy_sbm_methods, array('school_list', 'school_list_division'));
+        }
         if ($this->session->logged_in && in_array($this->session->position, $learning_gap_roles, true)
             && (strpos($method, 'sbm_') === 0 || strpos($method, 'tapr_') === 0
                 || strpos($method, 'tana_') === 0 || in_array($method, $legacy_sbm_methods, true))) {
@@ -740,13 +752,12 @@ class Pages extends CI_Controller
     }
 
     /**
-     * Regional figures. The administrator and regional dashboards read the same
-     * numbers and differ only in the view that renders them.
+     * Regional figures. The administrator dashboard requests management counts
+     * only, without loading legacy SBM assessments or governance statistics.
      */
-    private function region_scope_data()
+    private function region_scope_data($include_sbm = true)
     {
-        $data = $this->dashboard_indicator_data();
-        $indicator_numbers = $this->dashboard_indicator_numbers($data);
+        $data = $include_sbm ? $this->dashboard_indicator_data() : array();
 
         $region_id = (int) $this->session->region;
         $setup_summary = $this->Page_model->region_division_setup_summary($region_id);
@@ -755,16 +766,19 @@ class Pages extends CI_Controller
         $data['district_count'] = $this->Page_model->region_district_count($region_id);
         $data['registered_school_count'] = $this->Page_model->region_school_count($region_id);
         $data['user_count'] = $this->Page_model->region_user_count($region_id);
-        $data['sgc_counts'] = $this->Page_model->region_sgc_counts($region_id);
-        $data['sbm_rate_counts'] = $this->Page_model->region_sbm_rate_counts(
-            $region_id,
-            $this->session->fy,
-            $indicator_numbers
-        );
-        $data['completed_checklist_count'] = $this->Page_model->region_sbm_completed_count(
-            $region_id,
-            $this->session->fy
-        );
+        if ($include_sbm) {
+            $indicator_numbers = $this->dashboard_indicator_numbers($data);
+            $data['sgc_counts'] = $this->Page_model->region_sgc_counts($region_id);
+            $data['sbm_rate_counts'] = $this->Page_model->region_sbm_rate_counts(
+                $region_id,
+                $this->session->fy,
+                $indicator_numbers
+            );
+            $data['completed_checklist_count'] = $this->Page_model->region_sbm_completed_count(
+                $region_id,
+                $this->session->fy
+            );
+        }
         $data['encoded_total_schools'] = isset($setup_summary['encoded_total_schools'])
             ? (int) $setup_summary['encoded_total_schools']
             : 0;
@@ -774,7 +788,7 @@ class Pages extends CI_Controller
         $data['signup_percentage'] = $data['encoded_total_schools'] > 0
             ? ($data['registered_school_count'] / $data['encoded_total_schools']) * 100
             : 0;
-        $data['checklist_completion_percentage'] = $data['encoded_total_schools'] > 0
+        $data['checklist_completion_percentage'] = $include_sbm && $data['encoded_total_schools'] > 0
             ? ($data['completed_checklist_count'] / $data['encoded_total_schools']) * 100
             : 0;
 
@@ -905,7 +919,7 @@ class Pages extends CI_Controller
         $position = strtolower(trim((string) $this->session->position));
 
         if ($position === 'admin') {
-            $this->render_dashboard('dashboard', $this->region_scope_data());
+            $this->render_dashboard('dashboard', $this->region_scope_data(false));
             return;
         }
 
@@ -934,7 +948,7 @@ class Pages extends CI_Controller
 
     public function district()
     {
-        $this->render_dashboard('dashboard_district', $this->district_scope_data());
+        $this->learning_gap();
     }
 
     /**
@@ -951,6 +965,15 @@ class Pages extends CI_Controller
      * School users encode only their own records. Division and regional users
      * can review aggregate data within the organisational scope of their account.
      */
+    private function district_learning_gap_scope()
+    {
+        $district_id = (int) $this->session->district;
+        if ($district_id <= 0) {
+            show_error('Your account has no assigned district.', 403);
+        }
+        return array('type' => 'district', 'id' => $district_id);
+    }
+
     public function learning_gap($entry_mode = false)
     {
         if (!$this->session->logged_in) {
@@ -958,7 +981,7 @@ class Pages extends CI_Controller
         }
 
         $position = (string) $this->session->position;
-        if (!in_array($position, array('school', 'division', 'division_head', 'region', 'admin'), true)) {
+        if (!in_array($position, array('school', 'division', 'division_head', 'region', 'admin', 'district'), true)) {
             show_error('You are not authorized to access Learning Gap Monitoring.', 403);
         }
 
@@ -967,6 +990,10 @@ class Pages extends CI_Controller
             $scope = array('type' => 'division', 'id' => (int) $this->session->division);
         } elseif (in_array($position, array('region', 'admin'), true)) {
             $scope = array('type' => 'region', 'id' => (int) $this->session->region);
+        }
+
+        if ($position === 'district') {
+            $scope = $this->district_learning_gap_scope();
         }
 
         $data['title'] = 'Learning Gap Monitoring';
@@ -1055,13 +1082,16 @@ class Pages extends CI_Controller
             return;
         }
         $position = (string) $this->session->position;
-        if (!in_array($position, array('division', 'division_head', 'region'), true)) {
+        if (!in_array($position, array('division', 'division_head', 'region', 'district'), true)) {
             show_error('You are not authorized to access this summary.', 403);
             return;
         }
         $is_region = $position === 'region';
         $scope = array('type' => $is_region ? 'region' : 'division',
             'id' => (int) ($is_region ? $this->session->region : $this->session->division));
+        if ($position === 'district') {
+            $scope = $this->district_learning_gap_scope();
+        }
         if ($scope['id'] <= 0) {
             show_error('Your account has no assigned reporting scope.', 403);
             return;
@@ -1071,6 +1101,7 @@ class Pages extends CI_Controller
         $data['title'] = 'Learning Gap Summary';
         $data['grade_filter'] = $grade;
         $data['is_region'] = $is_region;
+        $data['is_district'] = $position === 'district';
         $this->load->view('templates/header');
         $this->load->view('templates/menu');
         $this->load->view('pages/learning_gap_school_summary', $data);
@@ -1087,6 +1118,10 @@ class Pages extends CI_Controller
             $scope = array('type' => 'division', 'id' => (int) $this->session->division);
         } elseif ($position === 'region') {
             $scope = array('type' => 'region', 'id' => (int) $this->session->region);
+        }
+
+        if ($position === 'district') {
+            $scope = $this->district_learning_gap_scope();
         }
 
         $data['title'] = 'Archived Learning Gap Records';
@@ -1108,7 +1143,7 @@ class Pages extends CI_Controller
         }
 
         $position = (string) $this->session->position;
-        if (!in_array($position, array('school', 'division', 'division_head', 'region', 'admin'), true)) {
+        if (!in_array($position, array('school', 'division', 'division_head', 'region', 'admin', 'district'), true)) {
             show_error('You are not authorized to access learning gap records.', 403);
         }
 
@@ -1117,6 +1152,10 @@ class Pages extends CI_Controller
             $scope = array('type' => 'division', 'id' => (int) $this->session->division);
         } elseif (in_array($position, array('region', 'admin'), true)) {
             $scope = array('type' => 'region', 'id' => (int) $this->session->region);
+        }
+
+        if ($position === 'district') {
+            $scope = $this->district_learning_gap_scope();
         }
 
         $data['title'] = 'Submitted Learning Gap Records';
@@ -2021,8 +2060,8 @@ class Pages extends CI_Controller
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>', '</div>');
-        $this->form_validation->set_rules('username', 'Username', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]');
-        $this->form_validation->set_rules('password', 'Password', 'required|min_length[12]|max_length[128]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]|max_length[128]');
+        $this->form_validation->set_rules('email', 'Email Address', 'trim|required|valid_email|max_length[254]|is_unique[users.email]|is_unique[users.username]');
         $this->form_validation->set_rules('gender', 'Gender', 'required');
 
         if ($this->form_validation->run() == FALSE) {
@@ -2056,7 +2095,7 @@ class Pages extends CI_Controller
         } else {
             $fname = $this->input->post('fname');
             $lname = $this->input->post('lname');
-            $username = $this->input->post('username');
+            $username = trim((string) $this->input->post('email'));
             $position = $this->input->post('position');
 
             if (!$this->is_allowed_managed_position($position)) {
@@ -2421,6 +2460,16 @@ class Pages extends CI_Controller
     }
     public function logout()
     {
+        // Repeated logout requests and expired sessions should return to login.
+        if (!$this->session->logged_in) {
+            redirect(base_url('homepage'));
+            return;
+        }
+        // Visiting a URL must not end an active session; the Logout form posts.
+        if (strtoupper((string) $this->input->method()) === 'GET') {
+            redirect(base_url());
+            return;
+        }
         $this->require_post();
         $this->session->sess_destroy();
         redirect(base_url() . 'homepage');
@@ -2464,7 +2513,7 @@ class Pages extends CI_Controller
 
         if ($this->session->position == 'admin') {
             // Load all schools for admin without filters - optimized with district and division joins
-            $this->db->select('s.schoolID, s.schoolName, s.district_id, s.division_id, d.description as district_name, div.description as division_name');
+            $this->db->select('s.recID, s.schoolID, s.schoolName, s.district_id, s.division_id, d.description as district_name, div.description as division_name');
             $this->db->from('schools s');
             $this->db->join('district d', 's.district_id = d.id', 'left');
             $this->db->join('division div', 's.division_id = div.id', 'left');
@@ -5549,10 +5598,10 @@ class Pages extends CI_Controller
 
         $this->require_post();
         $this->form_validation->set_rules('current_password', 'Current Password', 'required');
-        $this->form_validation->set_rules('password', 'New Password', 'required|min_length[12]|max_length[128]');
+        $this->form_validation->set_rules('password', 'New Password', 'required|min_length[8]|max_length[128]');
         $this->form_validation->set_rules('password_confirm', 'Confirm New Password', 'required|matches[password]');
         if ($this->form_validation->run() === FALSE) {
-            $this->session->set_flashdata('danger', 'Provide your current password and matching new passwords of at least 12 characters.');
+            $this->session->set_flashdata('danger', 'Provide your current password and matching new passwords of at least 8 characters.');
         } else {
             $result = $this->Page_model->user_password_change();
             if ($result === 'incorrect_current') {

@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/learning-gap-records.css'); ?>?v=<?= filemtime(FCPATH . 'assets/css/learning-gap-records.css'); ?>">
 <div class="lg-records">
-    <header class="lg-records-header"><div><span class="records-eyebrow"><?= $is_region ? 'Regional' : 'Division'; ?> school summary</span><h1>Learning Gap Summary</h1><p>Learning competencies with gaps and the number of schools that submitted each one.</p></div></header>
+    <header class="lg-records-header"><div><span class="records-eyebrow"><?= $is_region ? 'Regional' : (!empty($is_district) ? 'District' : 'Division'); ?> school summary</span><h1>Learning Gap Summary</h1><p>Learning competencies with gaps and the number of schools that submitted each one.</p></div></header>
     <section class="lg-records-card records-filter-card" aria-label="Grade level filter">
         <form method="get" action="<?= base_url('Pages/learning_gap_school_summary'); ?>" class="record-filter">
             <div class="record-filter-field"><label for="summary-grade">Grade level</label><select name="grade_level" id="summary-grade" class="custom-select"><option value="">All grade levels</option>

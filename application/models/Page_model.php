@@ -11,8 +11,27 @@ class Page_model extends CI_Model{
         // Run lightweight, idempotent application migrations automatically.
         // The migration marker makes this a metadata lookup after first deploy.
         $this->ensure_password_change_schema();
+        $this->ensure_email_username_schema();
         $this->ensure_learning_gap_archive_schema();
     }
+
+private function ensure_email_username_schema()
+{
+    $migration = '20261001_users_email_username';
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        return;
+    }
+
+    if ($this->db->query("ALTER TABLE users MODIFY username VARCHAR(254) NOT NULL DEFAULT ''")) {
+        $this->db->query(
+            'INSERT INTO app_schema_migrations (migration)
+             SELECT ? WHERE NOT EXISTS (
+                 SELECT 1 FROM app_schema_migrations WHERE migration = ?
+             )',
+            array($migration, $migration)
+        );
+    }
+}
 
 private function ensure_password_change_schema()
 {
@@ -87,7 +106,8 @@ public function user_insert(){
     $hash = password_hash($password, PASSWORD_DEFAULT);
     
     $data = array(
-    'username' => $this->input->post('username'),
+    'username' => trim((string) $this->input->post('email')),
+    'email' => trim((string) $this->input->post('email')),
     'password' => $hash,
     'must_change_password' => 1,
     'position' => $this->input->post('position'),
@@ -2039,9 +2059,28 @@ private function learning_gap_year($year = null)
 
 private function apply_learning_gap_scope($scope, $alias = 'lgr')
 {
+    // District accounts must never receive a wider scope from a caller.
+    if ($this->session->position === 'district') {
+        $district_id = (int) $this->session->district;
+        if ($district_id <= 0) {
+            show_error('Your account has no assigned district.', 403);
+            return;
+        }
+        $scope = array('type' => 'district', 'id' => $district_id);
+    }
     $prefix = $alias === '' ? '' : $alias . '.';
     if ($scope['type'] === 'school') {
         $this->db->where($prefix . 'school_id', $scope['id']);
+    } elseif ($scope['type'] === 'district') {
+        $this->db->where($prefix . 'district_id', (int) $scope['id']);
+        // A saved submission may retain an old district after a school moves.
+        // Only include schools that still belong to the viewer's district.
+        $this->db->where(
+            $prefix . 'school_id IN (SELECT district_school.schoolID FROM schools district_school'
+            . ' WHERE district_school.district_id = ' . (int) $scope['id'] . ')',
+            null,
+            false
+        );
     } elseif ($scope['type'] === 'division') {
         $this->db->where($prefix . 'division_id', $scope['id']);
     } elseif ($scope['type'] === 'region' && (int) $scope['id'] > 0) {

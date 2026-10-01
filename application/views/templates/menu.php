@@ -261,20 +261,10 @@
                         <li><a href="<?= base_url(); ?>" class="waves-effect"><i class="mdi mdi-view-dashboard"></i><span> Dashboard </span></a></li>
                         <?php if ($this->session->position == 'district') { ?>
                             <li><a href="<?= base_url(); ?>pages/schools_district/<?= $this->session->district; ?>" class="waves-effect"><i class="fas fa-school"></i><span>Schools</span></a></li>
-                            <li>
-                                <a href="<?= base_url(); ?>Pages/school_list" class="waves-effect">
-                                    <i class="fas fa-book-reader"></i>
-                                    <span> SBM </span>
-                                </a>
-
-                            </li>
-                            <li>
-                                <a href="<?= base_url(); ?>Pages/sbm_district_tech" class="waves-effect">
-                                    <i class="fas fa-wrench"></i>
-                                    <span> Technical Assisstance </span>
-                                </a>
-
-                            </li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap" class="waves-effect"><i class="fas fa-chart-bar"></i><span> AP Learning Gap Overview</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_school_summary" class="waves-effect"><i class="fas fa-school"></i><span> Learning Gap Summary</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_records" class="waves-effect"><i class="fas fa-list"></i><span> Submitted Learning Gap</span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/learning_gap_archives" class="waves-effect"><i class="mdi mdi-archive"></i><span> Archived Records</span></a></li>
                             <li><a href="#" class="waves-effect" data-toggle="modal" data-target="#renren"><i class="fas fa-lock"></i><span>Change Password</span></a></li>
                         <?php } ?>
 
@@ -348,18 +338,6 @@
                                 </ul>
                             </li>
                             <li><a href="<?= base_url(); ?>pages/userlist" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
-                            <li>
-                                <a href="javascript: void(0);" class="waves-effect">
-                                    <i class="mdi mdi-chart-line"></i>
-                                    <span> Reports</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul class="nav-second-level" aria-expanded="false">
-                                    <li><a href="<?= base_url(); ?>Pages/report_division_submission">Division Submission</a></li>
-                                    <li><a href="<?= base_url(); ?>Pages/report_overall_accomplishments">Overall Accomplishments</a></li>
-                                    <li><a href="<?= base_url(); ?>Pages/report_sgc">School Governance Council</a></li>
-                                </ul>
-                            </li>
                         <?php } ?>
 
                         <?php if ($this->session->position == 'ict') { ?>

@@ -36,10 +36,10 @@ $top_management = array(
 );
 
 $ap_developers = array(
-    array('name' => 'Alan D. Limbadan, PhD',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png'),
-    array('name' => 'Joselito Q. Edong, MIT', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png'),
-    array('name' => 'Clark Steven T. Edong',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,CLARK-STEVEN-T.png'),
-    array('name' => 'Tyrone T. Edong',        'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,TYRONE-T.png'),
+    array('name' => 'Alan D. Limbadan, PhD',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png', 'facebook' => 'https://www.facebook.com/bhong.lim.94'),
+    array('name' => 'Joselito Q. Edong, MIT', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png', 'facebook' => 'https://www.facebook.com/joselito.edong'),
+    array('name' => 'Clark Steven T. Edong',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,CLARK-STEVEN-T.png', 'facebook' => 'https://www.facebook.com/debugged.me'),
+    array('name' => 'Tyrone T. Edong',        'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,TYRONE-T.png', 'facebook' => 'https://www.facebook.com/tyrone.edong.37'),
 );
 
 // Optional per-person crop nudge: source photos are framed differently (tight square headshots
@@ -1819,6 +1819,10 @@ if ($seal_url === '') {
             line-height: 1.35;
         }
 
+        .developers-grid .person-info strong a {
+            text-decoration: none;
+        }
+
         .person-info span {
             display: block;
             margin-top: 6px;
@@ -2982,7 +2986,7 @@ if ($seal_url === '') {
                                                     <path d="m8 17-5-5 5-5m8 10 5-5-5-5" />
                                                 </svg></span>
                                         </div>
-                                        <div class="person-info"><strong><?= $developer_name !== '' ? html_escape($developer_name) : 'To be announced'; ?></strong><span><?= html_escape($developer['division']); ?></span></div>
+                                        <div class="person-info"><strong><a href="<?= html_escape($developer['facebook']); ?>" target="_blank" rel="noopener noreferrer"><?= $developer_name !== '' ? html_escape($developer_name) : 'To be announced'; ?></a></strong><span><?= html_escape($developer['division']); ?></span></div>
                                     </div>
                                 </article>
                             <?php endforeach; ?>
