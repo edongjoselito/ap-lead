@@ -1,8 +1,4 @@
 <?php
-$sgc_not_organized = isset($sgc_counts[1]) ? (int) $sgc_counts[1] : 0;
-$sgc_not_functional = isset($sgc_counts[2]) ? (int) $sgc_counts[2] : 0;
-$sgc_functional = isset($sgc_counts[3]) ? (int) $sgc_counts[3] : 0;
-$school_total = $sgc_not_organized + $sgc_not_functional + $sgc_functional;
 $division_total = isset($division_count) ? (int) $division_count : 0;
 $district_total = isset($district_count) ? (int) $district_count : 0;
 $registered_school_total = isset($registered_school_count) ? (int) $registered_school_count : 0;
@@ -11,28 +7,14 @@ $encoded_school_total = isset($encoded_total_schools) ? (int) $encoded_total_sch
 $configured_division_total = isset($configured_division_count) ? (int) $configured_division_count : 0;
 $signup_rate = isset($signup_percentage) ? (float) $signup_percentage : 0;
 $signup_progress_width = min(100, max(0, $signup_rate));
-$completed_checklist_total = isset($completed_checklist_count) ? (int) $completed_checklist_count : 0;
-$checklist_completion_rate = isset($checklist_completion_percentage) ? (float) $checklist_completion_percentage : 0;
-$checklist_completion_width = min(100, max(0, $checklist_completion_rate));
 $division_setup_rate = $division_total > 0 ? ($configured_division_total / $division_total) * 100 : 0;
 $division_setup_width = min(100, max(0, $division_setup_rate));
 $display_name = isset($this->session->user) && trim((string) $this->session->user) !== ''
     ? mb_convert_case((string) $this->session->user, MB_CASE_TITLE, 'UTF-8')
     : 'Administrator';
-$division_list_url = base_url() . 'pages/division_list';
+$division_list_url = base_url() . 'pages/school_by_district';
 $school_directory_url = base_url() . 'pages/school_by_district';
 $user_list_url = base_url() . 'pages/userlist';
-$rate_details = array(
-    1 => array('label' => 'Not Yet Manifested', 'class' => 'rate-one'),
-    2 => array('label' => 'Rarely Manifested', 'class' => 'rate-two'),
-    3 => array('label' => 'Frequently Manifested', 'class' => 'rate-three'),
-    4 => array('label' => 'Always Manifested', 'class' => 'rate-four')
-);
-$sgc_percentages = array(
-    1 => $school_total > 0 ? ($sgc_not_organized / $school_total) * 100 : 0,
-    2 => $school_total > 0 ? ($sgc_not_functional / $school_total) * 100 : 0,
-    3 => $school_total > 0 ? ($sgc_functional / $school_total) * 100 : 0
-);
 ?>
 
 <style>
@@ -454,7 +436,7 @@ $sgc_percentages = array(
     <div class="dashboard-hero">
         <div>
             <h1>Welcome, <?= html_escape($display_name); ?></h1>
-            <p>Monitor division readiness, school signups, governance status, and checklist results across the active region.</p>
+            <p>Manage division readiness, school signups, and user accounts across the active region.</p>
         </div>
     </div>
 
@@ -591,152 +573,4 @@ $sgc_percentages = array(
         </div>
     </section>
 
-    <section class="dashboard-panel">
-        <div class="dashboard-panel-header">
-            <div>
-                <h4>School Governance Council</h4>
-                <p>Current SGC organization and functionality across schools in the active region.</p>
-            </div>
-            <small class="text-muted"><?= $school_total; ?> total schools</small>
-        </div>
-        <div class="dashboard-panel-body">
-            <div class="sgc-status-grid">
-                <div class="sgc-status sgc-one">
-                    <div class="sgc-status-heading">
-                        <div>
-                            <h5>Not Yet Organized</h5>
-                            <small><?= $sgc_not_organized; ?> schools</small>
-                        </div>
-                        <span class="sgc-percentage"><?= number_format($sgc_percentages[1], 1); ?>%</span>
-                    </div>
-                    <div class="sgc-progress"><span style="width: <?= min(100, $sgc_percentages[1]); ?>%;"></span></div>
-                </div>
-
-                <div class="sgc-status sgc-two">
-                    <div class="sgc-status-heading">
-                        <div>
-                            <h5>Organized, Not Functional</h5>
-                            <small><?= $sgc_not_functional; ?> schools</small>
-                        </div>
-                        <span class="sgc-percentage"><?= number_format($sgc_percentages[2], 1); ?>%</span>
-                    </div>
-                    <div class="sgc-progress"><span style="width: <?= min(100, $sgc_percentages[2]); ?>%;"></span></div>
-                </div>
-
-                <div class="sgc-status sgc-three">
-                    <div class="sgc-status-heading">
-                        <div>
-                            <h5>Functional</h5>
-                            <small><?= $sgc_functional; ?> schools</small>
-                        </div>
-                        <span class="sgc-percentage"><?= number_format($sgc_percentages[3], 1); ?>%</span>
-                    </div>
-                    <div class="sgc-progress"><span style="width: <?= min(100, $sgc_percentages[3]); ?>%;"></span></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="dashboard-panel">
-        <div class="dashboard-panel-header">
-            <div>
-                <h4>Self-Assessment Checklist</h4>
-                <p>Select a principle to review finalized region-wide manifestation results and overall checklist completion.</p>
-            </div>
-            <small class="text-muted">
-                <?= $completed_checklist_total; ?> of <?= $encoded_school_total; ?> schools completed
-            </small>
-        </div>
-
-        <div class="dashboard-panel-body">
-            <div class="checklist-summary">
-                <div class="sgc-status">
-                    <div class="sgc-status-heading">
-                        <div>
-                            <h5>Checklist Completion</h5>
-                            <small>Finalized Self-Assessment Checklist submissions based on encoded school totals across the region.</small>
-                        </div>
-                        <span class="sgc-percentage" style="color:#8b1e3f;"><?= number_format($checklist_completion_rate, 1); ?>%</span>
-                    </div>
-                    <div class="sgc-progress"><span style="width: <?= $checklist_completion_width; ?>%; background:#8b1e3f;"></span></div>
-                    <small class="d-block mt-2 text-muted">
-                        <?= $completed_checklist_total; ?> completed schools out of <?= $encoded_school_total; ?> encoded schools for Fiscal Year <?= html_escape($this->session->fy); ?>.
-                    </small>
-                </div>
-            </div>
-
-            <div id="assessmentAccordion">
-                <?php foreach ($sbm as $principle) :
-                    $principle_id = (string) $principle->id;
-                    $questions = isset($sbm_sub_by_principle[$principle_id])
-                        ? $sbm_sub_by_principle[$principle_id]
-                        : array();
-                ?>
-                    <div class="principle-card">
-                        <div class="principle-header" id="principleHeading<?= $principle->id; ?>">
-                            <a
-                                href="#principleCollapse<?= $principle->id; ?>"
-                                class="principle-toggle"
-                                data-toggle="collapse"
-                                aria-expanded="<?= $principle->id == 1 ? 'true' : 'false'; ?>"
-                                aria-controls="principleCollapse<?= $principle->id; ?>"
-                            >
-                                <span><?= html_escape($principle->indicator); ?></span>
-                                <i class="mdi mdi-chevron-down"></i>
-                            </a>
-                        </div>
-
-                        <div
-                            id="principleCollapse<?= $principle->id; ?>"
-                            class="collapse <?= $principle->id == 1 ? 'show' : ''; ?>"
-                            aria-labelledby="principleHeading<?= $principle->id; ?>"
-                            data-parent="#assessmentAccordion"
-                        >
-                            <p class="principle-description"><?= html_escape($principle->description); ?></p>
-                            <div class="assessment-table-wrap table-responsive">
-                                <table class="table table-hover assessment-table">
-                                    <thead>
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>SBM Indicator</th>
-                                            <?php foreach ($rate_details as $rate) { ?>
-                                                <th class="text-center"><?= html_escape($rate['label']); ?></th>
-                                            <?php } ?>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($questions as $question) :
-                                            $indicator_number = (int) $question->i_no;
-                                            $question_key = 'q' . $indicator_number;
-                                        ?>
-                                            <tr>
-                                                <td><span class="indicator-number"><?= html_escape($question->i_no); ?></span></td>
-                                                <td class="indicator-description"><?= html_escape($question->description); ?></td>
-
-                                                <?php foreach ($rate_details as $rate_value => $rate) :
-                                                    $count = isset($sbm_rate_counts[$indicator_number][$rate_value])
-                                                        ? $sbm_rate_counts[$indicator_number][$rate_value]
-                                                        : 0;
-                                                ?>
-                                                    <td class="text-center">
-                                                        <a
-                                                            class="rate-count <?= $rate['class']; ?>"
-                                                            href="<?= base_url(); ?>Pages/sbm_rate_list_region/<?= $question_key; ?>/<?= $rate_value; ?>"
-                                                            title="<?= html_escape($rate['label']); ?>"
-                                                        >
-                                                            <?= $count; ?>
-                                                        </a>
-                                                    </td>
-                                                <?php endforeach; ?>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </section>
 </div>

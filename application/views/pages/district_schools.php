@@ -413,7 +413,7 @@ $hero_title = (!$is_admin_view && empty($division_school_scope))
                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
                                 <?= form_close(); ?>
                                 <?php else : ?>
-                                <button class="btn btn-sm btn-outline-danger" disabled title="Cannot delete: School has completed Self-Assessment and Action Plan">
+                                <button class="btn btn-sm btn-outline-danger" disabled title="Cannot delete: School has protected existing records">
                                     <i class="mdi mdi-trash-can-outline"></i> Delete
                                 </button>
                                 <?php endif; ?>

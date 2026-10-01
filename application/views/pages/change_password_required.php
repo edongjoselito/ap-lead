@@ -67,13 +67,13 @@
             </div>
             <div class="form-group">
                 <label for="required-new-password">New password</label>
-                <input type="password" class="form-control" name="password" id="required-new-password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <input type="password" class="form-control" name="password" id="required-new-password" autocomplete="new-password" minlength="8" maxlength="128" required>
             </div>
             <div class="form-group">
                 <label for="required-confirm-password">Confirm new password</label>
-                <input type="password" class="form-control" name="password_confirm" id="required-confirm-password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <input type="password" class="form-control" name="password_confirm" id="required-confirm-password" autocomplete="new-password" minlength="8" maxlength="128" required>
             </div>
-            <p class="password-note">Use at least 12 characters. Your new password must be different from the temporary password.</p>
+            <p class="password-note">Use at least 8 characters. Your new password must be different from the temporary password.</p>
             <button type="submit" class="btn btn-primary btn-block">Save and continue</button>
         <?= form_close(); ?>
         <?= form_open('logout', array('class' => 'logout-form text-center')); ?>

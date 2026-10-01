@@ -1,6 +1,6 @@
 <?php
 $summary = $summary ?: (object) array('record_count' => 0, 'school_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0);
-$scope_label = $scope['type'] === 'school' ? 'School workspace' : ($scope['type'] === 'division' ? 'Division summary' : 'Regional overview');
+$scope_label = $scope['type'] === 'school' ? 'School workspace' : ($scope['type'] === 'district' ? 'District AP overview' : ($scope['type'] === 'division' ? 'Division summary' : 'Regional overview'));
 $school_name = $school && trim((string) $school->schoolName) !== '' ? $school->schoolName : 'School profile not set up';
 $division_name = !empty($division->description) ? $division->description : 'Division not assigned';
 $district_name = !empty($district->description) ? $district->description : 'District not assigned';

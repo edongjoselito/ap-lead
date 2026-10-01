@@ -406,15 +406,18 @@ $position_count = !empty($pos) ? count($pos) : 0;
                             </div>
 
                             <div class="form-group">
-                                <label for="username">Username <span class="text-danger">*</span></label>
+                                <label for="email">Email Address <span class="text-danger">*</span></label>
                                 <input
-                                    type="text"
-                                    name="username"
-                                    id="username"
+                                    type="email"
+                                    name="email"
+                                    id="email"
                                     class="form-control"
+                                    autocomplete="email"
+                                    maxlength="254"
                                     required
-                                    value="<?= html_escape(set_value('username')); ?>"
+                                    value="<?= html_escape(set_value('email')); ?>"
                                 >
+                                <small class="form-text text-muted">Your email address will also be your username.</small>
                             </div>
 
                             <div class="row">
@@ -425,9 +428,13 @@ $position_count = !empty($pos) ? count($pos) : 0;
                                             type="password"
                                             name="password"
                                             id="password"
+                                            minlength="8"
+                                            maxlength="128"
+                                            aria-describedby="password-help"
                                             class="form-control"
                                             required
                                         >
+                                        <small id="password-help" class="form-text text-muted">Use at least 8 characters.</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
