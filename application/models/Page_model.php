@@ -2091,6 +2091,7 @@ private function apply_learning_gap_scope($scope, $alias = 'lgr')
 public function learning_gap_records($scope, $year = null)
 {
     $this->ensure_learning_gap_archive_schema();
+    $this->ensure_learning_gap_summative_schema();
     $this->db->select('lgr.*, s.schoolName, d.description AS division_name')
         ->from('learning_gap_records lgr')
         ->join('schools s', 's.schoolID = lgr.school_id', 'left')
@@ -2171,13 +2172,14 @@ public function learning_gap_summary($scope)
 public function learning_gap_term_performance($scope)
 {
     $this->ensure_learning_gap_archive_schema();
+    $this->ensure_learning_gap_summative_schema();
     $terms = array(
-        'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
-        'Term 2' => array('term' => 'Term 2', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
-        'Term 3' => array('term' => 'Term 3', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0),
+        'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
+        'Term 2' => array('term' => 'Term 2', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
+        'Term 3' => array('term' => 'Term 3', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
     );
 
-    $this->db->select('lgr.school_id, lgr.grade_level, lgr.term, lgr.learners_assessed, lgr.learners_with_gap, lgr.class_proficiency_level')
+    $this->db->select('lgr.school_id, lgr.grade_level, lgr.term, lgr.learners_assessed, lgr.learners_with_gap, lgr.class_proficiency_level, lgr.cpl_summative_1, lgr.cpl_summative_2')
         ->from('learning_gap_records lgr')
         ->where_in('lgr.term', array_keys($terms))
         ->where('lgr.fiscal_year', $this->learning_gap_year());
@@ -2185,6 +2187,12 @@ public function learning_gap_term_performance($scope)
 
     $cpl_weighted_totals = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
     $cpl_learner_totals = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
+    $s1_weighted = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
+    $s1_learners = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
+    $s2_weighted = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
+    $s2_learners = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
+    $savg_weighted = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
+    $savg_learners = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
     foreach ($this->db->get()->result() as $record) {
         $term = (string) $record->term;
         $assessed = (int) $record->learners_assessed;
@@ -2197,6 +2205,26 @@ public function learning_gap_term_performance($scope)
             $cpl_learner_totals[$term] += $weight;
             $terms[$term]['cpl_record_count']++;
         }
+        $weight = max(1, $assessed);
+        // Each record's summative CPL values are pooled with their assessed
+        // count so larger classes contribute proportionately at scope level.
+        $summative_parts = array();
+        if ($record->cpl_summative_1 !== null && $record->cpl_summative_1 !== '') {
+            $s1_weighted[$term] += (float) $record->cpl_summative_1 * $weight;
+            $s1_learners[$term] += $weight;
+            $terms[$term]['s1_record_count']++;
+            $summative_parts[] = (float) $record->cpl_summative_1;
+        }
+        if ($record->cpl_summative_2 !== null && $record->cpl_summative_2 !== '') {
+            $s2_weighted[$term] += (float) $record->cpl_summative_2 * $weight;
+            $s2_learners[$term] += $weight;
+            $terms[$term]['s2_record_count']++;
+            $summative_parts[] = (float) $record->cpl_summative_2;
+        }
+        if (!empty($summative_parts)) {
+            $savg_weighted[$term] += (array_sum($summative_parts) / count($summative_parts)) * $weight;
+            $savg_learners[$term] += $weight;
+        }
     }
 
     foreach ($terms as $term => &$row) {
@@ -2205,6 +2233,15 @@ public function learning_gap_term_performance($scope)
                 $cpl_weighted_totals[$term] / $cpl_learner_totals[$term],
                 2
             );
+        }
+        if ($s1_learners[$term] > 0) {
+            $row['cpl_summative_1'] = round($s1_weighted[$term] / $s1_learners[$term], 2);
+        }
+        if ($s2_learners[$term] > 0) {
+            $row['cpl_summative_2'] = round($s2_weighted[$term] / $s2_learners[$term], 2);
+        }
+        if ($savg_learners[$term] > 0) {
+            $row['cpl_summative_avg'] = round($savg_weighted[$term] / $savg_learners[$term], 2);
         }
         $row = (object) $row;
     }
@@ -2523,6 +2560,7 @@ public function save_learning_gap_record($school_id)
 {
     $this->ensure_learning_gap_proficiency_columns();
     $this->ensure_learning_gap_archive_schema();
+    $this->ensure_learning_gap_summative_schema();
     $school = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
     if (!$school) {
         return false;
@@ -2531,6 +2569,11 @@ public function save_learning_gap_record($school_id)
     $with_gap = (int) $this->input->post('learners_with_gap', true);
     $class_proficiency_level = trim((string) $this->input->post('class_proficiency_level', true));
     $proficiency_level = trim((string) $this->input->post('proficiency_level', true));
+    // Summative CPL columns are only written while the school has the feature
+    // enabled; disabling the feature never wipes values already encoded.
+    $summative_enabled = (int) $school->cpl_summative_enabled === 1;
+    $cpl_summative_1 = trim((string) $this->input->post('cpl_summative_1', true));
+    $cpl_summative_2 = trim((string) $this->input->post('cpl_summative_2', true));
     $selected_competencies = $this->input->post('least_learned_competency', true);
     $least_learned_competency = is_array($selected_competencies)
         ? implode("\n", array_values(array_filter(array_map('trim', $selected_competencies))))
@@ -2556,6 +2599,10 @@ public function save_learning_gap_record($school_id)
         'remarks' => $this->input->post('remarks', true),
         'created_by' => (string) $this->session->username,
     );
+    if ($summative_enabled) {
+        $data['cpl_summative_1'] = $cpl_summative_1 === '' ? null : $cpl_summative_1;
+        $data['cpl_summative_2'] = $cpl_summative_2 === '' ? null : $cpl_summative_2;
+    }
     $record_id = (int) $this->input->post('record_id', true);
     if ($record_id > 0) {
         return $this->db->where('id', $record_id)->where('school_id', $school_id)
@@ -2576,6 +2623,100 @@ private function ensure_learning_gap_proficiency_columns()
     }
     // MELC is retained for legacy records, but is no longer captured in entry.
     $this->db->query('ALTER TABLE learning_gap_records MODIFY melc_competency TEXT NULL');
+}
+
+private $summative_cpl_schema_ready = false;
+
+/**
+ * Summative CPL feature schema:
+ *  - schools.cpl_summative_enabled is the per-school toggle (default OFF)
+ *  - learning_gap_records.cpl_summative_1 / cpl_summative_2 hold the values
+ * Runs once per database via app_schema_migrations.
+ */
+public function ensure_learning_gap_summative_schema()
+{
+    if ($this->summative_cpl_schema_ready) {
+        return;
+    }
+
+    $migration = '20261001_summative_cpl';
+    $this->db->query("CREATE TABLE IF NOT EXISTS `app_schema_migrations` (
+        `migration` VARCHAR(190) NOT NULL,
+        `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`migration`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        $this->summative_cpl_schema_ready = true;
+        return;
+    }
+
+    $lock = $this->db->query(
+        "SELECT GET_LOCK(CONCAT('ap_lead_summative_cpl_', DATABASE()), 30) AS acquired"
+    )->row();
+    if (!$lock || (int) $lock->acquired !== 1) {
+        throw new RuntimeException('The Learning Gap database upgrade is currently busy. Please reload the page.');
+    }
+
+    try {
+        // Another request may have completed the migration while this request
+        // was waiting for the database lock.
+        if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+            $this->summative_cpl_schema_ready = true;
+            return;
+        }
+
+        if (!$this->db->field_exists('cpl_summative_enabled', 'schools')) {
+            $this->db->query('ALTER TABLE schools ADD cpl_summative_enabled TINYINT(1) NOT NULL DEFAULT 0');
+        }
+        if (!$this->db->field_exists('cpl_summative_1', 'learning_gap_records')) {
+            $this->db->query('ALTER TABLE learning_gap_records ADD cpl_summative_1 DECIMAL(5,2) NULL AFTER class_proficiency_level');
+        }
+        if (!$this->db->field_exists('cpl_summative_2', 'learning_gap_records')) {
+            $this->db->query('ALTER TABLE learning_gap_records ADD cpl_summative_2 DECIMAL(5,2) NULL AFTER cpl_summative_1');
+        }
+
+        $this->db->query(
+            'INSERT IGNORE INTO app_schema_migrations (migration) VALUES (?)',
+            array($migration)
+        );
+        $this->summative_cpl_schema_ready = true;
+    } finally {
+        $this->db->query("SELECT RELEASE_LOCK(CONCAT('ap_lead_summative_cpl_', DATABASE()))");
+    }
+}
+
+/** Whether the school is allowed to encode Summative 1/2 CPL per term. */
+public function school_summative_cpl_enabled($school_id)
+{
+    $this->ensure_learning_gap_summative_schema();
+    $school = $this->db->select('cpl_summative_enabled')
+        ->where('schoolID', (string) $school_id)
+        ->get('schools')->row();
+    return $school && (int) $school->cpl_summative_enabled === 1;
+}
+
+/** All schools with their Summative CPL flag for the admin toggle page. */
+public function summative_cpl_schools()
+{
+    $this->ensure_learning_gap_summative_schema();
+    return $this->db
+        ->select('s.schoolID, s.schoolName, s.cpl_summative_enabled, d.description AS division_name, dist.description AS district_name')
+        ->from('schools s')
+        ->join('division d', 'd.id = s.division_id', 'left')
+        ->join('district dist', 'dist.id = s.district_id', 'left')
+        ->order_by('d.description', 'ASC')
+        ->order_by('s.schoolName', 'ASC')
+        ->get()
+        ->result();
+}
+
+/** Toggle Summative CPL encoding for one school. */
+public function set_school_summative_cpl($school_id, $enabled)
+{
+    $this->ensure_learning_gap_summative_schema();
+    return $this->db->where('schoolID', (string) $school_id)
+        ->update('schools', array('cpl_summative_enabled' => $enabled ? 1 : 0));
 }
 
 public function learning_gap_record($id, $school_id)

@@ -54,6 +54,9 @@ if (!function_exists('lg_term_interpretation')) {
                 $cpl = (float) $row->class_proficiency_level;
                 $parts[] = 'CPL is <strong>' . number_format($cpl, 1) . '%</strong>, which falls under <strong>' . lg_cpl_band($cpl) . '</strong>';
             }
+            if (isset($row->cpl_summative_avg) && $row->cpl_summative_avg !== null) {
+                $parts[] = 'summative CPL average is <strong>' . number_format((float) $row->cpl_summative_avg, 1) . '%</strong>';
+            }
             $lines[] = '<strong>' . html_escape($row->term) . ':</strong> The ' . implode('; ', $parts) . '.';
         }
 

@@ -192,6 +192,9 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                                 <span class="rec-stat-label">Proficiency</span>
                                 <span class="rec-stat-value rec-num"><?= isset($row->class_proficiency_level) ? number_format((float) $row->class_proficiency_level, 2) . '%' : '—'; ?></span>
                                 <span class="rec-stat-note"><?= isset($row->proficiency_level) ? html_escape($row->proficiency_level) : 'Not set'; ?></span>
+                                <?php if (isset($row->cpl_summative_1) || isset($row->cpl_summative_2)) : ?>
+                                    <span class="rec-stat-note rec-num">S1 <?= isset($row->cpl_summative_1) ? number_format((float) $row->cpl_summative_1, 2) . '%' : '—'; ?> · S2 <?= isset($row->cpl_summative_2) ? number_format((float) $row->cpl_summative_2, 2) . '%' : '—'; ?></span>
+                                <?php endif; ?>
                             </div>
                             <div class="rec-stat">
                                 <span class="rec-stat-label">Assessed</span>
@@ -220,6 +223,26 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                                         </ul>
                                     <?php endif; ?>
                                 </div>
+                                <?php
+                                $summative_values = array();
+                                if (isset($row->cpl_summative_1) && $row->cpl_summative_1 !== null) {
+                                    $summative_values['Summative 1'] = (float) $row->cpl_summative_1;
+                                }
+                                if (isset($row->cpl_summative_2) && $row->cpl_summative_2 !== null) {
+                                    $summative_values['Summative 2'] = (float) $row->cpl_summative_2;
+                                }
+                                ?>
+                                <?php if (!empty($summative_values)) : ?>
+                                    <div>
+                                        <h3>Summative CPL</h3>
+                                        <p>
+                                            <?php foreach ($summative_values as $summative_label => $summative_value) : ?>
+                                                <?= html_escape($summative_label); ?>: <strong><?= number_format($summative_value, 2); ?>%</strong><br>
+                                            <?php endforeach; ?>
+                                            Term average: <strong><?= number_format(array_sum($summative_values) / count($summative_values), 2); ?>%</strong>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
                                 <?php foreach (array('intervention_action' => 'Intervention / Action', 'remarks' => 'Remarks') as $field => $label) : ?>
                                     <div>
                                         <h3><?= $label; ?></h3>
