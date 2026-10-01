@@ -312,7 +312,7 @@ class Pages extends CI_Controller
 
     private function is_user_manager()
     {
-        return in_array($this->session->position, array('admin', 'division', 'ict'), true);
+        return in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true);
     }
 
     private function is_division_user_manager()
@@ -325,6 +325,14 @@ class Pages extends CI_Controller
         if (!$this->session->logged_in || !$this->is_user_manager()) {
             show_error('You are not authorized to manage users.', 403);
         }
+    }
+
+    private function apply_district_user_scope()
+    {
+        $scope = $this->district_learning_gap_scope();
+        $this->db->where('d_id', $scope['id']);
+        $this->db->where('p_id', (int) $this->session->division);
+        $this->db->where_in('position', array('district', 'school'));
     }
 
     private function require_division_settings_access()
@@ -697,6 +705,14 @@ class Pages extends CI_Controller
             show_error('You can only manage users under your division.', 403);
         }
 
+        if ($this->session->position === 'district') {
+            $scope = $this->district_learning_gap_scope();
+            if ((int) $user->d_id !== $scope['id']
+                || (int) $user->p_id !== (int) $this->session->division
+                || !$this->is_allowed_managed_position($user->position)) {
+                show_error('You can only manage school and district users in your assigned district.', 403);
+            }
+        }
         return $user;
     }
 
@@ -706,6 +722,9 @@ class Pages extends CI_Controller
             return true;
         }
 
+        if ($this->session->position === 'district') {
+            return in_array($position, array('district', 'school'), true);
+        }
         $position_record = $this->Page_model->one_cond_row('position', 'pos', $position);
 
         return $position_record && !in_array($position, array('admin', 'region', 'division'), true);
@@ -713,6 +732,13 @@ class Pages extends CI_Controller
 
     private function validate_managed_district($district_id)
     {
+        if ($this->session->position === 'district') {
+            $scope = $this->district_learning_gap_scope();
+            if ((int) $district_id !== $scope['id']) {
+                show_error('You can only manage users in your assigned district.', 403);
+            }
+            return;
+        }
         if (!$this->is_division_user_manager() || empty($district_id)) {
             return;
         }
@@ -1644,7 +1670,13 @@ class Pages extends CI_Controller
         $data['division_scope'] = false;
 
         // Fetch all users for client-side DataTables
-        $data['users'] = $this->Page_model->no_cond('users');
+        if ($this->session->position === 'district') {
+            $this->apply_district_user_scope();
+            $data['users'] = $this->db->get('users')->result();
+            $data['title'] = 'District User List';
+        } else {
+            $data['users'] = $this->Page_model->no_cond('users');
+        }
 
         $this->load->view('templates/header_dt');
         $this->load->view('templates/menu');
@@ -1671,6 +1703,10 @@ class Pages extends CI_Controller
         $this->db->select('id, fname, mname, lname, username, position');
         if ($this->is_division_user_manager()) {
             $this->db->where('p_id', (int) $this->session->division);
+        }
+
+        if ($this->session->position === 'district') {
+            $this->apply_district_user_scope();
         }
 
         // Search
@@ -1753,6 +1789,10 @@ class Pages extends CI_Controller
     public function userlist_division()
     {
         $this->require_user_manager();
+        if ($this->session->position === 'district') {
+            $this->userlist();
+            return;
+        }
 
         $page = "user_list";
 
@@ -2074,7 +2114,13 @@ class Pages extends CI_Controller
 
             $data['title'] = "New User";
             $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
-            if ($this->is_division_user_manager()) {
+            if ($this->session->position === 'district') {
+                $this->district_learning_gap_scope();
+                $data['pos'] = array_values(array_filter($this->Page_model->no_cond('position'), function ($position) {
+                    return $this->is_allowed_managed_position($position->pos);
+                }));
+                $data['districts'] = $this->Page_model->one_cond('district', 'id', $this->session->district);
+            } elseif ($this->is_division_user_manager()) {
                 $data['pos'] = array_values(array_filter(
                     $this->Page_model->no_cond('position'),
                     function ($position) {
@@ -5530,6 +5576,10 @@ class Pages extends CI_Controller
     public function district_userlist_by_division()
     {
         $this->require_user_manager();
+        if ($this->session->position === 'district') {
+            $this->userlist();
+            return;
+        }
 
         $page = "user_list";
 

@@ -7,10 +7,10 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => getenv('DB_HOST') ?: '127.0.0.1',
-	'username' => getenv('DB_USERNAME') ?: 'root',
-	'password' => getenv('DB_PASSWORD') ?: '',
-	'database' => getenv('DB_DATABASE') ?: 'learning_gap_monitoring',
+	'hostname' => '127.0.0.1',
+	'username' => 'root',
+	'password' => 'moth34board',
+	'database' => 'learning_gap_monitoring',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

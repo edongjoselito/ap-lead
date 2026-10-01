@@ -260,6 +260,7 @@
 
                         <li><a href="<?= base_url(); ?>" class="waves-effect"><i class="mdi mdi-view-dashboard"></i><span> Dashboard </span></a></li>
                         <?php if ($this->session->position == 'district') { ?>
+                            <li><a href="<?= base_url(); ?>pages/userlist" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
                             <li><a href="<?= base_url(); ?>pages/schools_district/<?= $this->session->district; ?>" class="waves-effect"><i class="fas fa-school"></i><span>Schools</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap" class="waves-effect"><i class="fas fa-chart-bar"></i><span> AP Learning Gap Overview</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_school_summary" class="waves-effect"><i class="fas fa-school"></i><span> Learning Gap Summary</span></a></li>

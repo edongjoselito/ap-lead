@@ -377,7 +377,7 @@
                                 </div>
                                 <div class="user-list-hero-side">
                                     <div class="hero-actions">
-                                        <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
+                                        <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
                                         <a href="<?= base_url(); ?>pages/user_new" class="hero-button hero-button-primary">
                                             <i class="mdi mdi-account-plus-outline"></i>
                                             Add User
@@ -420,7 +420,7 @@
                         <div class="workspace-panel">
                             <div class="workspace-panel-header">
                                 <div>
-                                    <h4><?= !empty($district_user_scope) ? html_escape($district_name) . ' District Accounts' : (!empty($division_scope) ? 'Division Accounts' : 'System Accounts'); ?></h4>
+                                    <h4><?= !empty($district_user_scope) ? html_escape($district_name) . ' District Accounts' : (!empty($division_scope) ? 'Division Accounts' : ($this->session->position === 'district' ? 'District Accounts' : 'System Accounts')); ?></h4>
                                     <p><?= !empty($district_user_scope) ? 'Review and manage district-level user access for this district.' : (!empty($division_scope) ? 'Manage account details, access levels, and passwords.' : 'Manage system user accounts and access levels.'); ?></p>
                                 </div>
                                 <span class="account-level">
@@ -452,7 +452,7 @@
                                                 <td><span class="account-level"><?= html_escape($row->position); ?></span></td>
                                                 <td>
                                                     <div class="user-actions">
-                                                        <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
+                                                        <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
                                                         <a class="btn btn-primary btn-sm" href="<?= base_url(); ?>pages/user_update/<?= $row->id; ?>"><i class="mdi mdi-pencil-outline"></i> Edit</a>
                                                         <?php } ?>
                                                         <?php if($this->session->position == 'admin'){ ?>
@@ -463,7 +463,7 @@
                                                             <input type="hidden" name="id" value="<?= $row->id; ?>">
                                                             <button type="submit" class="btn btn-warning btn-sm waves-effect waves-light"><i class="mdi mdi-lock-reset"></i> Reset</button>
                                                         </form>
-                                                        <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
+                                                        <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
                                                         <?= form_open('pages/user_delete', array('style' => 'display:inline;', 'onsubmit' => "return confirm('Delete this user account?');")); ?>
                                                         <input type="hidden" name="id" value="<?= (int) $row->id; ?>">
                                                         <button type="submit" class="btn btn-danger btn-sm"><i class="mdi mdi-trash-can-outline"></i> Delete</button>
@@ -568,7 +568,7 @@
                                         data: 'id',
                                         render: function(data, type, row) {
                                             var actions = '';
-                                            <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
+                                            <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
                                             actions += '<a class="btn btn-primary btn-sm" href="<?= base_url(); ?>pages/user_update/' + data + '"><i class="mdi mdi-pencil-outline"></i> Edit</a> ';
                                             <?php } ?>
                                             <?php if($this->session->position == 'admin'){ ?>
@@ -579,7 +579,7 @@
                                                 '<input type="hidden" name="id" value="' + data + '">' +
                                                 '<button type="submit" class="btn btn-warning btn-sm waves-effect waves-light"><i class="mdi mdi-lock-reset"></i> Reset</button>' +
                                                 '</form> ';
-                                            <?php if(in_array($this->session->position, array('admin', 'division', 'ict'), true)){ ?>
+                                            <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
                                             actions += '<form action="<?= base_url(); ?>pages/user_delete" method="post" style="display:inline" onsubmit="return confirm(\'Delete this user account?\')">' +
                                                 '<input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">' +
                                                 '<input type="hidden" name="id" value="' + parseInt(data, 10) + '">' +

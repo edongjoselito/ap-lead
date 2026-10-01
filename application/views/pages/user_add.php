@@ -546,7 +546,10 @@ $position_count = !empty($pos) ? count($pos) : 0;
                                 </select>
                             </div>
 
-                            <?php if($is_division_scope){ ?>
+                            <?php if ($this->session->position === 'district') { ?>
+                                <input type="hidden" name="division_id" value="<?= (int) $this->session->division; ?>">
+                                <input type="hidden" name="d_id" value="<?= (int) $this->session->district; ?>">
+                            <?php } elseif($is_division_scope){ ?>
                                 <input type="hidden" name="division_id" value="<?= html_escape($this->session->division); ?>">
 
                                 <div class="user-create-scope">

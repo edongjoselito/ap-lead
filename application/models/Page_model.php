@@ -98,7 +98,7 @@ public function user_insert(){
     $filename = $file['file_name']; 
     $division_id = $this->input->post('division_id');
 
-    if (in_array($this->session->position, array('division', 'ict'), true)) {
+    if (in_array($this->session->position, array('division', 'ict', 'district'), true)) {
         $division_id = $this->session->division;
     }
 
@@ -117,7 +117,7 @@ public function user_insert(){
     'gender' => $this->input->post('gender'),
     'r_id' => $this->session->region,
     'p_id' => $division_id,
-    'd_id' => $this->input->post('d_id'),
+    'd_id' => $this->session->position === 'district' ? (int) $this->session->district : $this->input->post('d_id'),
     'image' => $filename,
     'virified' => 0
     ); 
