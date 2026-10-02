@@ -6,13 +6,8 @@
     <title>AP-LEAD | School Account Signup</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="AP-LEAD school account registration" name="description" />
-    <meta content="Coderthemes" name="author" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
     <link href="<?= base_url(); ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
     <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
@@ -36,810 +31,187 @@
     };
     ?>
 
-    <style>
-        :root {
-            --signup-primary: #8b1e3f;
-            --signup-primary-dark: #5f1129;
-            --signup-accent: #e9b949;
-            --signup-ink: #223047;
-            --signup-muted: #667085;
-            --signup-border: #e6eaf2;
-            --signup-surface: #ffffff;
-            --signup-surface-soft: #fff7f4;
-            --signup-shadow: 0 24px 60px rgba(22, 32, 55, .14);
-        }
-
-        body.school-signup-page {
-            min-height: 100vh;
-            color: var(--signup-ink);
-            font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(233, 185, 73, .14), transparent 24%),
-                radial-gradient(circle at bottom right, rgba(139, 30, 63, .13), transparent 26%),
-                linear-gradient(135deg, #f7efe8 0%, #fbfcff 48%, #f5f7fb 100%);
-        }
-
-        .signup-shell {
-            position: relative;
-            min-height: 100vh;
-            padding: 32px 0;
-        }
-
-        .signup-shell::before,
-        .signup-shell::after {
-            content: "";
-            position: fixed;
-            z-index: 0;
-            border-radius: 50%;
-            pointer-events: none;
-            filter: blur(2px);
-        }
-
-        .signup-shell::before {
-            top: -120px;
-            left: -110px;
-            width: 280px;
-            height: 280px;
-            background: rgba(139, 30, 63, .08);
-        }
-
-        .signup-shell::after {
-            right: -100px;
-            bottom: -120px;
-            width: 260px;
-            height: 260px;
-            background: rgba(233, 185, 73, .12);
-        }
-
-        .signup-layout {
-            position: relative;
-            z-index: 1;
-            max-width: 1240px;
-            margin: 0 auto;
-            border: 1px solid rgba(255, 255, 255, .75);
-            border-radius: 30px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, .68);
-            box-shadow: var(--signup-shadow);
-            backdrop-filter: blur(14px);
-        }
-
-        .signup-sidebar {
-            position: relative;
-            min-height: 100%;
-            padding: 42px 38px;
-            color: #fff;
-            background:
-                radial-gradient(circle at top right, rgba(255, 255, 255, .18), transparent 25%),
-                linear-gradient(160deg, #5f1129 0%, #8b1e3f 45%, #c76c48 100%);
-        }
-
-        .signup-sidebar::after {
-            content: "";
-            position: absolute;
-            right: -60px;
-            bottom: -80px;
-            width: 240px;
-            height: 240px;
-            border-radius: 42px;
-            background: rgba(255, 255, 255, .07);
-            transform: rotate(18deg);
-        }
-
-        .signup-sidebar > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .signup-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 34px;
-        }
-
-        .signup-brand img {
-            width: 60px;
-            height: auto;
-        }
-
-        .signup-brand-text span {
-            display: block;
-            color: rgba(255, 255, 255, .72);
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-        }
-
-        .signup-brand-text strong {
-            display: block;
-            margin-top: 4px;
-            color: #fff;
-            font-size: 17px;
-            font-weight: 700;
-            line-height: 1.3;
-        }
-
-        .signup-sidebar h1 {
-            margin: 0 0 14px;
-            color: #fff;
-            font-family: "Fraunces", Georgia, serif;
-            font-size: 42px;
-            font-weight: 700;
-            line-height: 1.08;
-        }
-
-        .signup-sidebar p {
-            margin: 0;
-            color: rgba(255, 255, 255, .84);
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .signup-side-card {
-            margin-top: 24px;
-            padding: 20px 22px;
-            border: 1px solid rgba(255, 255, 255, .18);
-            border-radius: 20px;
-            background: rgba(255, 255, 255, .1);
-            backdrop-filter: blur(4px);
-        }
-
-        .signup-side-card h5 {
-            margin: 0 0 12px;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .signup-side-list {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .signup-side-list li {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 12px;
-            color: rgba(255, 255, 255, .82);
-            font-size: 13px;
-            line-height: 1.55;
-        }
-
-        .signup-side-list li:last-child {
-            margin-bottom: 0;
-        }
-
-        .signup-side-list i {
-            margin-top: 1px;
-            color: #ffd58b;
-            font-size: 17px;
-        }
-
-        .signup-quick-links {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 26px;
-        }
-
-        .signup-quick-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 16px;
-            border: 1px solid rgba(255, 255, 255, .18);
-            border-radius: 16px;
-            color: #fff;
-            background: rgba(255, 255, 255, .08);
-            font-size: 13px;
-            font-weight: 600;
-            transition: transform .18s ease, background .18s ease;
-        }
-
-        .signup-quick-link:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, .14);
-            transform: translateY(-1px);
-        }
-
-        .signup-main {
-            padding: 32px 34px;
-        }
-
-        .signup-mobile-brand {
-            display: none;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 22px;
-        }
-
-        .signup-mobile-brand img {
-            width: 52px;
-            height: auto;
-        }
-
-        .signup-mobile-brand strong {
-            display: block;
-            color: var(--signup-ink);
-            font-size: 16px;
-            font-weight: 700;
-            line-height: 1.3;
-        }
-
-        .signup-mobile-brand span {
-            color: var(--signup-muted);
-            font-size: 12px;
-        }
-
-        .signup-main-topbar {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .signup-main-topbar a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--signup-primary);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .signup-form-card {
-            border: 1px solid var(--signup-border);
-            border-radius: 26px;
-            background: var(--signup-surface);
-            box-shadow: 0 18px 45px rgba(31, 45, 75, .08);
-            overflow: hidden;
-        }
-
-        .signup-form-header {
-            padding: 28px 30px 22px;
-            border-bottom: 1px solid var(--signup-border);
-            background:
-                radial-gradient(circle at top right, rgba(139, 30, 63, .08), transparent 26%),
-                linear-gradient(180deg, #fff9f6 0%, #ffffff 100%);
-        }
-
-        .signup-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            color: var(--signup-primary);
-            background: #fdecef;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-        }
-
-        .signup-form-header h2 {
-            margin: 0 0 8px;
-            color: var(--signup-ink);
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .signup-form-header p {
-            margin: 0;
-            color: var(--signup-muted);
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .signup-form-body {
-            padding: 26px 30px 30px;
-        }
-
-        .signup-form-body .alert {
-            border: 0;
-            border-radius: 16px;
-            box-shadow: 0 10px 24px rgba(31, 45, 75, .08);
-        }
-
-        .form-section {
-            margin-bottom: 22px;
-            padding: 20px;
-            border: 1px solid var(--signup-border);
-            border-radius: 20px;
-            background: #fff;
-        }
-
-        .form-section:last-of-type {
-            margin-bottom: 0;
-        }
-
-        .form-section-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .form-section-header h4 {
-            margin: 0 0 4px;
-            color: var(--signup-ink);
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        .form-section-header p {
-            margin: 0;
-            color: var(--signup-muted);
-            font-size: 13px;
-        }
-
-        .form-section-step {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            flex: 0 0 36px;
-            border-radius: 12px;
-            color: var(--signup-primary-dark);
-            background: #fdecef;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .signup-field label {
-            margin-bottom: 8px;
-            color: var(--signup-ink);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .signup-field small {
-            display: block;
-            margin-top: 6px;
-            color: var(--signup-muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .signup-field .form-control,
-        .signup-field .custom-select {
-            min-height: 48px;
-            border: 1px solid #d8dfeb;
-            border-radius: 14px;
-            color: var(--signup-ink);
-            background-color: #fcfdff;
-            font-size: 14px;
-            transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
-        }
-
-        .signup-field .form-control:focus,
-        .signup-field .custom-select:focus,
-        .signup-field .form-control:focus + .signup-password-toggle {
-            border-color: rgba(139, 30, 63, .45);
-            box-shadow: 0 0 0 .18rem rgba(139, 30, 63, .12);
-            background-color: #fff;
-        }
-
-        .signup-password-wrap {
-            position: relative;
-        }
-
-        .signup-password-input {
-            padding-right: 50px;
-        }
-
-        .signup-password-toggle {
-            position: absolute;
-            top: 50%;
-            right: 14px;
-            transform: translateY(-50%);
-            border: 0;
-            color: #7a8599;
-            background: transparent;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .signup-password-toggle:focus {
-            outline: none;
-            box-shadow: none;
-        }
-
-        .signup-consent {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px 18px;
-            border: 1px solid #f0dfc4;
-            border-radius: 18px;
-            background: #fffaf0;
-        }
-
-        .signup-consent .checkbox {
-            margin: 0;
-        }
-
-        .signup-consent label {
-            margin: 0;
-            color: #6c5a2e;
-            font-size: 13px;
-            line-height: 1.65;
-        }
-
-        .signup-consent a {
-            color: var(--signup-primary);
-            font-weight: 700;
-        }
-
-        .captcha-wrap {
-            display: inline-block;
-            max-width: 100%;
-            overflow-x: auto;
-            border-radius: 18px;
-        }
-
-        .signup-actions {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            margin-top: 26px;
-            padding-top: 6px;
-        }
-
-        .signup-actions p {
-            margin: 0;
-            color: var(--signup-muted);
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .signup-actions a {
-            color: var(--signup-primary);
-            font-weight: 700;
-        }
-
-        .btn-signup-submit {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 13px 22px;
-            border: 0;
-            border-radius: 999px;
-            color: #fff;
-            background: linear-gradient(135deg, #8b1e3f, #be5c3c);
-            box-shadow: 0 14px 28px rgba(139, 30, 63, .2);
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .btn-signup-submit:hover {
-            color: #fff;
-        }
-
-        .signup-modal .modal-content {
-            border: 0;
-            border-radius: 22px;
-            overflow: hidden;
-            box-shadow: 0 25px 60px rgba(18, 28, 48, .22);
-        }
-
-        .signup-modal .modal-header {
-            border-bottom: 0;
-            padding: 18px 22px;
-            background: linear-gradient(135deg, #8b1e3f, #be5c3c);
-        }
-
-        .signup-modal .modal-header .modal-title {
-            color: #fff;
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .signup-modal .modal-header .close {
-            color: #fff;
-            opacity: 1;
-            text-shadow: none;
-        }
-
-        .signup-modal .modal-body {
-            padding: 24px;
-            color: var(--signup-ink);
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        @media (max-width: 1199.98px) {
-            .signup-layout {
-                max-width: 820px;
-            }
-
-            .signup-sidebar {
-                display: none;
-            }
-
-            .signup-mobile-brand {
-                display: flex;
-            }
-
-            .signup-main {
-                padding: 28px 24px;
-            }
-        }
-
-        @media (max-width: 767.98px) {
-            .signup-shell {
-                padding: 16px 0;
-            }
-
-            .signup-layout {
-                border-radius: 22px;
-            }
-
-            .signup-main {
-                padding: 18px 14px;
-            }
-
-            .signup-main-topbar {
-                justify-content: flex-start;
-                margin-bottom: 14px;
-            }
-
-            .signup-form-header,
-            .signup-form-body {
-                padding-left: 18px;
-                padding-right: 18px;
-            }
-
-            .form-section {
-                padding: 16px;
-                border-radius: 18px;
-            }
-
-            .form-section-header {
-                flex-direction: column;
-            }
-
-            .signup-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .btn-signup-submit {
-                justify-content: center;
-                width: 100%;
-            }
-        }
-    </style>
+    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261002" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="school-signup-page">
+    <a class="signup-skip-link" href="#schoolSignupForm">Skip to registration form</a>
     <div class="signup-shell">
-        <div class="container-fluid px-lg-4">
-            <div class="signup-layout">
-                <div class="row no-gutters">
-                    <div class="col-xl-5">
-                        <aside class="signup-sidebar">
-                            <a href="<?= base_url(); ?>" class="signup-brand">
-                                <div class="signup-brand-text">
-                                    <span>AP-LEAD Portal</span>
-                                    <strong>AP-LEAD</strong>
-                                </div>
-                            </a>
-
-                            <h1>Create your school account with confidence.</h1>
-                            <p>Register your school profile, connect it to the correct division and district, and sign in to AP-LEAD immediately after registration.</p>
-
-                            <div class="signup-side-card">
-                                <h5>Before you begin</h5>
-                                <ul class="signup-side-list">
-                                    <li><i class="mdi mdi-check-circle-outline"></i><span>Prepare your official school ID. It will also be used as your username.</span></li>
-                                    <li><i class="mdi mdi-email-check-outline"></i><span>Use your official school email as an alternative to your School ID when signing in.</span></li>
-                                    <li><i class="mdi mdi-map-marker-radius-outline"></i><span>Select the correct division and district to make your records easier to monitor and support.</span></li>
-                                    <li><i class="mdi mdi-shield-check-outline"></i><span>Accept the declaration before submitting. Security verification runs automatically.</span></li>
-                                </ul>
-                            </div>
-
-                            <div class="signup-side-card">
-                                <h5>Who should use this page?</h5>
-                                <ul class="signup-side-list">
-                                    <li><i class="mdi mdi-school-outline"></i><span>School users registering their school account in AP-LEAD.</span></li>
-                                    <li><i class="mdi mdi-account-supervisor-outline"></i><span>District users should use the district signup page instead of the school account form.</span></li>
-                                </ul>
-                            </div>
-
-                            <div class="signup-quick-links">
-                                <a href="<?= base_url('log_in'); ?>" class="signup-quick-link">
-                                    <i class="mdi mdi-login-variant"></i>
-                                    Sign In
-                                </a>
-                                <a href="<?= base_url('signup_district'); ?>" class="signup-quick-link">
-                                    <i class="mdi mdi-account-group-outline"></i>
-                                    District Signup
-                                </a>
-                            </div>
-                        </aside>
-                    </div>
-
-                    <div class="col-xl-7">
-                        <main class="signup-main">
-                            <div class="signup-mobile-brand">
-                                <div>
-                                    <strong>AP-LEAD</strong>
-                                    <span>School account registration</span>
-                                </div>
-                            </div>
-
-                            <div class="signup-main-topbar">
-                                <a href="<?= base_url('log_in'); ?>">
-                                    <i class="mdi mdi-arrow-left"></i>
-                                    Back to Sign In
-                                </a>
-                            </div>
-
-                            <div class="signup-form-card">
-                                <div class="signup-form-header">
-                                    <span class="signup-eyebrow">
-                                        <i class="mdi mdi-school-outline"></i>
-                                        School Signup
-                                    </span>
-                                    <h2>Register your school profile</h2>
-                                    <p>Fill in the required school details below. All fields are used to create and organize your school account in AP-LEAD.</p>
-                                </div>
-
-                                <div class="signup-form-body">
-                                    <div id="signup-feedback" tabindex="-1" aria-live="polite">
-                                        <?php foreach (array('success' => 'success', 'failed' => 'danger', 'danger' => 'danger') as $message_key => $message_style): ?>
-                                            <?php $signup_message = $this->session->flashdata($message_key); ?>
-                                            <?php if ($signup_message): ?>
-                                                <div class="alert alert-<?= $message_style; ?>" role="<?= $message_style === 'success' ? 'status' : 'alert'; ?>">
-                                                    <?= html_escape($signup_message); ?>
-                                                    <?php if ($message_style === 'success'): ?>
-                                                        <a href="<?= base_url('homepage'); ?>#portal" class="alert-link">Go to sign in</a>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                        <?= !empty($show_validation_errors) ? validation_errors() : ''; ?>
-                                        <?php if (!empty($captcha_error)): ?>
-                                            <div class="alert alert-danger" role="alert"><?= html_escape($captcha_error); ?></div>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <?= form_open('Pages/signup', array('id' => 'schoolSignupForm')); ?>
-                                        <div class="form-section">
-                                            <div class="form-section-header">
-                                                <div>
-                                                    <h4>Access Credentials</h4>
-                                                    <p>Set up the login details that the school will use to access the system.</p>
-                                                </div>
-                                                <span class="form-section-step">01</span>
-                                            </div>
-
-                                            <div class="form-row">
-                                                <div class="form-group col-md-6 signup-field">
-                                                    <label for="schoolID">School ID</label>
-                                                    <input class="form-control" type="text" id="schoolID" name="schoolID" value="<?= html_escape($signup_value('schoolID')); ?>" autocomplete="username" required>
-                                                    <small>Sign in using your School ID or registered school email address.</small>
-                                                </div>
-
-                                                <div class="form-group col-md-6 signup-field">
-                                                    <label for="password">Password</label>
-                                                    <div class="signup-password-wrap">
-                                                        <input id="password" class="form-control signup-password-input" type="password" name="password" value="<?= html_escape($signup_value('password')); ?>" autocomplete="new-password" minlength="8" maxlength="128" required>
-                                                        <button type="button" class="signup-password-toggle" id="togglePassword" aria-label="Show password">
-                                                            <i class="mdi mdi-eye-outline" id="togglePasswordIcon"></i>
-                                                        </button>
-                                                    </div>
-                                                    <small>Use 8–128 characters for your password.</small>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-section">
-                                            <div class="form-section-header">
-                                                <div>
-                                                    <h4>School Identity</h4>
-                                                    <p>Provide the official school name, contact email, and location assignment.</p>
-                                                </div>
-                                                <span class="form-section-step">02</span>
-                                            </div>
-
-                                            <div class="form-row">
-                                                <div class="form-group col-md-6 signup-field">
-                                                    <label for="schoolName">School Name</label>
-                                                    <input class="form-control" type="text" id="schoolName" name="schoolName" value="<?= html_escape($signup_value('schoolName')); ?>" required>
-                                                </div>
-
-                                                <div class="form-group col-md-6 signup-field">
-                                                    <label for="schoolEmail">School Email</label>
-                                                    <input class="form-control" type="email" id="schoolEmail" name="schoolEmail" value="<?= html_escape($signup_value('schoolEmail')); ?>" autocomplete="email" aria-describedby="email-availability" required>
-                                                    <small id="email-availability" role="status" aria-live="polite"></small>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-row">
-                                                <div class="form-group col-md-6 signup-field">
-                                                    <label for="division">Division</label>
-                                                    <select name="division_id" id="division" class="custom-select" required>
-                                                        <option value="">Select Division</option>
-                                                        <?php foreach ($division as $row) : ?>
-                                                            <option value="<?= $row->id; ?>" <?= $selected_division_id === (string) $row->id ? 'selected' : ''; ?>>
-                                                                <?= html_escape($format_title($row->description)); ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group col-md-6 signup-field">
-                                                    <label for="district">Districts / Cluster</label>
-                                                    <select name="d_id" id="district" class="custom-select" required>
-                                                        <option value="">Select District / Cluster</option>
-                                                        <?php foreach ($district_options as $district_row) : ?>
-                                                            <option value="<?= $district_row->id; ?>" <?= $selected_district_id === (string) $district_row->id ? 'selected' : ''; ?>>
-                                                                <?= html_escape($format_title($district_row->description)); ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <input type="hidden" name="renren" value="">
-                                        <input type="hidden" name="ivykate" value="">
-                                        <input type="hidden" name="ivankyle" value="">
-                                        <input type="hidden" name="ic" value="">
-
-                                        <div class="form-section">
-                                            <div class="form-section-header">
-                                                <div>
-                                                    <h4>Consent and Verification</h4>
-                                                    <p>Review the declaration, confirm your consent, and complete the security check.</p>
-                                                </div>
-                                                <span class="form-section-step">03</span>
-                                            </div>
-
-                                            <div class="signup-consent mb-4">
-                                                <div class="checkbox checkbox-success mt-1">
-                                                    <input id="termsAccepted" name="termsAccepted" type="checkbox" <?= $signup_value('termsAccepted') === 'on' ? 'checked' : ''; ?> required>
-                                                    <label for="termsAccepted">
-                                                        I accept the
-                                                        <a href="#" data-toggle="modal" data-target="#termsModal">Declaration and Attestation</a>
-                                                        for registering and processing school information in AP-LEAD.
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="captcha-wrap signup-field">
-                                                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse" value="">
-                                                <small>This form is protected by Google reCAPTCHA.</small>
-                                                <p id="recaptchaStatus" role="status" aria-live="polite"></p>
-                                            </div>
-                                        </div>
-
-                                        <div class="signup-actions">
-                                            <p>Already registered? <a href="<?= base_url('log_in'); ?>">Go to the sign in page</a>.</p>
-                                            <button class="btn btn-signup-submit waves-effect waves-light" type="submit" <?= !empty($account_saved) ? 'disabled' : ''; ?>>
-                                                <i class="mdi mdi-account-plus-outline"></i>
-                                                Create School Account
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </main>
-                    </div>
+        <header class="signup-nav">
+            <a href="<?= base_url(); ?>" class="signup-brand" aria-label="AP-LEAD home">
+                <span class="signup-brand-mark" aria-hidden="true"><i class="mdi mdi-school"></i></span>
+                <span class="signup-brand-text"><strong>AP-LEAD</strong><span>ARALING PANLIPUNAN · REGION XI</span></span>
+            </a>
+            <a href="<?= base_url('log_in'); ?>" class="signup-nav-link">Back to sign in <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+        </header>
+        <div class="signup-layout">
+            <aside class="signup-sidebar" aria-label="Registration guide">
+                <div class="signup-sidebar-intro">
+                    <span class="signup-region"><span aria-hidden="true"></span> FOR REGION XI SCHOOLS</span>
+                    <h2>Better insights.<br><em>Stronger schools.</em></h2>
+                    <p>Join AP-LEAD to monitor learner progress and turn assessment results into meaningful classroom support.</p>
                 </div>
-            </div>
+                <div class="signup-guide">
+                    <h3>A few things to have ready</h3>
+                    <ul class="signup-side-list">
+                        <li><span class="signup-guide-icon" aria-hidden="true"><i class="mdi mdi-school"></i></span><div><strong>Your official school ID</strong><span>This will also be your sign-in username.</span></div></li>
+                        <li><span class="signup-guide-icon" aria-hidden="true"><i class="mdi mdi-email-outline"></i></span><div><strong>Your school email address</strong><span>You can use it to sign in, too.</span></div></li>
+                        <li><span class="signup-guide-icon" aria-hidden="true"><i class="mdi mdi-map-marker-outline"></i></span><div><strong>Your division and district</strong><span>Connect your school to the right team.</span></div></li>
+                    </ul>
+                </div>
+                <div class="signup-sidebar-note"><i class="mdi mdi-check-circle-outline" aria-hidden="true"></i><p><strong>Ready right after registration</strong><span>Once your account is created, you can sign in and get started.</span></p></div>
+                <div class="signup-sidebar-footer"><span>Registering a district?</span><a href="<?= base_url('signup_district'); ?>">District account setup <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></div>
+            </aside>
+            <main class="signup-main">
+                <div class="signup-form-header">
+                    <span class="signup-eyebrow">SCHOOL REGISTRATION</span>
+                    <h1>Create your school account</h1>
+                    <p>A single account for your school’s learning insights.</p>
+                    <div class="signup-form-meta"><span><i class="mdi mdi-information-outline" aria-hidden="true"></i> All fields are required</span><span>Already registered? <a href="<?= base_url('log_in'); ?>">Sign in</a></span></div>
+                </div>
+                <div class="signup-form-body">
+                    <div id="signup-feedback" tabindex="-1" aria-live="polite">
+                        <?php foreach (array('success' => 'success', 'failed' => 'danger', 'danger' => 'danger') as $message_key => $message_style): ?>
+                            <?php $signup_message = $this->session->flashdata($message_key); ?>
+                            <?php if ($signup_message): ?>
+                                <div class="alert alert-<?= $message_style; ?>" role="<?= $message_style === 'success' ? 'status' : 'alert'; ?>">
+                                    <?= html_escape($signup_message); ?>
+                                    <?php if ($message_style === 'success'): ?>
+                                        <a href="<?= base_url('homepage'); ?>#portal" class="alert-link">Go to sign in</a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?= !empty($show_validation_errors) ? validation_errors() : ''; ?>
+                        <?php if (!empty($captcha_error)): ?>
+                            <div class="alert alert-danger" role="alert"><?= html_escape($captcha_error); ?></div>
+                        <?php endif; ?>
+                    </div>
+
+                    <?= form_open('Pages/signup', array('id' => 'schoolSignupForm')); ?>
+                        <div class="form-section" role="group" aria-labelledby="account-heading" id="account-section">
+                            <div class="form-section-header">
+                                <div>
+                                    <h2 id="account-heading">Account access</h2>
+                                    <p>Choose the credentials you’ll use to sign in.</p>
+                                </div>
+                                <span class="form-section-step">01</span>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6 signup-field">
+                                    <label for="schoolID">School ID</label>
+                                    <input class="form-control" type="text" id="schoolID" name="schoolID" value="<?= html_escape($signup_value('schoolID')); ?>" autocomplete="username" maxlength="45" pattern="[A-Za-z0-9._\-]+" title="Use letters, numbers, dots, underscores, or hyphens." placeholder="e.g. 123456" aria-describedby="school-id-help" required>
+                                    <small id="school-id-help">Use your official school ID as your username.</small>
+                                </div>
+
+                                <div class="form-group col-md-6 signup-field">
+                                    <label for="password">Password</label>
+                                    <div class="signup-password-wrap">
+                                        <input id="password" class="form-control signup-password-input" type="password" name="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Create a strong password" aria-describedby="password-help" required>
+                                        <button type="button" class="signup-password-toggle" id="togglePassword" aria-label="Show password" aria-pressed="false">
+                                            <i class="mdi mdi-eye-outline" id="togglePasswordIcon"></i>
+                                        </button>
+                                    </div>
+                                    <small id="password-help">Use at least 8 characters. Maximum of 128.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section" role="group" aria-labelledby="school-heading">
+                            <div class="form-section-header">
+                                <div>
+                                    <h2 id="school-heading">School details</h2>
+                                    <p>Tell us which school you represent.</p>
+                                </div>
+                                <span class="form-section-step">02</span>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6 signup-field">
+                                    <label for="schoolName">School name</label>
+                                    <input class="form-control" type="text" id="schoolName" name="schoolName" value="<?= html_escape($signup_value('schoolName')); ?>" autocomplete="organization" maxlength="255" placeholder="Official school name" required>
+                                </div>
+
+                                <div class="form-group col-md-6 signup-field">
+                                    <label for="schoolEmail">School email</label>
+                                    <input class="form-control" type="email" id="schoolEmail" name="schoolEmail" value="<?= html_escape($signup_value('schoolEmail')); ?>" autocomplete="email" maxlength="254" placeholder="school@deped.gov.ph" aria-describedby="email-availability" required>
+                                    <small id="email-availability" role="status" aria-live="polite"></small>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-6 signup-field">
+                                    <label for="division">Division</label>
+                                    <select name="division_id" id="division" class="custom-select" required>
+                                        <option value="">Select Division</option>
+                                        <?php foreach ($division as $row) : ?>
+                                            <option value="<?= $row->id; ?>" <?= $selected_division_id === (string) $row->id ? 'selected' : ''; ?>>
+                                                <?= html_escape($format_title($row->description)); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="form-group col-md-6 signup-field">
+                                    <label for="district">District / cluster</label>
+                                    <select name="d_id" id="district" class="custom-select" aria-describedby="district-help" required>
+                                        <option value="">Select District / Cluster</option>
+                                        <?php foreach ($district_options as $district_row) : ?>
+                                            <option value="<?= $district_row->id; ?>" <?= $selected_district_id === (string) $district_row->id ? 'selected' : ''; ?>>
+                                                <?= html_escape($format_title($district_row->description)); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small id="district-help">Select your division first.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="renren" value="">
+                        <input type="hidden" name="ivykate" value="">
+                        <input type="hidden" name="ivankyle" value="">
+                        <input type="hidden" name="ic" value="">
+
+                        <div class="form-section" role="group" aria-labelledby="verification-heading">
+                            <div class="form-section-header">
+                                <div>
+                                    <h2 id="verification-heading">One last check</h2>
+                                    <p>Confirm your details and complete the security check.</p>
+                                </div>
+                                <span class="form-section-step">03</span>
+                            </div>
+
+                            <div class="signup-consent">
+                                <div class="signup-consent-control">
+                                    <input id="termsAccepted" name="termsAccepted" type="checkbox" <?= $signup_value('termsAccepted') === 'on' ? 'checked' : ''; ?> required>
+                                    <label for="termsAccepted">
+                                        I accept the
+                                        <button type="button" class="signup-terms-link" data-toggle="modal" data-target="#termsModal">Declaration and Attestation</button>
+                                        for registering and processing school information in AP-LEAD.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="captcha-wrap" id="captchaWrap" tabindex="-1">
+                                <div id="signupRecaptcha" aria-describedby="recaptchaStatus"></div>
+                                <p id="recaptchaStatus" role="status" aria-live="polite">Loading security verification…</p>
+                                <button type="button" id="retryRecaptcha" class="signup-retry" hidden>Retry verification <i class="mdi mdi-refresh" aria-hidden="true"></i></button>
+                                <noscript><p class="text-danger">Please enable JavaScript to complete reCAPTCHA and create your account.</p></noscript>
+                            </div>
+                        </div>
+
+                        <div class="signup-actions">
+                            <button class="btn btn-signup-submit" type="submit" <?= !empty($account_saved) ? 'disabled' : ''; ?>>
+                                <span>Create School Account</span><i class="mdi mdi-arrow-right" aria-hidden="true"></i>
+                            </button>
+                            <p><i class="mdi mdi-lock-outline" aria-hidden="true"></i> Your account is protected by Google reCAPTCHA.</p>
+                        </div>
+                    </form>
+                </div>
+            </main>
         </div>
+        <footer class="signup-footer"><span>AP-LEAD · Region XI</span><span>Supporting schools. Strengthening learning.</span></footer>
     </div>
 
     <div id="termsModal" class="modal fade signup-modal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
@@ -847,7 +219,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="termsModalLabel">Declaration and Attestation</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close declaration">×</button>
                 </div>
                 <div class="modal-body">
                     <p>
@@ -869,7 +241,6 @@
 
     <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
     <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js?render=<?= rawurlencode($captcha_site_key); ?>" async defer></script>
 
     <script>
         (function() {
@@ -883,42 +254,118 @@
             const captchaStatus = document.getElementById('recaptchaStatus');
             const signupButton = signupForm.querySelector('button[type="submit"]');
             const siteKey = <?= json_encode($captcha_site_key, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-            let verifying = false;
-            signupForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                if (verifying || signupButton.disabled) return;
-                if (!siteKey || !window.grecaptcha || !window.grecaptcha.ready) {
-                    captchaStatus.textContent = 'Security verification is still loading. Check your internet connection and try again.';
+            const captchaWrap = document.getElementById('captchaWrap');
+            const retryCaptcha = document.getElementById('retryRecaptcha');
+            let captchaWidget = null;
+            let captchaTimer;
+            let submitting = false;
+
+            function fitCaptcha() {
+                const container = document.getElementById('signupRecaptcha');
+                const widget = container.firstElementChild;
+                if (!widget || !widget.offsetWidth) return;
+                const scale = Math.min(1, captchaWrap.clientWidth / widget.offsetWidth);
+                widget.style.transformOrigin = 'left top';
+                widget.style.transform = 'scale(' + scale + ')';
+                container.style.height = Math.ceil(widget.offsetHeight * scale) + 'px';
+            }
+            window.addEventListener('resize', fitCaptcha);
+
+            function captchaMessage(message, isError) {
+                captchaStatus.textContent = message;
+                captchaStatus.classList.toggle('text-danger', !!isError);
+            }
+
+            function captchaFailed() {
+                clearTimeout(captchaTimer);
+                captchaMessage('Security verification could not load. Check your connection and retry.', true);
+                retryCaptcha.hidden = false;
+            }
+
+            window.signupRecaptchaLoaded = function() {
+                clearTimeout(captchaTimer);
+                if (captchaWidget !== null) return;
+                try {
+                    captchaWidget = grecaptcha.render('signupRecaptcha', {
+                        sitekey: siteKey,
+                        size: captchaWrap.clientWidth < 304 ? 'compact' : 'normal',
+                        callback: function() {
+                            captchaMessage('Verification complete. You’re ready to create your account.');
+                            retryCaptcha.hidden = true;
+                        },
+                        'expired-callback': function() {
+                            captchaMessage('Verification expired. Please select the checkbox again.', true);
+                        },
+                        'error-callback': captchaFailed
+                    });
+                    fitCaptcha();
+                    retryCaptcha.hidden = true;
+                    captchaMessage('Select “I’m not a robot” to continue.');
+                } catch (error) {
+                    captchaFailed();
+                }
+            };
+
+            function loadCaptcha() {
+                if (!siteKey) {
+                    captchaMessage('Security verification is unavailable. Please contact your administrator.', true);
                     return;
                 }
-                verifying = true;
-                signupButton.disabled = true;
-                captchaStatus.textContent = 'Verifying…';
-                let finished = false;
-                function failed() {
-                    if (finished) return;
-                    finished = true;
-                    clearTimeout(timeout);
-                    verifying = false;
-                    signupButton.disabled = false;
-                    captchaStatus.textContent = 'Security verification could not finish. Please try again. Your details have been kept.';
+                retryCaptcha.hidden = true;
+                captchaMessage('Loading security verification…');
+                clearTimeout(captchaTimer);
+                captchaTimer = setTimeout(captchaFailed, 15000);
+                if (window.grecaptcha && typeof grecaptcha.render === 'function') {
+                    if (captchaWidget !== null) {
+                        try {
+                            grecaptcha.reset(captchaWidget);
+                            clearTimeout(captchaTimer);
+                            captchaMessage('Select “I’m not a robot” to continue.');
+                        } catch (error) { captchaFailed(); }
+                    } else {
+                        window.signupRecaptchaLoaded();
+                    }
+                    return;
                 }
-                const timeout = setTimeout(failed, 15000);
-                grecaptcha.ready(function() {
-                    if (finished) return;
-                    try {
-                        grecaptcha.execute(siteKey, {action: 'school_signup'}).then(function(token) {
-                            if (finished) return;
-                            if (!token) { failed(); return; }
-                            // Recheck in case the email availability result arrived while verifying.
-                            if (!signupForm.reportValidity()) { failed(); return; }
-                            finished = true;
-                            clearTimeout(timeout);
-                            document.getElementById('recaptchaResponse').value = token;
-                            HTMLFormElement.prototype.submit.call(signupForm);
-                        }).catch(failed);
-                    } catch (error) { failed(); }
-                });
+                const previousScript = document.getElementById('signupRecaptchaScript');
+                if (previousScript) previousScript.remove();
+                const script = document.createElement('script');
+                script.id = 'signupRecaptchaScript';
+                script.src = 'https://www.google.com/recaptcha/api.js?onload=signupRecaptchaLoaded&render=explicit';
+                script.async = true;
+                script.defer = true;
+                script.onerror = captchaFailed;
+                document.head.appendChild(script);
+            }
+            retryCaptcha.addEventListener('click', loadCaptcha);
+            loadCaptcha();
+
+            signupForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (submitting || signupButton.disabled || !signupForm.reportValidity()) return;
+                let token = '';
+                try {
+                    if (captchaWidget !== null && window.grecaptcha) token = grecaptcha.getResponse(captchaWidget);
+                } catch (error) { captchaFailed(); }
+                if (!token) {
+                    captchaMessage('Please complete the “I’m not a robot” checkbox before continuing.', true);
+                    captchaWrap.focus();
+                    return;
+                }
+                submitting = true;
+                signupButton.disabled = true;
+                signupButton.setAttribute('aria-busy', 'true');
+                signupButton.querySelector('span').textContent = 'Creating your account…';
+                captchaMessage('Checking verification and creating your account…');
+                HTMLFormElement.prototype.submit.call(signupForm);
+            });
+            window.addEventListener('pageshow', function(event) {
+                if (!event.persisted) return;
+                submitting = false;
+                signupButton.disabled = <?= !empty($account_saved) ? 'true' : 'false'; ?>;
+                signupButton.removeAttribute('aria-busy');
+                signupButton.querySelector('span').textContent = 'Create School Account';
+                loadCaptcha();
             });
 
             const passwordInput = document.getElementById('password');
@@ -931,6 +378,7 @@
                     passwordInput.type = isHidden ? 'text' : 'password';
                     toggleIcon.className = isHidden ? 'mdi mdi-eye-off-outline' : 'mdi mdi-eye-outline';
                     toggleButton.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+                    toggleButton.setAttribute('aria-pressed', String(isHidden));
                 });
             }
 
@@ -988,7 +436,11 @@
                 });
             }
 
+            let districtRequest;
             function loadDistricts(divisionID, chosenDistrict) {
+                if (districtRequest) districtRequest.abort();
+                districtField.prop('disabled', true);
+                document.getElementById('district-help').textContent = divisionID ? 'Choose your school’s district or cluster.' : 'Select your division first.';
                 if (!divisionID) {
                     districtField.html('<option value="">Select District / Cluster</option>');
                     return;
@@ -996,7 +448,7 @@
 
                 districtField.html('<option value="">Loading districts...</option>');
 
-                $.ajax({
+                districtRequest = $.ajax({
                     url: '<?= base_url("Pages/get_district_by_division"); ?>',
                     method: 'POST',
                     data: {
@@ -1006,8 +458,12 @@
                     dataType: 'json',
                     success: function(response) {
                         populateDistrictOptions(response, chosenDistrict);
+                        districtField.prop('disabled', false);
                     },
-                    error: function() {
+                    error: function(xhr, status) {
+                        if (status === 'abort') return;
+                        districtField.prop('disabled', false);
+                        document.getElementById('district-help').textContent = 'Please select your division again to retry.';
                         districtField.html('<option value="">Unable to load districts</option>');
                     }
                 });
@@ -1017,6 +473,8 @@
                 loadDistricts($(this).val(), '');
             });
 
+            districtField.prop('disabled', !divisionField.val());
+            if (divisionField.val()) document.getElementById('district-help').textContent = 'Choose your school’s district or cluster.';
             if (divisionField.val() && districtField.find('option').length <= 1) {
                 loadDistricts(divisionField.val(), selectedDistrict);
             }

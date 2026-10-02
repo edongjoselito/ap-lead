@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-/** Google reCAPTCHA v3: the secret is used only in server-to-server requests. */
+/** Google reCAPTCHA v2 Checkbox: the secret stays on the server. */
 class Signup_captcha
 {
     private $settings = array();
@@ -30,7 +30,7 @@ class Signup_captcha
             if ($secret) {
                 $ci->db->query('INSERT IGNORE INTO recaptcha_settings (id, site_key, secret_key, expected_hostname) VALUES (?, ?, ?, ?)', array(
                     1,
-                    getenv('RECAPTCHA_SITE_KEY') ?: '6LeyxNotAAAAAJ7xV5VvLv5QgPigHzdpK5bndfeQ',
+                    getenv('RECAPTCHA_SITE_KEY') ?: '',
                     $secret,
                     getenv('RECAPTCHA_EXPECTED_HOSTNAME') ?: '',
                 ));
@@ -48,13 +48,39 @@ class Signup_captcha
     public function verify($token)
     {
         if (!is_string($token) || trim($token) === '' || strlen($token) > 4096) {
-            return 'Security verification is missing. Please submit the form again.';
+            return 'Please select the “I’m not a robot” checkbox before creating your account.';
         }
         $secret = isset($this->settings['secret_key']) ? $this->settings['secret_key'] : '';
         if (!$secret || !function_exists('curl_init')) {
             log_message('error', 'Signup reCAPTCHA requires a secret key and PHP cURL.');
             return 'Security verification is unavailable. Please contact the administrator.';
         }
+        $response = $this->request_verification($secret, trim($token));
+        $status = $response['status'];
+        $body = $response['body'];
+        $result = is_string($body) ? json_decode($body, true) : null;
+        if ($status !== 200 || !is_array($result)) {
+            return 'Unable to reach Google reCAPTCHA. Please try again; your details have been kept.';
+        }
+        if (!isset($result['success']) || $result['success'] !== true) {
+            $codes = isset($result['error-codes']) && is_array($result['error-codes']) ? $result['error-codes'] : array();
+            if (array_intersect(array('missing-input-secret', 'invalid-input-secret'), $codes)) {
+                log_message('error', 'Google rejected the configured signup reCAPTCHA secret.');
+                return 'Security verification is not configured correctly. Please contact the administrator.';
+            }
+            return 'Please complete reCAPTCHA again. The previous response may have expired.';
+        }
+        // Checkbox responses do not contain the action/score fields used by v3.
+        $expected = isset($this->settings['expected_hostname']) ? trim($this->settings['expected_hostname']) : '';
+        if ($expected !== '' && (!isset($result['hostname']) || !is_string($result['hostname']) || !hash_equals($expected, $result['hostname']))) {
+            return 'Security verification failed for this website. Please contact the administrator.';
+        }
+        return true;
+    }
+
+    /** Keep the HTTP boundary separate so verification rules can be regression-tested. */
+    protected function request_verification($secret, $token)
+    {
         $request = curl_init('https://www.google.com/recaptcha/api/siteverify');
         curl_setopt_array($request, array(
             CURLOPT_POST => true,
@@ -68,26 +94,6 @@ class Signup_captcha
         $body = curl_exec($request);
         $status = curl_getinfo($request, CURLINFO_HTTP_CODE);
         curl_close($request);
-        $result = is_string($body) ? json_decode($body, true) : null;
-        if ($status !== 200 || !is_array($result)) {
-            return 'Unable to reach Google reCAPTCHA. Please try again; your details have been kept.';
-        }
-        if (empty($result['success'])) {
-            $codes = isset($result['error-codes']) ? $result['error-codes'] : array();
-            if (array_intersect(array('missing-input-secret', 'invalid-input-secret'), $codes)) {
-                log_message('error', 'Google rejected the configured signup reCAPTCHA secret.');
-                return 'Security verification is not configured correctly. Please contact the administrator.';
-            }
-            return 'Please complete reCAPTCHA again. The previous response may have expired.';
-        }
-        if (!isset($result['action'], $result['score']) || $result['action'] !== 'school_signup'
-            || !is_numeric($result['score']) || (float) $result['score'] < 0.5 || (float) $result['score'] > 1) {
-            return 'Security verification was unsuccessful. Please try again; your details have been kept.';
-        }
-        $expected = isset($this->settings['expected_hostname']) ? trim($this->settings['expected_hostname']) : '';
-        if ($expected !== '' && (!isset($result['hostname']) || !hash_equals($expected, $result['hostname']))) {
-            return 'Security verification failed for this website. Please contact the administrator.';
-        }
-        return true;
+        return array('status' => $status, 'body' => $body);
     }
 }

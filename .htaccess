@@ -6,7 +6,7 @@ RewriteEngine On
 # manifests, or one-off migration scripts from the public web root.
 RewriteRule ^\.well-known/acme-challenge/[A-Za-z0-9_-]+$ - [L]
 RewriteRule (^|/)\. - [F,L]
-RewriteRule ^(?:application|system|vendor|database)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:application|system|vendor|database|tests)(?:/|$) - [F,L,NC]
 RewriteRule \.(?:sql|sqlite|zip|tar|gz|bak|old|orig|save|log|lock|env|ini|yml|yaml)$ - [F,L,NC]
 RewriteRule ^(?:barcode\.php|create_audit_trail\.php|database_ta_unlock_requests\.sql|audit_trail\.sql)$ - [F,L,NC]
 
