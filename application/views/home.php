@@ -2693,7 +2693,7 @@ if ($seal_url === '') {
             <button class="menu-toggle" id="menuToggle" type="button" aria-controls="siteNav" aria-expanded="false" aria-label="Open navigation menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M4 7h16M4 12h16M4 17h16" />
                 </svg></button>
-            <nav class="site-nav" id="siteNav" aria-label="Main navigation"><a href="#about">About</a><a href="#process">Data-to-action</a><a href="#governance">Governance</a><a class="nav-login" href="#portal" data-open-login>Sign in</a></nav>
+            <nav class="site-nav" id="siteNav" aria-label="Main navigation"><a href="#about">About</a><a href="#process">Data-to-action</a><a href="#governance">Governance</a><a href="<?= base_url('signup'); ?>">School Account Signup</a><a class="nav-login" href="#portal" data-open-login>Sign in</a></nav>
         </div>
     </header>
     <?php if (!empty($page_success)) : ?><div class="page-message" role="status"><?= html_escape($page_success); ?></div><?php endif; ?>
@@ -3063,7 +3063,7 @@ if ($seal_url === '') {
                     <?php if (!empty($login_failed)) : ?><div class="alert alert-danger" role="alert"><?= html_escape($login_failed); ?></div><?php endif; ?>
                     <?= $login_validation_errors; ?>
                     <?= form_open('log_in', array('id' => 'portalLoginForm')); ?>
-                    <div class="field"><label for="username">Username</label>
+                    <div class="field"><label for="username">School ID, username or email address</label>
                         <div class="input-wrap"><input id="username" name="username" type="text" value="<?= html_escape(set_value('username')); ?>" autocomplete="username" required><span class="input-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M20 21a8 8 0 0 0-16 0" />
                                     <circle cx="12" cy="7" r="4" />
@@ -3074,6 +3074,7 @@ if ($seal_url === '') {
                     </div>
                     <button class="button button-primary login-submit" id="loginSubmit" type="submit"><span class="button-label">Sign in securely</span><span class="button-spinner" aria-hidden="true"></span></button>
                     <?= form_close(); ?>
+                    <p class="login-help">New school? <a href="<?= base_url('signup'); ?>">Create a School Account</a></p>
                     <p class="login-help"><a href="<?= base_url('Pages/forgot_password'); ?>" data-portal-view="reset">Forgot your password?</a><br>For account concerns, contact your division system administrator.</p>
                 </div>
 

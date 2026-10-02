@@ -10,10 +10,19 @@ Required environment variables:
 - `APP_ENCRYPTION_KEY` — at least 32 cryptographically random bytes
 - `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`
 - `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_PORT`, `MAIL_CRYPTO`
-- `RECAPTCHA_SECRET_KEY` and `RECAPTCHA_EXPECTED_HOSTNAME`
 
 For local HTTP-only development, set `CI_ENV=development`. Never use that value
 on an internet-facing server.
+
+School signup uses a local PNG CAPTCHA and does not require Google reCAPTCHA
+keys or network access. Enable PHP GD and allow the web-server user to create a
+private application-specific directory under PHP's temporary directory for signup
+rate limiting. Challenges expire after five
+minutes and are single-use; each IP may submit ten attempts per fifteen-minute
+window (100 attempts for direct loopback requests in development mode). Storage
+failures block signup with a separate availability message. The local file rate limiter is intended for a single application server;
+use shared rate-limit storage when scaling to multiple servers. Email verification
+still requires the configured SMTP service.
 
 Deployment checklist:
 

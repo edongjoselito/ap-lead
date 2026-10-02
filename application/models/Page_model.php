@@ -126,6 +126,31 @@ public function user_insert(){
     
 }
 
+// Keep schema creation outside the transaction: MySQL DDL implicitly commits.
+public function register_school_account()
+{
+    $this->ensure_user_verification_tokens_table();
+    $debug = $this->db->db_debug;
+    $this->db->db_debug = false;
+    $this->db->trans_begin();
+    $school_saved = $this->insert_school();
+    $user_id = $school_saved ? $this->insert_user() : false;
+    $token = $user_id ? bin2hex(random_bytes(32)) : false;
+    $token_saved = $token && $this->db->insert('user_verification_tokens', array(
+        'user_id' => (int) $user_id,
+        'token_hash' => hash('sha256', $token),
+        'expires_at' => date('Y-m-d H:i:s', time() + 86400),
+    ));
+    if (!$school_saved || !$user_id || !$token_saved || !$this->db->trans_status()) {
+        $this->db->trans_rollback();
+        $this->db->db_debug = $debug;
+        return false;
+    }
+    $committed = $this->db->trans_commit();
+    $this->db->db_debug = $debug;
+    return $committed ? array('user_id' => $user_id, 'token' => $token) : false;
+}
+
 public function insert_user(){
 
 
@@ -357,7 +382,7 @@ public function users_update_profile(){
 public function login(){
 
     $password = $this->input->post('password');
-    $login_input = $this->input->post('username', true);
+    $login_input = trim((string) $this->input->post('username', true));
     
     $this->db->where('virified', 0);
     $this->db->group_start();
@@ -1441,9 +1466,10 @@ public function sbm_checklist_lock_unloc_by_id($id, $stat, $school_id = null)
 			'district_id' => $this->input->post('d_id'),
             'region_id' => 12,
 			'schoolEmail' => $this->input->post('schoolEmail'),
-            'schoolType' => $this->input->post('schoolType'),
-            'category' => $this->input->post('category'),
-            'sgc' => $this->input->post('sgc'),
+            // Profile details are not collected during signup. Zero denotes an unset SGC.
+            'schoolType' => null,
+            'category' => null,
+            'sgc' => 0,
 			'schoolLogo' => 'logo.png'
 		);
 

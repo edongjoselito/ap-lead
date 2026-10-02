@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Least Learned Competencies Monitoring</title>
+    <title>AP-LEAD | School Account Signup</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="School-Based Management account registration" name="description" />
+    <meta content="AP-LEAD school account registration" name="description" />
     <meta content="Coderthemes" name="author" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
@@ -476,7 +476,7 @@
             font-weight: 700;
         }
 
-        .recaptcha-wrap {
+        .captcha-wrap {
             display: inline-block;
             max-width: 100%;
             overflow-x: auto;
@@ -626,15 +626,14 @@
                     <div class="col-xl-5">
                         <aside class="signup-sidebar">
                             <a href="<?= base_url(); ?>" class="signup-brand">
-                                <img src="<?= base_url(); ?>assets/images/ftad.png" alt="FTAD logo">
                                 <div class="signup-brand-text">
-                                    <span>SBM Portal</span>
-                                    <strong>School-Based Management System</strong>
+                                    <span>AP-LEAD Portal</span>
+                                    <strong>AP-LEAD</strong>
                                 </div>
                             </a>
 
                             <h1>Create your school account with confidence.</h1>
-                            <p>Register your school profile, connect it to the correct division and district, and start using the SBM system with a verified account.</p>
+                            <p>Register your school profile, connect it to the correct division and district, and start using AP-LEAD with a verified account.</p>
 
                             <div class="signup-side-card">
                                 <h5>Before you begin</h5>
@@ -649,7 +648,7 @@
                             <div class="signup-side-card">
                                 <h5>Who should use this page?</h5>
                                 <ul class="signup-side-list">
-                                    <li><i class="mdi mdi-school-outline"></i><span>School users registering their school account in the SBM platform.</span></li>
+                                    <li><i class="mdi mdi-school-outline"></i><span>School users registering their school account in AP-LEAD.</span></li>
                                     <li><i class="mdi mdi-account-supervisor-outline"></i><span>District users should use the district signup page instead of the school account form.</span></li>
                                 </ul>
                             </div>
@@ -670,9 +669,8 @@
                     <div class="col-xl-7">
                         <main class="signup-main">
                             <div class="signup-mobile-brand">
-                                <img src="<?= base_url(); ?>assets/images/ftad.png" alt="FTAD logo">
                                 <div>
-                                    <strong>School-Based Management System</strong>
+                                    <strong>AP-LEAD</strong>
                                     <span>School account registration</span>
                                 </div>
                             </div>
@@ -691,38 +689,27 @@
                                         School Signup
                                     </span>
                                     <h2>Register your school profile</h2>
-                                    <p>Fill in the required school details below. All fields are used to create and organize your school account in the SBM system.</p>
+                                    <p>Fill in the required school details below. All fields are used to create and organize your school account in AP-LEAD.</p>
                                 </div>
 
                                 <div class="signup-form-body">
-                                    <?php if ($this->session->flashdata('failed')) : ?>
-                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                            <?= $this->session->flashdata('failed'); ?>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if ($this->session->flashdata('success')) : ?>
-                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                            <?= $this->session->flashdata('success'); ?>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if ($this->session->flashdata('danger')) : ?>
-                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                            <?= $this->session->flashdata('danger'); ?>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?= validation_errors(); ?>
+                                    <div id="signup-feedback" tabindex="-1" aria-live="polite">
+                                        <?php foreach (array('success' => 'success', 'failed' => 'danger', 'danger' => 'danger') as $message_key => $message_style): ?>
+                                            <?php $signup_message = $this->session->flashdata($message_key); ?>
+                                            <?php if ($signup_message): ?>
+                                                <div class="alert alert-<?= $message_style; ?>" role="<?= $message_style === 'success' ? 'status' : 'alert'; ?>">
+                                                    <?= html_escape($signup_message); ?>
+                                                    <?php if ($message_style === 'success'): ?>
+                                                        <a href="<?= base_url('homepage'); ?>#portal" class="alert-link">Go to sign in</a>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                        <?= !empty($show_validation_errors) ? validation_errors() : ''; ?>
+                                        <?php if (!empty($captcha_error)): ?>
+                                            <div class="alert alert-danger" role="alert"><?= html_escape($captcha_error); ?></div>
+                                        <?php endif; ?>
+                                    </div>
 
                                     <?= form_open('Pages/signup', array('id' => 'schoolSignupForm')); ?>
                                         <div class="form-section">
@@ -738,18 +725,18 @@
                                                 <div class="form-group col-md-6 signup-field">
                                                     <label for="schoolID">School ID</label>
                                                     <input class="form-control" type="text" id="schoolID" name="schoolID" value="<?= html_escape(set_value('schoolID')); ?>" autocomplete="username" required>
-                                                    <small>Your school ID will also serve as the username for sign in.</small>
+                                                    <small>Sign in using your School ID or registered school email address.</small>
                                                 </div>
 
                                                 <div class="form-group col-md-6 signup-field">
                                                     <label for="password">Password</label>
                                                     <div class="signup-password-wrap">
-                                                        <input id="password" class="form-control signup-password-input" type="password" name="password" autocomplete="new-password" required>
+                                                        <input id="password" class="form-control signup-password-input" type="password" name="password" autocomplete="new-password" minlength="12" maxlength="128" required>
                                                         <button type="button" class="signup-password-toggle" id="togglePassword" aria-label="Show password">
                                                             <i class="mdi mdi-eye-outline" id="togglePasswordIcon"></i>
                                                         </button>
                                                     </div>
-                                                    <small>Choose a password that your school account can manage securely.</small>
+                                                    <small>Use 12–128 characters for your password.</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -802,52 +789,6 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-section">
-                                            <div class="form-section-header">
-                                                <div>
-                                                    <h4>School Profile</h4>
-                                                    <p>Tell us about your governance council, school category, and available offerings.</p>
-                                                </div>
-                                                <span class="form-section-step">03</span>
-                                            </div>
-
-                                            <div class="form-row">
-                                                <div class="form-group col-md-4 signup-field">
-                                                    <label for="sgc">School Governance Council</label>
-                                                    <select name="sgc" id="sgc" class="custom-select" required>
-                                                        <option value="">Select SGC Status</option>
-                                                        <option value="1" <?= set_select('sgc', '1'); ?>>Not Yet Organized</option>
-                                                        <option value="2" <?= set_select('sgc', '2'); ?>>Organized but not Functional</option>
-                                                        <option value="3" <?= set_select('sgc', '3'); ?>>Functional</option>
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group col-md-4 signup-field">
-                                                    <label for="category">Categories</label>
-                                                    <select class="custom-select" id="category" name="category" required>
-                                                        <option value="">Select Category</option>
-                                                        <option value="1" <?= set_select('category', '1'); ?>>Elementary</option>
-                                                        <option value="2" <?= set_select('category', '2'); ?>>Integrated (Elem &amp; JHS)</option>
-                                                        <option value="3" <?= set_select('category', '3'); ?>>Integrated (Elem, JHS, &amp; SHS)</option>
-                                                        <option value="4" <?= set_select('category', '4'); ?>>Secondary (JHS only)</option>
-                                                        <option value="5" <?= set_select('category', '5'); ?>>Secondary (JHS &amp; SHS)</option>
-                                                        <option value="6" <?= set_select('category', '6'); ?>>SHS - Stand Alone</option>
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group col-md-4 signup-field">
-                                                    <label for="school_type">Offerings</label>
-                                                    <select name="schoolType" id="school_type" class="custom-select" required>
-                                                        <option value="">Select Offerings</option>
-                                                        <option value="1" <?= set_select('schoolType', '1'); ?>>None</option>
-                                                        <option value="2" <?= set_select('schoolType', '2'); ?>>School-Based ALS Program</option>
-                                                        <option value="3" <?= set_select('schoolType', '3'); ?>>TLE-TVL Course Offerings</option>
-                                                        <option value="4" <?= set_select('schoolType', '4'); ?>>School-Based ALS Program and TLE-TVL Course Offerings</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <input type="hidden" name="renren" value="">
                                         <input type="hidden" name="ivykate" value="">
                                         <input type="hidden" name="ivankyle" value="">
@@ -859,7 +800,7 @@
                                                     <h4>Consent and Verification</h4>
                                                     <p>Review the declaration, confirm your consent, and complete the security check.</p>
                                                 </div>
-                                                <span class="form-section-step">04</span>
+                                                <span class="form-section-step">03</span>
                                             </div>
 
                                             <div class="signup-consent mb-4">
@@ -867,14 +808,25 @@
                                                     <input id="termsAccepted" name="termsAccepted" type="checkbox" required>
                                                     <label for="termsAccepted">
                                                         I accept the
-                                                        <a href="#" data-toggle="modal" data-target="#termsModal">Terms and Conditions</a>
-                                                        for registering and processing school information in the SBM system.
+                                                        <a href="#" data-toggle="modal" data-target="#termsModal">Declaration and Attestation</a>
+                                                        for registering and processing school information in AP-LEAD.
                                                     </label>
                                                 </div>
                                             </div>
 
-                                            <div class="recaptcha-wrap">
-                                                <div class="g-recaptcha" data-sitekey="6LedsqorAAAAAMSwAX3ZLaCOyCFv5oVRRwR9AW34"></div>
+                                            <div class="captcha-wrap signup-field">
+                                                <label for="captcha_answer">Security code</label>
+                                                <?php if (!empty($captcha_error)): ?>
+                                                    <p class="text-danger" role="alert"><?= html_escape($captcha_error); ?></p>
+                                                <?php endif; ?>
+                                                <?php if ($captcha_image): ?>
+                                                    <img src="<?= html_escape($captcha_image); ?>" alt="Security challenge: six letters and numbers" width="260" height="86" style="display:block;max-width:100%;height:auto;margin-bottom:12px;">
+                                                    <button type="button" id="refreshCaptcha" class="btn btn-outline-secondary btn-sm mb-2">Get a new code</button>
+                                                    <input class="form-control" id="captcha_answer" name="captcha_answer" type="text" minlength="6" maxlength="6" pattern="[A-Za-z2-9]{6}" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="captcha-help" required>
+                                                    <small id="captcha-help">Enter the six characters shown above. Letters are not case-sensitive. The code expires after 5 minutes. For assistance, contact your division system administrator.</small>
+                                                <?php else: ?>
+                                                    <p class="text-danger" role="alert">The security code is temporarily unavailable. Please contact the system administrator.</p>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 
@@ -903,8 +855,17 @@
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-0 text-justify">
-                        The Department of Education (DepEd) complies with Republic Act No. 10173 or the Data Privacy Act of 2012 and its Implementing Rules and Regulations. By ticking the checkbox and clicking “Submit,” you freely, specifically, and informedly consent to DepEd’s collection, processing, and storage of your personal information (e.g., name, position/designation, school, contact details, and assessment responses) for lawful and legitimate purposes connected with the implementation, monitoring, and data management under DepEd Order No. 007, s. 2024 on the Revised School-Based Management (SBM) System. This system is a regional initiative to consolidate results, provide technical assistance, and support continuous improvement at the school level through the Schools Division Offices.
+                    <p>
+                        I declare that I am authorized to register and manage this school account in AP-LEAD Region XI. I attest that the school identification, official email address, division, and district information I provide is accurate and complete, and I will keep these details up to date.
+                    </p>
+                    <p>
+                        I understand that AP-LEAD supports the monitoring of learner progress, assessment results, and least learned competencies in Araling Panlipunan. School submissions help identify learning gaps and guide instructional interventions, technical assistance, and recommendations at the school, district, division, and regional levels.
+                    </p>
+                    <p>
+                        I acknowledge that the registration details and school data submitted through this account will be collected, stored, and processed for account administration, learning assessment monitoring, reporting, and educational support. I will submit only information necessary for these purposes, protect account credentials, and handle learner and school information responsibly, sharing it only with authorized personnel for official use.
+                    </p>
+                    <p class="mb-0">
+                        By selecting the declaration checkbox and clicking “Create School Account,” I confirm that I have read and understood this declaration, attest to the accuracy of the information provided, and agree to use AP-LEAD responsibly for its stated educational purposes. For account concerns or corrections to submitted information, I will contact the division system administrator.
                     </p>
                 </div>
             </div>
@@ -913,10 +874,28 @@
 
     <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
     <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <script>
         (function() {
+            const feedback = document.getElementById('signup-feedback');
+            if (feedback && feedback.querySelector('.alert')) {
+                feedback.scrollIntoView({ block: 'center' });
+                feedback.focus({ preventScroll: true });
+            }
+
+            const refreshCaptcha = document.getElementById('refreshCaptcha');
+            if (refreshCaptcha) {
+                refreshCaptcha.addEventListener('click', function() {
+                    const form = document.getElementById('schoolSignupForm');
+                    const refresh = document.createElement('input');
+                    refresh.type = 'hidden';
+                    refresh.name = 'refresh_captcha';
+                    refresh.value = '1';
+                    form.appendChild(refresh);
+                    form.submit();
+                });
+            }
+
             const passwordInput = document.getElementById('password');
             const toggleButton = document.getElementById('togglePassword');
             const toggleIcon = document.getElementById('togglePasswordIcon');
@@ -959,7 +938,10 @@
                 $.ajax({
                     url: '<?= base_url("Pages/get_district_by_division"); ?>',
                     method: 'POST',
-                    data: { division_id: divisionID },
+                    data: {
+                        division_id: divisionID,
+                        <?= json_encode($this->security->get_csrf_token_name()); ?>: <?= json_encode($this->security->get_csrf_hash()); ?>
+                    },
                     dataType: 'json',
                     success: function(response) {
                         populateDistrictOptions(response, chosenDistrict);

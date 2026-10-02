@@ -240,39 +240,6 @@ class Pages extends CI_Controller
         return array($record, $school);
     }
 
-    private function verify_recaptcha_response()
-    {
-        $secret = trim((string) getenv('RECAPTCHA_SECRET_KEY'));
-        $response_token = trim((string) $this->input->post('g-recaptcha-response', true));
-        if ($secret === '' || $response_token === '' || strlen($response_token) > 4096) {
-            log_message('error', 'Registration rejected because reCAPTCHA is not configured or no token was supplied.');
-            return false;
-        }
-
-        $payload = http_build_query(array(
-            'secret' => $secret,
-            'response' => $response_token,
-            'remoteip' => $this->input->ip_address(),
-        ), '', '&');
-        $context = stream_context_create(array('http' => array(
-            'method' => 'POST',
-            'header' => "Content-Type: application/x-www-form-urlencoded\r\n"
-                . 'Content-Length: ' . strlen($payload) . "\r\n",
-            'content' => $payload,
-            'timeout' => 8,
-            'ignore_errors' => true,
-        )));
-        $response = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
-        $result = is_string($response) ? json_decode($response, true) : null;
-        if (!is_array($result) || empty($result['success'])) {
-            return false;
-        }
-
-        $expected_hostname = trim((string) getenv('RECAPTCHA_EXPECTED_HOSTNAME'));
-        return $expected_hostname === ''
-            || (!empty($result['hostname']) && hash_equals($expected_hostname, (string) $result['hostname']));
-    }
-
     private function login_throttle_file($username)
     {
         $key = hash('sha256', $this->input->ip_address() . '|' . mb_strtolower(trim((string) $username), 'UTF-8'));
@@ -2427,8 +2394,8 @@ class Pages extends CI_Controller
     {
 
         $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
-        $this->form_validation->set_rules('username', 'username', 'required');
-        $this->form_validation->set_rules('password', 'uassword', 'required');
+        $this->form_validation->set_rules('username', 'School ID, username or email address', 'trim|required');
+        $this->form_validation->set_rules('password', 'Password', 'required');
 
         if ($this->form_validation->run() == FALSE) {
             $page = 'home';
@@ -4482,23 +4449,33 @@ class Pages extends CI_Controller
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         ', '</div>');
-        $this->form_validation->set_rules('schoolID', 'School ID', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]');
+        $this->form_validation->set_rules('schoolID', 'School ID', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]|is_unique[schools.schoolID]|is_unique[users.username]');
         $this->form_validation->set_rules('password', 'Password', 'required|min_length[12]|max_length[128]');
         $this->form_validation->set_rules('schoolName', 'School Name', 'trim|required|max_length[255]');
-        $this->form_validation->set_rules('schoolEmail', 'School Email', 'trim|required|valid_email');
-        $this->form_validation->set_rules('division_id', 'Division', 'trim|required');
-        $this->form_validation->set_rules('d_id', 'District/Cluster', 'trim|required');
-        $this->form_validation->set_rules('sgc', 'School Governance Council', 'trim|required');
-        $this->form_validation->set_rules('category', 'Category', 'trim|required');
-        $this->form_validation->set_rules('schoolType', 'Offerings', 'trim|required');
+        $this->form_validation->set_rules('schoolEmail', 'School Email', 'trim|required|valid_email|max_length[254]|is_unique[users.email]|is_unique[users.username]');
+        $this->form_validation->set_rules('division_id', 'Division', 'trim|required|is_natural_no_zero');
+        $this->form_validation->set_rules('d_id', 'District/Cluster', 'trim|required|is_natural_no_zero');
 
-        if ($this->form_validation->run() == FALSE) {
+        $this->form_validation->set_rules('termsAccepted', 'Declaration and Attestation', 'required|in_list[on]');
+
+        $this->load->library('signup_captcha');
+        $this->output->set_header('Cache-Control: no-store, private');
+        $is_submission = $this->input->method() === 'post' && !$this->input->post('refresh_captcha');
+        $captcha_result = $is_submission
+            ? $this->signup_captcha->verify($this->input->post('captcha_answer'))
+            : true;
+        $valid_form = $this->input->method() === 'post' && $this->form_validation->run();
+
+        if (!$is_submission || !$valid_form || $captcha_result !== true) {
 
             $page = "school_signup";
 
             if (!file_exists(APPPATH . 'views/pages/' . $page . '.php')) {
                 show_404();
             }
+            $data['show_validation_errors'] = $is_submission;
+            $data['captcha_image'] = $this->signup_captcha->create();
+            $data['captcha_error'] = $captcha_result === true ? '' : $captcha_result;
             $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
             $selected_division_id = (int) $this->input->post('division_id');
             $data['districts'] = $selected_division_id > 0
@@ -4509,13 +4486,6 @@ class Pages extends CI_Controller
             $this->load->view('pages/' . $page, $data);
             } else {
 
-                if (!$this->verify_recaptcha_response()) {
-                    $this->session->set_flashdata('danger', 'reCAPTCHA verification failed. Please try again.');
-                    redirect(base_url() . 'log_in');
-                    return;
-                }
-
-
             $renren = $this->input->post('renren');
             $ivykate = $this->input->post('ivykate');
             $ivankyle = $this->input->post('ivankyle');
@@ -4525,28 +4495,42 @@ class Pages extends CI_Controller
             $user_email = $this->input->post('schoolEmail');
 
             if (!empty($renren) || !empty($ivykate) || !empty($ivankyle) || !empty($ic)) {
-                $this->session->set_flashdata('danger', 'I Got you');
-                redirect(base_url() . 'private');
+                $this->session->set_flashdata('danger', 'Registration could not be completed. Please try again.');
+                redirect(base_url('signup') . '#signup-feedback');
+                return;
+            }
+
+            $division = $this->Page_model->one_cond_row('division', 'id', (int) $this->input->post('division_id'));
+            if (!$division || (int) $division->region_id !== 12) {
+                $this->session->set_flashdata('danger', 'Please select a valid Region XI division.');
+                redirect(base_url('signup') . '#signup-feedback');
                 return;
             }
 
             $district = $this->Page_model->one_cond_row('district', 'id', (int) $this->input->post('d_id', true));
             if (!$district || (int) $district->division_id !== (int) $this->input->post('division_id', true)) {
-                show_error('The selected district does not belong to the selected division.', 422);
+                $this->session->set_flashdata('danger', 'The selected district does not belong to the selected division. Please select it again.');
+                redirect(base_url('signup') . '#signup-feedback');
+                return;
             }
 
             $check = $this->Common->one_cond_count_row('schools', 'schoolID', $schoolID)->num_rows();
             $user_check = $this->Common->one_cond_count_row('users', 'email', $user_email)->num_rows();
 
             if ($check == 0 && $user_check == 0) {
-                $this->Page_model->insert_school();
-                $new_user_id = $this->Page_model->insert_user();
-                $verification_token = $this->Page_model->create_signup_verification_token($new_user_id);
+                $registration = $this->Page_model->register_school_account();
+                if (!$registration) {
+                    $this->session->set_flashdata('danger', 'Registration could not be saved. Please try again.');
+                    redirect(base_url('signup') . '#signup-feedback');
+                    return;
+                }
+                $new_user_id = $registration['user_id'];
+                $verification_token = $registration['token'];
                 $pass = base_url() . 'Pages/confirm_signup/' . (int) $new_user_id . '/'
                     . rawurlencode($verification_token);
             } else {
                 $this->session->set_flashdata('failed', 'Duplicate entry found. The record already exists.');
-                redirect(base_url() . 'log_in');
+                redirect(base_url('signup') . '#signup-feedback');
                 return;
             }
 
@@ -4629,11 +4613,11 @@ class Pages extends CI_Controller
                     <body>
                     <div class="email-wrapper">
                         <div class="email-header">
-                        <h2>Welcome to FTAD OneView</h2>
+                        <h2>Welcome to AP-LEAD</h2>
                         </div>
                         <div class="email-body">
                         <p>Dear ' . htmlspecialchars($name) . ',</p>
-                        <p>Your profile has been successfully encoded into the <strong>FTAD OneView</strong> system. Please find your login credentials below:</p>
+                        <p>Your profile has been successfully encoded into the <strong>AP-LEAD</strong> system. Please find your login credentials below:</p>
 
                         <div class="credentials-box">
                             <p>Username: ' . htmlspecialchars($username) . '</p>
@@ -4643,7 +4627,7 @@ class Pages extends CI_Controller
                         <p>Kindly keep this information secure and do not share it with anyone.</p>
                         <p>Should you have any issues accessing your account, please contact your system administrator.</p>
 
-                        <p style="margin-top: 30px;">Thanks & Regards,<br><strong>FTAD OneView Team</strong></p>
+                        <p style="margin-top: 30px;">Thanks & Regards,<br><strong>AP-LEAD Team</strong></p>
                         </div>
                         <div class="email-footer">
                         © ' . date('Y') . ' Department of Education
@@ -4652,15 +4636,21 @@ class Pages extends CI_Controller
                     </body>
                     </html>';
 
-            $this->email->from('no-reply@lxeinfotechsolutions.com', 'FTAD OneView Team')
+            $this->email->from('no-reply@lxeinfotechsolutions.com', 'AP-LEAD Team')
                 ->to($email)
                 ->subject('Account Created')
                 ->message($mail_message);
-            $this->email->send();
+            $email_sent = $this->email->send();
+            if (!$email_sent) {
+                log_message('error', 'School signup verification email could not be sent for user ' . (int) $new_user_id);
+                $this->session->set_flashdata('danger', 'Your school account was saved, but the verification email could not be sent. Contact your division system administrator for activation.');
+                redirect(base_url('signup') . '#signup-feedback');
+                return;
+            }
 
             //$this->session->set_flashdata('success', 'School account has been registered successfully. Your username and password have been sent to your email.');
             $this->session->set_flashdata('success', 'Registration received. Check your official email and verify the account before signing in.');
-            redirect(base_url() . 'log_in');
+            redirect(base_url('signup') . '#signup-feedback');
         }
     }
 
