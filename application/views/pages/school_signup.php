@@ -6,6 +6,8 @@
     <title>AP-LEAD | School Account Signup</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="AP-LEAD school account registration" name="description" />
+    <meta name="theme-color" content="#103f6e">
+    <meta name="robots" content="noindex, nofollow">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="shortcut icon" href="<?= base_url(); ?>assets/images/favicon.ico">
     <link href="<?= base_url(); ?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bootstrap-stylesheet" />
@@ -31,7 +33,7 @@
     };
     ?>
 
-    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261002" rel="stylesheet" type="text/css" />
+    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261002-blue" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="school-signup-page">
@@ -39,10 +41,10 @@
     <div class="signup-shell">
         <header class="signup-nav">
             <a href="<?= base_url(); ?>" class="signup-brand" aria-label="AP-LEAD home">
-                <span class="signup-brand-mark" aria-hidden="true"><i class="mdi mdi-school"></i></span>
-                <span class="signup-brand-text"><strong>AP-LEAD</strong><span>ARALING PANLIPUNAN · REGION XI</span></span>
+                <span class="signup-brand-mark"><img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal" width="52" height="52"></span>
+                <span class="signup-brand-text"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · REGIONAL OFFICE XI</span></span>
             </a>
-            <a href="<?= base_url('log_in'); ?>" class="signup-nav-link">Back to sign in <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+            <a href="<?= base_url('log_in'); ?>" class="signup-nav-link">Sign in <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
         </header>
         <div class="signup-layout">
             <aside class="signup-sidebar" aria-label="Registration guide">
@@ -168,7 +170,10 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="renren" value="">
+                        <div class="signup-trap" aria-hidden="true">
+                            <label for="signupWebsite">Leave this field empty</label>
+                            <input type="text" id="signupWebsite" name="renren" value="" tabindex="-1" autocomplete="off">
+                        </div>
                         <input type="hidden" name="ivykate" value="">
                         <input type="hidden" name="ivankyle" value="">
                         <input type="hidden" name="ic" value="">
@@ -211,7 +216,7 @@
                 </div>
             </main>
         </div>
-        <footer class="signup-footer"><span>AP-LEAD · Region XI</span><span>Supporting schools. Strengthening learning.</span></footer>
+        <footer class="signup-footer"><span>AP-LEAD · Region XI</span><a href="<?= base_url('Pages/data_privacy'); ?>">Data privacy</a><span>Supporting schools. Strengthening learning.</span></footer>
     </div>
 
     <div id="termsModal" class="modal fade signup-modal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
@@ -410,9 +415,10 @@
                             emailStatus.className = result.available ? 'text-success' : 'text-danger';
                             emailField.setCustomValidity(result.available ? '' : result.message);
                         },
-                        error: function() {
+                        error: function(xhr) {
                             if (request !== emailRequest) return;
-                            emailStatus.textContent = 'Availability will be checked when you submit.';
+                            emailStatus.textContent = xhr.responseJSON && xhr.responseJSON.message
+                                ? xhr.responseJSON.message : 'Availability will be checked when you submit.';
                         }
                     });
                 }, 450);
@@ -463,7 +469,8 @@
                     error: function(xhr, status) {
                         if (status === 'abort') return;
                         districtField.prop('disabled', false);
-                        document.getElementById('district-help').textContent = 'Please select your division again to retry.';
+                        document.getElementById('district-help').textContent = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message : 'Please select your division again to retry.';
                         districtField.html('<option value="">Unable to load districts</option>');
                     }
                 });

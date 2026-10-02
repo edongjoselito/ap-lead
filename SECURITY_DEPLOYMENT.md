@@ -14,10 +14,11 @@ Required environment variables:
 For local HTTP-only development, set `CI_ENV=development`. Never use that value
 on an internet-facing server.
 
-School signup uses Google reCAPTCHA v3. Configure the site
-key for both localhost and the production domain in Google's reCAPTCHA console.
-PHP cURL and outbound HTTPS access to Google are required. Tokens are generated
-on submission and checked server-side for action `school_signup` and score >= 0.5.
+School signup uses Google reCAPTCHA v2 Checkbox. Configure a matching v2 key pair
+for the production domain in Google's reCAPTCHA console. PHP cURL and outbound
+HTTPS access to Google are required. Checkbox tokens are checked server-side for
+successful verification and the configured hostname; v3 action/score fields do
+not apply. Set production `expected_hostname` to `ap.depedmis.com`, not `localhost`.
 
 reCAPTCHA settings are stored in `recaptcha_settings`, row `id = 1`:
 `site_key`, `secret_key`, and optional `expected_hostname`. Only the site key is
@@ -28,6 +29,11 @@ For hosts without CREATE permission, import `database/20261002_recaptcha_setting
 and populate row 1 securely. Deploy the configured row to the hosting database;
 it is not included in the schema SQL. The legacy secret file can be removed after import.
 School accounts activate immediately; SMTP is not required for signup.
+
+Deploy hidden `.htaccess` files in the internal, static-asset, resource, and upload
+folders as well as the repository root. Folder policies and request-limit setup
+are documented in `docs/security-deployment.md`; the folder rules provide another
+layer of protection when the whole repository has been uploaded.
 
 Deployment checklist:
 

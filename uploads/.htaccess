@@ -1,10 +1,16 @@
-Options -Indexes
+# Upload endpoints accept raster images only. Other file types cannot be served.
+Options -Indexes -MultiViews -ExecCGI -Includes
+SetHandler None
 
-<FilesMatch "\.(?:php|php[0-9]?|phtml|phar|cgi|pl|py|sh|shtml)$">
+<FilesMatch "(?i)^(?!.*\.(?:jpe?g|png|gif|webp|ico)$)">
+    Require all denied
+</FilesMatch>
+<FilesMatch "(?i)(?:^\.|\.(?:php[0-9]*|phps|phtml|pht|phar|cgi|fcgi|pl|py|sh|shtml|shtm|asp|aspx|jsp)(?:\.|$))">
     Require all denied
 </FilesMatch>
 
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Robots-Tag "noindex, nofollow"
     Header always set Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'none'; sandbox"
 </IfModule>

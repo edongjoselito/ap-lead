@@ -4,3 +4,7 @@
 
 # Server-only reCAPTCHA credentials
 /application/config/recaptcha_secret.php
+
+# Runtime abuse-prevention counters and application logs
+/application/cache/request-guard/
+/application/logs/log-*.php

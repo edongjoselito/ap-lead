@@ -1,0 +1,13 @@
+# The navigation links to the PDF manuals here. Serve documents as static files.
+# Development and update subdirectories have their own deny-all rules.
+Options -Indexes -MultiViews -ExecCGI -Includes
+SetHandler None
+
+<FilesMatch "(?i)(?:^\.|\.(?:php[0-9]*|phps|phtml|pht|phar|cgi|fcgi|pl|py|sh|shtml|shtm|asp|aspx|jsp)(?:\.|$)|\.(?:sql|sqlite[0-9]?|bak|old|orig|save|swp|swo|log|env|ini|ya?ml)$|~$)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>

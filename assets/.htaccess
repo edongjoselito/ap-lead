@@ -1,0 +1,13 @@
+# Public CSS, JavaScript, images, fonts, and required JSON remain accessible.
+Options -Indexes -MultiViews -ExecCGI -Includes
+SetHandler None
+
+# Deny scripts (including double extensions), dotfiles, build metadata,
+# source maps, and accidentally copied credentials or backups.
+<FilesMatch "(?i)(?:^\.|^(?:composer\.(?:json|lock)|package(?:-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$|\.(?:php[0-9]*|phps|phtml|pht|phar|cgi|fcgi|pl|py|sh|shtml|shtm|asp|aspx|jsp)(?:\.|$)|\.(?:sql|sqlite[0-9]?|bak|old|orig|save|swp|swo|log|env|ini|ya?ml|map)$|~$)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

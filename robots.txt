@@ -1,0 +1,7 @@
+# Keep the public landing page discoverable. Account and portal screens are
+# excluded for cooperative crawlers; server authorization and limits enforce access.
+User-agent: *
+Disallow: /
+Allow: /$
+Allow: /homepage$
+Allow: /assets/

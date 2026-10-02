@@ -1,0 +1,4 @@
+# Private server-side files. Applies to this directory and its descendants.
+# PHP filesystem includes and CLI tools are unaffected by HTTP access rules.
+Options -Indexes -MultiViews
+Require all denied

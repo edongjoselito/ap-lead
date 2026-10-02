@@ -10,6 +10,11 @@ class Pages extends CI_Controller
         // Deny by default. Public routes must be deliberately listed here;
         // every other controller action requires an authenticated session.
         $method = strtolower((string) $this->router->fetch_method());
+        // Keep account and internal screens out of search results. Public landing
+        // and information pages remain indexable; authorization still applies.
+        if (!in_array($method, array('homepage', 'about', 'authors', 'data_privacy'), true)) {
+            $this->output->set_header('X-Robots-Tag: noindex, nofollow');
+        }
         $public_methods = array(
             // The default controller lands on view(), which performs its own
             // guest-only redirect to homepage before rendering any data.
@@ -238,6 +243,44 @@ class Pages extends CI_Controller
         $school = $this->Page_model->one_cond_row('schools', 'schoolID', $record->school_id);
         $this->require_school_scope($school);
         return array($record, $school);
+    }
+
+    private function allow_public_request($bucket)
+    {
+        $this->config->load('request_guard');
+        $limits = $this->config->item('public_request_limits');
+        $policy = $limits[$bucket];
+        $this->load->library('request_guard', array('directory' => $this->config->item('public_request_guard_directory')));
+        $retry = $this->request_guard->consume($bucket, $this->input->ip_address(), $policy['limit'], $policy['window']);
+        if ($retry === 0) return true;
+
+        $unavailable = $retry === false;
+        $seconds = $unavailable ? 60 : $retry;
+        $status = $unavailable ? 503 : 429;
+        $message = $unavailable
+            ? 'This service is temporarily unavailable. Please try again in a minute.'
+            : 'Too many requests. Please wait ' . (int) ceil($seconds / 60) . ' minute(s) and try again.';
+        $this->output->set_status_header($status)
+            ->set_header('Retry-After: ' . (int) $seconds)
+            ->set_header('Cache-Control: no-store, private');
+        if ($unavailable) {
+            log_message('error', 'Public request protection storage is unavailable. Check application/cache permissions.');
+        }
+        if ($this->input->is_ajax_request() || in_array($bucket, array('email_lookup', 'district_lookup'), true)) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array(
+                'success' => false, 'message' => $message, 'retry_after' => $seconds,
+            )));
+        } elseif ($bucket === 'signup') {
+            $this->load->library('signup_captcha');
+            $this->render_school_signup($message, false);
+        } else {
+            // CI's show_error() exits; queue this response so the action can return normally.
+            $this->output->set_output($this->load->view('errors/html/error_general', array(
+                'heading' => $unavailable ? 'Please try again shortly' : 'Please slow down',
+                'message' => '<p>' . html_escape($message) . '</p>',
+            ), true));
+        }
+        return false;
     }
 
     private function login_throttle_file($username)
@@ -2392,6 +2435,7 @@ class Pages extends CI_Controller
 
     public function log_in()
     {
+        if (!$this->allow_public_request($this->input->method() === 'post' ? 'login' : 'public_page')) return;
 
         $this->form_validation->set_error_delimiters('<div class="error">', '</div>');
         $this->form_validation->set_rules('username', 'School ID, username or email address', 'trim|required');
@@ -2907,10 +2951,16 @@ class Pages extends CI_Controller
 
     public function get_district_by_division()
     {
+        $this->require_post();
+        if (!$this->allow_public_request('district_lookup')) return;
         $division_id = $this->input->post('division_id');
+        if (!is_scalar($division_id) || !ctype_digit((string) $division_id) || (int) $division_id < 1) {
+            $this->output->set_status_header(400)->set_content_type('application/json')->set_output('[]');
+            return;
+        }
 
         $districts = $this->Page_model->get_districts_by_division($division_id);
-        echo json_encode($districts);
+        $this->output->set_content_type('application/json')->set_output(json_encode($districts));
     }
 
     function sbm_action_plan()
@@ -4449,6 +4499,7 @@ class Pages extends CI_Controller
             show_error('POST required.', 405);
             return;
         }
+        if (!$this->allow_public_request('email_lookup')) return;
         $email = $this->input->post('email');
         $email = is_string($email) ? trim($email) : '';
         $valid = strlen($email) <= 254 && filter_var($email, FILTER_VALIDATE_EMAIL);
@@ -4477,6 +4528,22 @@ class Pages extends CI_Controller
 
     public function signup()
     {
+        $is_submission = $this->input->method() === 'post';
+        if (!$this->allow_public_request($is_submission ? 'signup' : 'public_page')) return;
+        $this->load->library('signup_captcha');
+        $this->output->set_header('Cache-Control: no-store, private');
+
+        // Reject filled bot traps before validation queries or contacting Google.
+        if ($is_submission) {
+            foreach (array('renren', 'ivykate', 'ivankyle', 'ic') as $field) {
+                $value = $this->input->post($field, false);
+                if ($value !== null && (!is_string($value) || trim($value) !== '')) {
+                    $this->output->set_status_header(400);
+                    $this->render_school_signup('Registration could not be completed. Please reload the page and try again.', false);
+                    return;
+                }
+            }
+        }
 
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger alert-dismissible fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -4490,10 +4557,7 @@ class Pages extends CI_Controller
 
         $this->form_validation->set_rules('termsAccepted', 'Declaration and Attestation', 'required|in_list[on]');
 
-        $this->load->library('signup_captcha');
-        $this->output->set_header('Cache-Control: no-store, private');
-        $is_submission = $this->input->method() === 'post';
-        $valid_form = $this->input->method() === 'post' && $this->form_validation->run();
+        $valid_form = $is_submission && $this->form_validation->run();
         // Correcting form fields should not use up CAPTCHA attempts.
         $captcha_result = $is_submission && $valid_form
             ? $this->signup_captcha->verify($this->input->post('g-recaptcha-response'))
@@ -4504,18 +4568,8 @@ class Pages extends CI_Controller
             $this->render_school_signup($captcha_result === true ? '' : $captcha_result, $is_submission);
             } else {
 
-            $renren = $this->input->post('renren');
-            $ivykate = $this->input->post('ivykate');
-            $ivankyle = $this->input->post('ivankyle');
-            $ic = $this->input->post('ic');
-
             $schoolID = $this->input->post('schoolID');
             $user_email = $this->input->post('schoolEmail');
-
-            if (!empty($renren) || !empty($ivykate) || !empty($ivankyle) || !empty($ic)) {
-                $this->render_school_signup('Registration could not be completed. Please try again.', true);
-                return;
-            }
 
             $division = $this->Page_model->one_cond_row('division', 'id', (int) $this->input->post('division_id'));
             if (!$division || (int) $division->region_id !== 12) {
@@ -4766,6 +4820,7 @@ class Pages extends CI_Controller
 
     function homepage()
     {
+        if (!$this->allow_public_request('public_page')) return;
 
         $page = "home";
 
@@ -4849,6 +4904,7 @@ class Pages extends CI_Controller
 
     public function forgot_password()
     {
+        if (!$this->allow_public_request($this->input->method() === 'post' ? 'password_reset' : 'public_page')) return;
 
         // Delimiters match the alert styling shared by the homepage portal and the reset page.
         $this->form_validation->set_error_delimiters('<div class="alert alert-danger" role="alert">', '</div>');
