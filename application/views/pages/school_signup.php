@@ -33,7 +33,7 @@
     };
     ?>
 
-    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261003-privacy" rel="stylesheet" type="text/css" />
+    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261003-district" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="school-signup-page">
@@ -61,7 +61,7 @@
                     </ul>
                 </div>
                 <div class="signup-sidebar-note"><i class="mdi mdi-check-circle-outline" aria-hidden="true"></i><p><strong>Ready right after registration</strong><span>Once your account is created, you can sign in and get started.</span></p></div>
-                <div class="signup-sidebar-footer"><span>Registering a district?</span><a href="<?= base_url('signup_district'); ?>">District account setup <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></div>
+                <div class="signup-sidebar-footer"><span>Registering a district?</span><strong>District accounts are set up by your Schools Division Office.</strong></div>
             </aside>
             <main class="signup-main">
                 <div class="signup-form-header">

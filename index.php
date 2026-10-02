@@ -84,7 +84,9 @@ switch (ENVIRONMENT)
 {
 	case 'development':
 		error_reporting(-1);
-		ini_set('display_errors', 1);
+		// Web pages never print raw PHP errors, even locally: details go to
+		// application/logs (see application/core/error_handlers.php).
+		ini_set('display_errors', PHP_SAPI === 'cli' ? 1 : 0);
 	break;
 
 	case 'testing':
@@ -329,4 +331,6 @@ switch (ENVIRONMENT)
  *
  * And away we go...
  */
+// Must load before CodeIgniter declares its default error handlers.
+require_once APPPATH.'core/error_handlers.php';
 require_once BASEPATH.'core/CodeIgniter.php';

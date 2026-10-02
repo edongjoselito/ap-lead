@@ -54,7 +54,7 @@ body.school-signup-page {
 .signup-sidebar-note span { display: block; color: #c7dced; font-size: 12px; line-height: 1.6; }
 .signup-sidebar-footer { display: flex; flex-direction: column; gap: 5px; margin-top: auto; padding-top: 42px; font-size: 12px; }
 .signup-sidebar-footer > span { color: #c7dced; }
-.signup-sidebar-footer a { display: flex; gap: 10px; align-items: center; color: #f8cf6a; font-weight: 600; }
+.signup-sidebar-footer strong { max-width: 260px; color: #f8cf6a; font-weight: 600; line-height: 1.6; }
 .signup-main { min-width: 0; padding: 40px 42px 32px; }
 .signup-eyebrow { display: block; margin-bottom: 10px; color: var(--signup-primary); font-size: 10px; font-weight: 750; letter-spacing: 1.6px; }
 .signup-form-header h1 { margin: 0 0 8px; color: var(--signup-ink); font-family: inherit; font-size: clamp(25px, 2.5vw, 30px); font-weight: 750; letter-spacing: -1px; line-height: 1.25; }
