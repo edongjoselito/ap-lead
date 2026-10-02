@@ -33,7 +33,7 @@
     };
     ?>
 
-    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261002-blue" rel="stylesheet" type="text/css" />
+    <link href="<?= base_url(); ?>assets/css/school-signup.css?v=20261003-privacy" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="school-signup-page">
@@ -44,7 +44,6 @@
                 <span class="signup-brand-mark"><img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal" width="52" height="52"></span>
                 <span class="signup-brand-text"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · REGIONAL OFFICE XI</span></span>
             </a>
-            <a href="<?= base_url('log_in'); ?>" class="signup-nav-link">Sign in <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
         </header>
         <div class="signup-layout">
             <aside class="signup-sidebar" aria-label="Registration guide">
@@ -216,7 +215,10 @@
                 </div>
             </main>
         </div>
-        <footer class="signup-footer"><span>AP-LEAD · Region XI</span><a href="<?= base_url('Pages/data_privacy'); ?>">Data privacy</a><span>Supporting schools. Strengthening learning.</span></footer>
+        <footer class="signup-footer">
+            <span>© <?= date('Y'); ?> Department of Education Regional Office XI</span>
+            <button type="button" class="signup-footer-link" data-toggle="modal" data-target="#privacyModal">Privacy notice</button>
+        </footer>
     </div>
 
     <div id="termsModal" class="modal fade signup-modal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
@@ -239,6 +241,65 @@
                     <p class="mb-0">
                         By selecting the declaration checkbox and clicking “Create School Account,” I confirm that I have read and understood this declaration, attest to the accuracy of the information provided, and agree to use AP-LEAD responsibly for its stated educational purposes. For account concerns or corrections to submitted information, I will contact the division system administrator.
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacyModal" class="modal fade signup-modal" tabindex="-1" role="dialog" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="privacyModalLabel">Privacy notice</h5>
+                        <p class="signup-modal-subtitle">Republic Act No. 10173 · Data Privacy Act of 2012</p>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close privacy notice">×</button>
+                </div>
+                <div class="modal-body signup-privacy">
+                    <p>AP-LEAD helps the Department of Education Regional Office XI and its Schools Division Offices track learner progress and identify least learned competencies in Araling Panlipunan. This notice explains what the system collects from your school and how that information is handled.</p>
+
+                    <h3>What we collect</h3>
+                    <ul>
+                        <li><strong>Account details:</strong> school ID (your username), school name, official school email, division, and district or cluster.</li>
+                        <li><strong>Password:</strong> stored only as a one-way hash. No one can read it, including system administrators.</li>
+                        <li><strong>Learning-gap records:</strong> grade level, term, proficiency levels, least learned competencies, learner counts, interventions, and remarks your school submits.</li>
+                        <li><strong>Security records:</strong> the account, time, IP address, and browser involved when key records change or when sign-in attempts repeat.</li>
+                    </ul>
+                    <p class="signup-privacy-note"><i class="mdi mdi-information-outline" aria-hidden="true"></i> Learning-gap records are class-level counts. AP-LEAD does not ask for learners’ names or LRNs, so please leave them out of remarks.</p>
+
+                    <h3>How we use it</h3>
+                    <ul>
+                        <li>To create your account, sign you in, and show only the screens your role allows.</li>
+                        <li>To combine school results into district, division, and regional summaries that guide interventions and technical assistance.</li>
+                        <li>To keep the system secure, investigate problems, and block automated sign-ups and repeated sign-in attempts.</li>
+                    </ul>
+                    <p>Your information is never sold or used for advertising or any commercial purpose. Apart from the reCAPTCHA security check described below, it is not shared outside DepEd.</p>
+
+                    <h3>Who can see it</h3>
+                    <ul>
+                        <li><strong>Your school:</strong> its own account and records.</li>
+                        <li><strong>District and division offices:</strong> the schools under their office, for monitoring and follow-up.</li>
+                        <li><strong>Regional Office XI:</strong> region-wide summaries and records, for planning and reporting.</li>
+                        <li><strong>Google reCAPTCHA:</strong> receives device and browser information during the security check, under Google’s <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</li>
+                    </ul>
+
+                    <h3>How we protect it</h3>
+                    <ul>
+                        <li>Access to pages and records is restricted by account role and office.</li>
+                        <li>Sessions expire automatically, and repeated failed sign-ins are temporarily blocked.</li>
+                        <li>Key changes are logged so they can be traced to an account.</li>
+                    </ul>
+                    <p>Records are kept while they are needed for learning monitoring and reporting, in line with DepEd records-management policies.</p>
+
+                    <h3>Your rights</h3>
+                    <p>Under the Data Privacy Act, you may ask what information is held about your school, have errors corrected, object to processing, or ask for an account to be deactivated when it is no longer needed. You may also file a complaint with the National Privacy Commission.</p>
+
+                    <h3>Questions or requests</h3>
+                    <p class="mb-0">For account concerns or corrections, contact your Schools Division Office system administrator. For other privacy concerns, contact the Data Protection Officer of DepEd Regional Office XI.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-signup-close" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
