@@ -260,12 +260,12 @@
 
                         <li><a href="<?= base_url(); ?>" class="waves-effect"><i class="mdi mdi-view-dashboard"></i><span> Dashboard </span></a></li>
                         <?php if ($this->session->position == 'district') { ?>
-                            <li><a href="<?= base_url(); ?>pages/userlist" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
                             <li><a href="<?= base_url(); ?>pages/schools_district/<?= $this->session->district; ?>" class="waves-effect"><i class="fas fa-school"></i><span>Schools</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap" class="waves-effect"><i class="fas fa-chart-bar"></i><span> AP Learning Gap Overview</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_school_summary" class="waves-effect"><i class="fas fa-school"></i><span> Learning Gap Summary</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_records" class="waves-effect"><i class="fas fa-list"></i><span> Submitted Learning Gap</span></a></li>
                             <li><a href="<?= base_url(); ?>Pages/learning_gap_archives" class="waves-effect"><i class="mdi mdi-archive"></i><span> Archived Records</span></a></li>
+                            <li><a href="<?= base_url(); ?>pages/userlist" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
                             <li><a href="#" class="waves-effect" data-toggle="modal" data-target="#renren"><i class="fas fa-lock"></i><span>Change Password</span></a></li>
                         <?php } ?>
 
@@ -295,11 +295,11 @@
                                 </a>
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li><a href="<?= base_url(); ?>pages/district_account/<?= $this->session->division; ?>">Districts</a></li>
-                                    <li><a href="<?= base_url(); ?>pages/userlist_division">Manage Users</a></li>
                                     <li><a href="<?= base_url(); ?>pages/schools_division/<?= $this->session->division; ?>">Manage Schools</a></li>
                                     <li><a href="<?= base_url(); ?>Pages/division_setup">Division Setup</a></li>
                                 </ul>
                             </li>
+                            <li><a href="<?= base_url(); ?>pages/userlist_division" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
                             <li><a href="#" class="waves-effect" data-toggle="modal" data-target="#renren"><i class="fas fa-lock"></i><span>Change Password</span></a></li>
 
                         <?php } ?>
