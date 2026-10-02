@@ -13,7 +13,7 @@ class Pages extends CI_Controller
         $public_methods = array(
             // The default controller lands on view(), which performs its own
             // guest-only redirect to homepage before rendering any data.
-            'view', 'homepage', 'log_in', 'signup', 'forgot_password', 'confirm_signup',
+            'view', 'homepage', 'log_in', 'signup', 'signup_email_available', 'forgot_password', 'confirm_signup',
             'lock_user_screen', 'logout',
             'get_provinces', 'get_districts', 'get_district_by_division',
             'data_privacy', 'authors', 'about', 'verify',
@@ -4443,6 +4443,38 @@ class Pages extends CI_Controller
 
     // }
 
+    public function signup_email_available()
+    {
+        if ($this->input->method() !== 'post') {
+            show_error('POST required.', 405);
+            return;
+        }
+        $email = $this->input->post('email');
+        $email = is_string($email) ? trim($email) : '';
+        $valid = strlen($email) <= 254 && filter_var($email, FILTER_VALIDATE_EMAIL);
+        $available = $valid && $this->db->group_start()->where('email', $email)
+            ->or_where('username', $email)->group_end()->count_all_results('users') === 0;
+        $this->output->set_header('Cache-Control: no-store, private')->set_content_type('application/json')
+            ->set_output(json_encode(array('available' => (bool) $available,
+                'message' => !$valid ? 'Enter a valid email address.' : ($available
+                    ? 'Email address is available.' : 'This email address is already registered.'))));
+    }
+
+    private function render_school_signup($error = '', $show_validation = true, $account_saved = false)
+    {
+        $division_id = (int) $this->input->post('division_id');
+        $data = array(
+            'show_validation_errors' => $show_validation,
+            'captcha_site_key' => $this->signup_captcha->site_key(),
+            'captcha_error' => $error,
+            'account_saved' => $account_saved,
+            'signup_values' => $this->input->post(NULL, false),
+            'division' => $this->Page_model->one_cond('division', 'region_id', 12),
+            'districts' => $division_id > 0 ? $this->Page_model->get_districts_by_division($division_id) : array(),
+        );
+        $this->load->view('pages/school_signup', $data);
+    }
+
     public function signup()
     {
 
@@ -4450,7 +4482,7 @@ class Pages extends CI_Controller
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         ', '</div>');
         $this->form_validation->set_rules('schoolID', 'School ID', 'trim|required|max_length[45]|regex_match[/^[A-Za-z0-9._-]+$/]|is_unique[schools.schoolID]|is_unique[users.username]');
-        $this->form_validation->set_rules('password', 'Password', 'required|min_length[12]|max_length[128]');
+        $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]|max_length[128]');
         $this->form_validation->set_rules('schoolName', 'School Name', 'trim|required|max_length[255]');
         $this->form_validation->set_rules('schoolEmail', 'School Email', 'trim|required|valid_email|max_length[254]|is_unique[users.email]|is_unique[users.username]');
         $this->form_validation->set_rules('division_id', 'Division', 'trim|required|is_natural_no_zero');
@@ -4460,30 +4492,16 @@ class Pages extends CI_Controller
 
         $this->load->library('signup_captcha');
         $this->output->set_header('Cache-Control: no-store, private');
-        $is_submission = $this->input->method() === 'post' && !$this->input->post('refresh_captcha');
-        $captcha_result = $is_submission
-            ? $this->signup_captcha->verify($this->input->post('captcha_answer'))
-            : true;
+        $is_submission = $this->input->method() === 'post';
         $valid_form = $this->input->method() === 'post' && $this->form_validation->run();
+        // Correcting form fields should not use up CAPTCHA attempts.
+        $captcha_result = $is_submission && $valid_form
+            ? $this->signup_captcha->verify($this->input->post('g-recaptcha-response'))
+            : true;
 
         if (!$is_submission || !$valid_form || $captcha_result !== true) {
 
-            $page = "school_signup";
-
-            if (!file_exists(APPPATH . 'views/pages/' . $page . '.php')) {
-                show_404();
-            }
-            $data['show_validation_errors'] = $is_submission;
-            $data['captcha_image'] = $this->signup_captcha->create();
-            $data['captcha_error'] = $captcha_result === true ? '' : $captcha_result;
-            $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
-            $selected_division_id = (int) $this->input->post('division_id');
-            $data['districts'] = $selected_division_id > 0
-                ? $this->Page_model->get_districts_by_division($selected_division_id)
-                : array();
-
-
-            $this->load->view('pages/' . $page, $data);
+            $this->render_school_signup($captcha_result === true ? '' : $captcha_result, $is_submission);
             } else {
 
             $renren = $this->input->post('renren');
@@ -4495,22 +4513,19 @@ class Pages extends CI_Controller
             $user_email = $this->input->post('schoolEmail');
 
             if (!empty($renren) || !empty($ivykate) || !empty($ivankyle) || !empty($ic)) {
-                $this->session->set_flashdata('danger', 'Registration could not be completed. Please try again.');
-                redirect(base_url('signup') . '#signup-feedback');
+                $this->render_school_signup('Registration could not be completed. Please try again.', true);
                 return;
             }
 
             $division = $this->Page_model->one_cond_row('division', 'id', (int) $this->input->post('division_id'));
             if (!$division || (int) $division->region_id !== 12) {
-                $this->session->set_flashdata('danger', 'Please select a valid Region XI division.');
-                redirect(base_url('signup') . '#signup-feedback');
+                $this->render_school_signup('Please select a valid Region XI division.', true);
                 return;
             }
 
             $district = $this->Page_model->one_cond_row('district', 'id', (int) $this->input->post('d_id', true));
             if (!$district || (int) $district->division_id !== (int) $this->input->post('division_id', true)) {
-                $this->session->set_flashdata('danger', 'The selected district does not belong to the selected division. Please select it again.');
-                redirect(base_url('signup') . '#signup-feedback');
+                $this->render_school_signup('The selected district does not belong to the selected division. Please select it again.', true);
                 return;
             }
 
@@ -4520,136 +4535,15 @@ class Pages extends CI_Controller
             if ($check == 0 && $user_check == 0) {
                 $registration = $this->Page_model->register_school_account();
                 if (!$registration) {
-                    $this->session->set_flashdata('danger', 'Registration could not be saved. Please try again.');
-                    redirect(base_url('signup') . '#signup-feedback');
+                    $this->render_school_signup($this->Page_model->signup_failure_message(), true);
                     return;
                 }
-                $new_user_id = $registration['user_id'];
-                $verification_token = $registration['token'];
-                $pass = base_url() . 'Pages/confirm_signup/' . (int) $new_user_id . '/'
-                    . rawurlencode($verification_token);
             } else {
-                $this->session->set_flashdata('failed', 'Duplicate entry found. The record already exists.');
-                redirect(base_url('signup') . '#signup-feedback');
+                $this->render_school_signup('Duplicate entry found. The record already exists.', true);
                 return;
             }
 
-            $email = $this->input->post('schoolEmail');
-            $name = $this->input->post('schoolName');
-            $username = $this->input->post('schoolID');
-            
-
-            //Email Notification
-            $this->load->config('email');
-            $this->load->library('email');
-            $mail_message = '
-                    <html>
-                    <head>
-                    <style>
-                        body {
-                        font-family: "Segoe UI", Roboto, Arial, sans-serif;
-                        background-color: #f0f4f8;
-                        margin: 0;
-                        padding: 20px;
-                        }
-                        .email-wrapper {
-                        max-width: 600px;
-                        margin: auto;
-                        background-color: #ffffff;
-                        border-radius: 10px;
-                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-                        overflow: hidden;
-                        }
-                        .email-header {
-                        background-color: #a00000;
-                        color: white;
-                        padding: 20px;
-                        text-align: center;
-                        }
-                        .email-header h2 {
-                        margin: 0;
-                        font-size: 24px;
-                        }
-                        .email-body {
-                        padding: 30px 25px;
-                        color: #333333;
-                        }
-                        .email-body p {
-                        font-size: 16px;
-                        line-height: 1.6;
-                        }
-                        .credentials-box {
-                        background-color: #e9f2ff;
-                        padding: 15px;
-                        border-left: 4px solid #a00000;
-                        margin: 20px 0;
-                        border-radius: 6px;
-                        }
-                        .credentials-box p {
-                        margin: 0;
-                        font-weight: bold;
-                        color: #a00000;
-                        }
-                        .email-footer {
-                        background-color: #f7f7f7;
-                        padding: 15px;
-                        text-align: center;
-                        font-size: 14px;
-                        color: #666666;
-                        }
-                        .cb{
-                            margin-top:20px;
-                            background-color:#a00000;
-                            color:#ffffff !important;
-                            padding:7px 15px;
-                            text-decoration:none;
-                            border-radius:6px;
-                            font-size:16px;
-                            font-weight:bold;
-                            display:inline-block;
-                        }
-                    </style>
-                    </head>
-                    <body>
-                    <div class="email-wrapper">
-                        <div class="email-header">
-                        <h2>Welcome to AP-LEAD</h2>
-                        </div>
-                        <div class="email-body">
-                        <p>Dear ' . htmlspecialchars($name) . ',</p>
-                        <p>Your profile has been successfully encoded into the <strong>AP-LEAD</strong> system. Please find your login credentials below:</p>
-
-                        <div class="credentials-box">
-                            <p>Username: ' . htmlspecialchars($username) . '</p>
-                            <a class="cb" href="' . htmlspecialchars($pass) . '">' . 'Confirm' . '</a>
-                        </div>
-
-                        <p>Kindly keep this information secure and do not share it with anyone.</p>
-                        <p>Should you have any issues accessing your account, please contact your system administrator.</p>
-
-                        <p style="margin-top: 30px;">Thanks & Regards,<br><strong>AP-LEAD Team</strong></p>
-                        </div>
-                        <div class="email-footer">
-                        © ' . date('Y') . ' Department of Education
-                        </div>
-                    </div>
-                    </body>
-                    </html>';
-
-            $this->email->from('no-reply@lxeinfotechsolutions.com', 'AP-LEAD Team')
-                ->to($email)
-                ->subject('Account Created')
-                ->message($mail_message);
-            $email_sent = $this->email->send();
-            if (!$email_sent) {
-                log_message('error', 'School signup verification email could not be sent for user ' . (int) $new_user_id);
-                $this->session->set_flashdata('danger', 'Your school account was saved, but the verification email could not be sent. Contact your division system administrator for activation.');
-                redirect(base_url('signup') . '#signup-feedback');
-                return;
-            }
-
-            //$this->session->set_flashdata('success', 'School account has been registered successfully. Your username and password have been sent to your email.');
-            $this->session->set_flashdata('success', 'Registration received. Check your official email and verify the account before signing in.');
+            $this->session->set_flashdata('success', 'School account created and activated. You can now sign in using your School ID or registered email address and password.');
             redirect(base_url('signup') . '#signup-feedback');
         }
     }

@@ -18,8 +18,11 @@
     <link href="<?= base_url(); ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-stylesheet" />
 
     <?php
-    $selected_division_id = set_value('division_id');
-    $selected_district_id = set_value('d_id');
+    $signup_value = function ($field) use ($signup_values) {
+        return isset($signup_values[$field]) && is_scalar($signup_values[$field]) ? (string) $signup_values[$field] : '';
+    };
+    $selected_division_id = $signup_value('division_id');
+    $selected_district_id = $signup_value('d_id');
     $district_options = isset($districts) && is_array($districts) ? $districts : array();
 
     $format_title = function ($value) {
@@ -633,15 +636,15 @@
                             </a>
 
                             <h1>Create your school account with confidence.</h1>
-                            <p>Register your school profile, connect it to the correct division and district, and start using AP-LEAD with a verified account.</p>
+                            <p>Register your school profile, connect it to the correct division and district, and sign in to AP-LEAD immediately after registration.</p>
 
                             <div class="signup-side-card">
                                 <h5>Before you begin</h5>
                                 <ul class="signup-side-list">
                                     <li><i class="mdi mdi-check-circle-outline"></i><span>Prepare your official school ID. It will also be used as your username.</span></li>
-                                    <li><i class="mdi mdi-email-check-outline"></i><span>Use an active school email so your confirmation details and updates can reach you.</span></li>
+                                    <li><i class="mdi mdi-email-check-outline"></i><span>Use your official school email as an alternative to your School ID when signing in.</span></li>
                                     <li><i class="mdi mdi-map-marker-radius-outline"></i><span>Select the correct division and district to make your records easier to monitor and support.</span></li>
-                                    <li><i class="mdi mdi-shield-check-outline"></i><span>Complete the privacy consent and reCAPTCHA verification before submitting.</span></li>
+                                    <li><i class="mdi mdi-shield-check-outline"></i><span>Accept the declaration before submitting. Security verification runs automatically.</span></li>
                                 </ul>
                             </div>
 
@@ -724,19 +727,19 @@
                                             <div class="form-row">
                                                 <div class="form-group col-md-6 signup-field">
                                                     <label for="schoolID">School ID</label>
-                                                    <input class="form-control" type="text" id="schoolID" name="schoolID" value="<?= html_escape(set_value('schoolID')); ?>" autocomplete="username" required>
+                                                    <input class="form-control" type="text" id="schoolID" name="schoolID" value="<?= html_escape($signup_value('schoolID')); ?>" autocomplete="username" required>
                                                     <small>Sign in using your School ID or registered school email address.</small>
                                                 </div>
 
                                                 <div class="form-group col-md-6 signup-field">
                                                     <label for="password">Password</label>
                                                     <div class="signup-password-wrap">
-                                                        <input id="password" class="form-control signup-password-input" type="password" name="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                                                        <input id="password" class="form-control signup-password-input" type="password" name="password" value="<?= html_escape($signup_value('password')); ?>" autocomplete="new-password" minlength="8" maxlength="128" required>
                                                         <button type="button" class="signup-password-toggle" id="togglePassword" aria-label="Show password">
                                                             <i class="mdi mdi-eye-outline" id="togglePasswordIcon"></i>
                                                         </button>
                                                     </div>
-                                                    <small>Use 12–128 characters for your password.</small>
+                                                    <small>Use 8–128 characters for your password.</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -753,12 +756,13 @@
                                             <div class="form-row">
                                                 <div class="form-group col-md-6 signup-field">
                                                     <label for="schoolName">School Name</label>
-                                                    <input class="form-control" type="text" id="schoolName" name="schoolName" value="<?= html_escape(set_value('schoolName')); ?>" required>
+                                                    <input class="form-control" type="text" id="schoolName" name="schoolName" value="<?= html_escape($signup_value('schoolName')); ?>" required>
                                                 </div>
 
                                                 <div class="form-group col-md-6 signup-field">
                                                     <label for="schoolEmail">School Email</label>
-                                                    <input class="form-control" type="email" id="schoolEmail" name="schoolEmail" value="<?= html_escape(set_value('schoolEmail')); ?>" autocomplete="email" required>
+                                                    <input class="form-control" type="email" id="schoolEmail" name="schoolEmail" value="<?= html_escape($signup_value('schoolEmail')); ?>" autocomplete="email" aria-describedby="email-availability" required>
+                                                    <small id="email-availability" role="status" aria-live="polite"></small>
                                                 </div>
                                             </div>
 
@@ -768,7 +772,7 @@
                                                     <select name="division_id" id="division" class="custom-select" required>
                                                         <option value="">Select Division</option>
                                                         <?php foreach ($division as $row) : ?>
-                                                            <option value="<?= $row->id; ?>" <?= set_select('division_id', (string) $row->id); ?>>
+                                                            <option value="<?= $row->id; ?>" <?= $selected_division_id === (string) $row->id ? 'selected' : ''; ?>>
                                                                 <?= html_escape($format_title($row->description)); ?>
                                                             </option>
                                                         <?php endforeach; ?>
@@ -780,7 +784,7 @@
                                                     <select name="d_id" id="district" class="custom-select" required>
                                                         <option value="">Select District / Cluster</option>
                                                         <?php foreach ($district_options as $district_row) : ?>
-                                                            <option value="<?= $district_row->id; ?>" <?= set_select('d_id', (string) $district_row->id); ?>>
+                                                            <option value="<?= $district_row->id; ?>" <?= $selected_district_id === (string) $district_row->id ? 'selected' : ''; ?>>
                                                                 <?= html_escape($format_title($district_row->description)); ?>
                                                             </option>
                                                         <?php endforeach; ?>
@@ -805,7 +809,7 @@
 
                                             <div class="signup-consent mb-4">
                                                 <div class="checkbox checkbox-success mt-1">
-                                                    <input id="termsAccepted" name="termsAccepted" type="checkbox" required>
+                                                    <input id="termsAccepted" name="termsAccepted" type="checkbox" <?= $signup_value('termsAccepted') === 'on' ? 'checked' : ''; ?> required>
                                                     <label for="termsAccepted">
                                                         I accept the
                                                         <a href="#" data-toggle="modal" data-target="#termsModal">Declaration and Attestation</a>
@@ -815,24 +819,15 @@
                                             </div>
 
                                             <div class="captcha-wrap signup-field">
-                                                <label for="captcha_answer">Security code</label>
-                                                <?php if (!empty($captcha_error)): ?>
-                                                    <p class="text-danger" role="alert"><?= html_escape($captcha_error); ?></p>
-                                                <?php endif; ?>
-                                                <?php if ($captcha_image): ?>
-                                                    <img src="<?= html_escape($captcha_image); ?>" alt="Security challenge: six letters and numbers" width="260" height="86" style="display:block;max-width:100%;height:auto;margin-bottom:12px;">
-                                                    <button type="button" id="refreshCaptcha" class="btn btn-outline-secondary btn-sm mb-2">Get a new code</button>
-                                                    <input class="form-control" id="captcha_answer" name="captcha_answer" type="text" minlength="6" maxlength="6" pattern="[A-Za-z2-9]{6}" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="captcha-help" required>
-                                                    <small id="captcha-help">Enter the six characters shown above. Letters are not case-sensitive. The code expires after 5 minutes. For assistance, contact your division system administrator.</small>
-                                                <?php else: ?>
-                                                    <p class="text-danger" role="alert">The security code is temporarily unavailable. Please contact the system administrator.</p>
-                                                <?php endif; ?>
+                                                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse" value="">
+                                                <small>This form is protected by Google reCAPTCHA.</small>
+                                                <p id="recaptchaStatus" role="status" aria-live="polite"></p>
                                             </div>
                                         </div>
 
                                         <div class="signup-actions">
                                             <p>Already registered? <a href="<?= base_url('log_in'); ?>">Go to the sign in page</a>.</p>
-                                            <button class="btn btn-signup-submit waves-effect waves-light" type="submit">
+                                            <button class="btn btn-signup-submit waves-effect waves-light" type="submit" <?= !empty($account_saved) ? 'disabled' : ''; ?>>
                                                 <i class="mdi mdi-account-plus-outline"></i>
                                                 Create School Account
                                             </button>
@@ -874,6 +869,7 @@
 
     <script src="<?= base_url(); ?>assets/js/vendor.min.js"></script>
     <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=<?= rawurlencode($captcha_site_key); ?>" async defer></script>
 
     <script>
         (function() {
@@ -883,18 +879,47 @@
                 feedback.focus({ preventScroll: true });
             }
 
-            const refreshCaptcha = document.getElementById('refreshCaptcha');
-            if (refreshCaptcha) {
-                refreshCaptcha.addEventListener('click', function() {
-                    const form = document.getElementById('schoolSignupForm');
-                    const refresh = document.createElement('input');
-                    refresh.type = 'hidden';
-                    refresh.name = 'refresh_captcha';
-                    refresh.value = '1';
-                    form.appendChild(refresh);
-                    form.submit();
+            const signupForm = document.getElementById('schoolSignupForm');
+            const captchaStatus = document.getElementById('recaptchaStatus');
+            const signupButton = signupForm.querySelector('button[type="submit"]');
+            const siteKey = <?= json_encode($captcha_site_key, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+            let verifying = false;
+            signupForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (verifying || signupButton.disabled) return;
+                if (!siteKey || !window.grecaptcha || !window.grecaptcha.ready) {
+                    captchaStatus.textContent = 'Security verification is still loading. Check your internet connection and try again.';
+                    return;
+                }
+                verifying = true;
+                signupButton.disabled = true;
+                captchaStatus.textContent = 'Verifying…';
+                let finished = false;
+                function failed() {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timeout);
+                    verifying = false;
+                    signupButton.disabled = false;
+                    captchaStatus.textContent = 'Security verification could not finish. Please try again. Your details have been kept.';
+                }
+                const timeout = setTimeout(failed, 15000);
+                grecaptcha.ready(function() {
+                    if (finished) return;
+                    try {
+                        grecaptcha.execute(siteKey, {action: 'school_signup'}).then(function(token) {
+                            if (finished) return;
+                            if (!token) { failed(); return; }
+                            // Recheck in case the email availability result arrived while verifying.
+                            if (!signupForm.reportValidity()) { failed(); return; }
+                            finished = true;
+                            clearTimeout(timeout);
+                            document.getElementById('recaptchaResponse').value = token;
+                            HTMLFormElement.prototype.submit.call(signupForm);
+                        }).catch(failed);
+                    } catch (error) { failed(); }
                 });
-            }
+            });
 
             const passwordInput = document.getElementById('password');
             const toggleButton = document.getElementById('togglePassword');
@@ -908,6 +933,42 @@
                     toggleButton.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
                 });
             }
+
+            const emailField = document.getElementById('schoolEmail');
+            const emailStatus = document.getElementById('email-availability');
+            let emailTimer;
+            let emailRequest = 0;
+            emailField.addEventListener('input', function() {
+                clearTimeout(emailTimer);
+                const request = ++emailRequest;
+                emailStatus.textContent = '';
+                emailField.setCustomValidity('');
+                emailStatus.className = '';
+                const email = emailField.value.trim();
+                if (!email || !emailField.validity.valid) return;
+                emailTimer = setTimeout(function() {
+                    emailStatus.textContent = 'Checking email availability…';
+                    $.ajax({
+                        url: <?= json_encode(base_url('Pages/signup_email_available')); ?>,
+                        method: 'POST',
+                        dataType: 'json',
+                        data: {
+                            email: email,
+                            <?= json_encode($this->security->get_csrf_token_name()); ?>: <?= json_encode($this->security->get_csrf_hash()); ?>
+                        },
+                        success: function(result) {
+                            if (request !== emailRequest) return;
+                            emailStatus.textContent = result.message;
+                            emailStatus.className = result.available ? 'text-success' : 'text-danger';
+                            emailField.setCustomValidity(result.available ? '' : result.message);
+                        },
+                        error: function() {
+                            if (request !== emailRequest) return;
+                            emailStatus.textContent = 'Availability will be checked when you submit.';
+                        }
+                    });
+                }, 450);
+            });
 
             const divisionField = $('#division');
             const districtField = $('#district');

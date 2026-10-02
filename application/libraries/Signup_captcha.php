@@ -1,123 +1,93 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-/** Offline, session-bound signup challenge. No answer is sent in HTML. */
+/** Google reCAPTCHA v3: the secret is used only in server-to-server requests. */
 class Signup_captcha
 {
-    private $ci;
+    private $settings = array();
 
     public function __construct()
     {
-        $this->ci =& get_instance();
-    }
-
-    public function create()
-    {
-        $this->ci->session->unset_userdata('signup_captcha');
-        if (!function_exists('imagecreatetruecolor')) {
-            log_message('error', 'Signup CAPTCHA requires the PHP GD extension.');
-            return false;
+        $ci =& get_instance();
+        $ci->load->database();
+        if (!$ci->db->table_exists('recaptcha_settings')) {
+            $ci->db->query("CREATE TABLE IF NOT EXISTS recaptcha_settings (
+                id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+                site_key VARCHAR(255) NOT NULL,
+                secret_key VARCHAR(255) NOT NULL,
+                expected_hostname VARCHAR(255) NOT NULL DEFAULT ''
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
-        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        $answer = '';
-        for ($i = 0; $i < 6; $i++) {
-            $answer .= $alphabet[random_int(0, strlen($alphabet) - 1)];
-        }
-        $image = imagecreatetruecolor(260, 86);
-        imagefill($image, 0, 0, imagecolorallocate($image, 248, 245, 240));
-        for ($i = 0; $i < 180; $i++) {
-            imagesetpixel($image, random_int(0, 259), random_int(0, 85), imagecolorallocate($image, 150, 155, 165));
-        }
-        for ($i = 0; $i < 7; $i++) {
-            imageline($image, random_int(0, 259), random_int(0, 85), random_int(0, 259), random_int(0, 85), imagecolorallocate($image, 185, 180, 190));
-        }
-        $font = FCPATH . 'assets/fonts/DM_Sans/static/DMSans_18pt-Bold.ttf';
-        for ($i = 0; $i < 6; $i++) {
-            $color = imagecolorallocate($image, random_int(30, 85), random_int(25, 70), random_int(40, 90));
-            if (function_exists('imagettftext') && is_file($font)) {
-                imagettftext($image, 28, random_int(-18, 18), 15 + $i * 39, random_int(51, 65), $color, $font, $answer[$i]);
-            } else {
-                imagestring($image, 5, 25 + $i * 39, random_int(28, 48), $answer[$i], $color);
+        $row = $ci->db->where('id', 1)->get('recaptcha_settings')->row_array();
+        if (!$row) {
+            // One-time import of the existing server configuration. Afterwards,
+            // the database row is authoritative and edits take effect next request.
+            $secret = getenv('RECAPTCHA_SECRET_KEY');
+            $legacy_file = APPPATH . 'config/recaptcha_secret.php';
+            if (!$secret && is_file($legacy_file)) {
+                $secret = require $legacy_file;
+            }
+            if ($secret) {
+                $ci->db->query('INSERT IGNORE INTO recaptcha_settings (id, site_key, secret_key, expected_hostname) VALUES (?, ?, ?, ?)', array(
+                    1,
+                    getenv('RECAPTCHA_SITE_KEY') ?: '6LeyxNotAAAAAJ7xV5VvLv5QgPigHzdpK5bndfeQ',
+                    $secret,
+                    getenv('RECAPTCHA_EXPECTED_HOSTNAME') ?: '',
+                ));
+                $row = $ci->db->where('id', 1)->get('recaptcha_settings')->row_array();
             }
         }
-        ob_start();
-        imagepng($image);
-        $png = ob_get_clean();
-        imagedestroy($image);
-        $this->ci->session->set_userdata('signup_captcha', array(
-            'hash' => hash('sha256', $answer),
-            'expires' => time() + 300,
-        ));
-        return 'data:image/png;base64,' . base64_encode($png);
+        $this->settings = $row ?: array();
     }
 
-    public function verify($answer)
+    public function site_key()
     {
-        $challenge = $this->ci->session->userdata('signup_captcha');
-        // Consume even incorrect or rate-limited submissions to prevent replay.
-        $this->ci->session->unset_userdata('signup_captcha');
-        $allowed = $this->allow_attempt();
-        if ($allowed === null) {
-            return 'Signup verification is temporarily unavailable. Please contact the system administrator.';
+        return isset($this->settings['site_key']) ? $this->settings['site_key'] : '';
+    }
+
+    public function verify($token)
+    {
+        if (!is_string($token) || trim($token) === '' || strlen($token) > 4096) {
+            return 'Security verification is missing. Please submit the form again.';
         }
-        if (!$allowed) {
-            return 'Too many signup attempts. Please wait 15 minutes before trying again.';
+        $secret = isset($this->settings['secret_key']) ? $this->settings['secret_key'] : '';
+        if (!$secret || !function_exists('curl_init')) {
+            log_message('error', 'Signup reCAPTCHA requires a secret key and PHP cURL.');
+            return 'Security verification is unavailable. Please contact the administrator.';
         }
-        $answer = is_string($answer) ? strtoupper(trim($answer)) : '';
-        if (!is_array($challenge) || empty($challenge['expires']) || $challenge['expires'] <= time()
-            || !preg_match('/^[A-Z2-9]{6}$/', $answer)
-            || !hash_equals($challenge['hash'], hash('sha256', $answer))) {
-            return 'The security code is incorrect or expired. Enter the code from the new image below.';
+        $request = curl_init('https://www.google.com/recaptcha/api/siteverify');
+        curl_setopt_array($request, array(
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query(array('secret' => $secret, 'response' => trim($token))),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ));
+        $body = curl_exec($request);
+        $status = curl_getinfo($request, CURLINFO_HTTP_CODE);
+        curl_close($request);
+        $result = is_string($body) ? json_decode($body, true) : null;
+        if ($status !== 200 || !is_array($result)) {
+            return 'Unable to reach Google reCAPTCHA. Please try again; your details have been kept.';
+        }
+        if (empty($result['success'])) {
+            $codes = isset($result['error-codes']) ? $result['error-codes'] : array();
+            if (array_intersect(array('missing-input-secret', 'invalid-input-secret'), $codes)) {
+                log_message('error', 'Google rejected the configured signup reCAPTCHA secret.');
+                return 'Security verification is not configured correctly. Please contact the administrator.';
+            }
+            return 'Please complete reCAPTCHA again. The previous response may have expired.';
+        }
+        if (!isset($result['action'], $result['score']) || $result['action'] !== 'school_signup'
+            || !is_numeric($result['score']) || (float) $result['score'] < 0.5 || (float) $result['score'] > 1) {
+            return 'Security verification was unsuccessful. Please try again; your details have been kept.';
+        }
+        $expected = isset($this->settings['expected_hostname']) ? trim($this->settings['expected_hostname']) : '';
+        if ($expected !== '' && (!isset($result['hostname']) || !hash_equals($expected, $result['hostname']))) {
+            return 'Security verification failed for this website. Please contact the administrator.';
         }
         return true;
-    }
-
-    private function allow_attempt()
-    {
-        // IP-based limits survive session resets; lock the read/write together.
-        $temporary_root = sys_get_temp_dir();
-        // macOS XAMPP can inherit the desktop user's TMPDIR while running as daemon.
-        if (!is_writable($temporary_root) && DIRECTORY_SEPARATOR === '/' && is_writable('/tmp')) {
-            $temporary_root = '/tmp';
-        }
-        // Keep CLI and web-server processes from creating directories for each other.
-        $owner = function_exists('posix_geteuid') ? '-' . posix_geteuid() : '';
-        $directory = rtrim($temporary_root, DIRECTORY_SEPARATOR)
-            . DIRECTORY_SEPARATOR . 'aplead-signup-' . substr(hash('sha256', APPPATH), 0, 16) . $owner;
-        if (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)) {
-            log_message('error', 'Unable to create signup rate limit storage.');
-            return null;
-        }
-        $file = $directory . '/signup-rate-' . hash('sha256', $this->ci->input->ip_address()) . '.json';
-        $handle = @fopen($file, 'c+');
-        if (!$handle) {
-            log_message('error', 'Unable to open signup rate limit storage.');
-            return null;
-        }
-        if (!flock($handle, LOCK_EX)) {
-            fclose($handle);
-            return null;
-        }
-        $state = json_decode(stream_get_contents($handle), true);
-        if (!is_array($state) || !isset($state['expires'], $state['attempts']) || $state['expires'] <= time()) {
-            $state = array('expires' => time() + 900, 'attempts' => 0);
-        }
-        // Require both development mode and a direct loopback connection.
-        $local_development = defined('ENVIRONMENT') && ENVIRONMENT === 'development'
-            && in_array(isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', array('127.0.0.1', '::1'), true);
-        $limit = $local_development ? 100 : 10;
-        $allowed = $state['attempts'] < $limit;
-        if ($allowed) {
-            $state['attempts']++;
-            rewind($handle);
-            $saved = ftruncate($handle, 0) && fwrite($handle, json_encode($state)) !== false && fflush($handle);
-            $allowed = $saved ? true : null;
-            if (!$saved) {
-                log_message('error', 'Unable to save signup rate limit counter.');
-            }
-        }
-        flock($handle, LOCK_UN);
-        fclose($handle);
-        return $allowed;
     }
 }

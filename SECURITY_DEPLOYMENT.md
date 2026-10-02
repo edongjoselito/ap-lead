@@ -14,15 +14,20 @@ Required environment variables:
 For local HTTP-only development, set `CI_ENV=development`. Never use that value
 on an internet-facing server.
 
-School signup uses a local PNG CAPTCHA and does not require Google reCAPTCHA
-keys or network access. Enable PHP GD and allow the web-server user to create a
-private application-specific directory under PHP's temporary directory for signup
-rate limiting. Challenges expire after five
-minutes and are single-use; each IP may submit ten attempts per fifteen-minute
-window (100 attempts for direct loopback requests in development mode). Storage
-failures block signup with a separate availability message. The local file rate limiter is intended for a single application server;
-use shared rate-limit storage when scaling to multiple servers. Email verification
-still requires the configured SMTP service.
+School signup uses Google reCAPTCHA v3. Configure the site
+key for both localhost and the production domain in Google's reCAPTCHA console.
+PHP cURL and outbound HTTPS access to Google are required. Tokens are generated
+on submission and checked server-side for action `school_signup` and score >= 0.5.
+
+reCAPTCHA settings are stored in `recaptcha_settings`, row `id = 1`:
+`site_key`, `secret_key`, and optional `expected_hostname`. Only the site key is
+rendered in HTML. Keep the secret out of public exports and restrict database access.
+The signup library creates this table if absent and imports the previous server
+configuration once if the row is missing. After import, database values take precedence.
+For hosts without CREATE permission, import `database/20261002_recaptcha_settings.sql`
+and populate row 1 securely. Deploy the configured row to the hosting database;
+it is not included in the schema SQL. The legacy secret file can be removed after import.
+School accounts activate immediately; SMTP is not required for signup.
 
 Deployment checklist:
 

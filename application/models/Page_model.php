@@ -12,8 +12,23 @@ class Page_model extends CI_Model{
         // The migration marker makes this a metadata lookup after first deploy.
         $this->ensure_password_change_schema();
         $this->ensure_email_username_schema();
+        $this->ensure_signup_field_sizes();
         $this->ensure_learning_gap_archive_schema();
     }
+
+private function ensure_signup_field_sizes()
+{
+    $migration = '20261002_signup_field_sizes';
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        return;
+    }
+    // Signup accepts full school names and standard email addresses.
+    $schools = $this->db->query("ALTER TABLE schools MODIFY schoolName VARCHAR(255) NOT NULL DEFAULT '', MODIFY schoolEmail VARCHAR(254) NOT NULL DEFAULT ''");
+    $users = $this->db->query("ALTER TABLE users MODIFY fname VARCHAR(255) NOT NULL DEFAULT ''");
+    if ($schools && $users) {
+        $this->db->query('INSERT IGNORE INTO app_schema_migrations (migration) VALUES (?)', array($migration));
+    }
+}
 
 private function ensure_email_username_schema()
 {
@@ -126,29 +141,54 @@ public function user_insert(){
     
 }
 
-// Keep schema creation outside the transaction: MySQL DDL implicitly commits.
+private $signup_failure_message = '';
+
+public function signup_failure_message()
+{
+    return $this->signup_failure_message;
+}
+
+private function record_signup_failure($stage)
+{
+    $error = $this->db->error();
+    $code = isset($error['code']) ? (int) $error['code'] : 0;
+    $reference = bin2hex(random_bytes(6));
+    $message = 'School signup database failure [' . $reference . '] stage=' . $stage
+        . ' code=' . $code . ' ' . (isset($error['message']) ? $error['message'] : '');
+    log_message('error', $message);
+    // Hosting may not allow writes to application/logs; also use the PHP error log.
+    error_log($message);
+    $this->signup_failure_message = $code === 1062
+        ? 'This school ID or email is already registered. Please check your details or sign in.'
+        : 'Registration could not be saved. Please contact the administrator with reference ' . $reference . '.';
+}
+
+// Save the school and its immediately active account together.
 public function register_school_account()
 {
-    $this->ensure_user_verification_tokens_table();
+    $this->signup_failure_message = '';
     $debug = $this->db->db_debug;
     $this->db->db_debug = false;
-    $this->db->trans_begin();
+    if (!$this->db->trans_begin()) {
+        $this->record_signup_failure('begin');
+        $this->db->db_debug = $debug;
+        return false;
+    }
     $school_saved = $this->insert_school();
     $user_id = $school_saved ? $this->insert_user() : false;
-    $token = $user_id ? bin2hex(random_bytes(32)) : false;
-    $token_saved = $token && $this->db->insert('user_verification_tokens', array(
-        'user_id' => (int) $user_id,
-        'token_hash' => hash('sha256', $token),
-        'expires_at' => date('Y-m-d H:i:s', time() + 86400),
-    ));
-    if (!$school_saved || !$user_id || !$token_saved || !$this->db->trans_status()) {
+    if (!$school_saved || !$user_id || !$this->db->trans_status()) {
+        $this->record_signup_failure(!$school_saved ? 'schools insert' : 'users insert');
         $this->db->trans_rollback();
         $this->db->db_debug = $debug;
         return false;
     }
     $committed = $this->db->trans_commit();
+    if (!$committed) {
+        $this->record_signup_failure('commit');
+        $this->db->trans_rollback();
+    }
     $this->db->db_debug = $debug;
-    return $committed ? array('user_id' => $user_id, 'token' => $token) : false;
+    return $committed ? array('user_id' => $user_id) : false;
 }
 
 public function insert_user(){
@@ -161,17 +201,22 @@ public function insert_user(){
     'username' => $this->input->post('schoolID'),
     'password' => $hash,
     'position' => 'school',
+    'mname' => '',
+    'lname' => '',
+    'gender' => 0,
+    'image' => '',
+    'stat' => 0,
+    'sec' => 0,
     'fname' => $this->input->post('schoolName'),
     'r_id' => 12,
     'p_id' => $this->input->post('division_id'),
     'd_id' => $this->input->post('d_id'),
     'email' => $this->input->post('schoolEmail'),
-    // New self-service accounts remain disabled until the email token is used.
-    'virified' => 1
+    // Legacy flag: zero means active and permitted to sign in.
+    'virified' => 0
     ); 
 
-    $this->db->insert('users', $data);
-    return $this->db->insert_id();
+    return $this->db->insert('users', $data) ? $this->db->insert_id() : false;
     
 }
 
@@ -1466,14 +1511,20 @@ public function sbm_checklist_lock_unloc_by_id($id, $stat, $school_id = null)
 			'district_id' => $this->input->post('d_id'),
             'region_id' => 12,
 			'schoolEmail' => $this->input->post('schoolEmail'),
-            // Profile details are not collected during signup. Zero denotes an unset SGC.
-            'schoolType' => null,
-            'category' => null,
+            // Profile details are not collected during signup. Zero denotes unset values.
+            'schoolType' => 0,
+            'category' => 0,
             'sgc' => 0,
 			'schoolLogo' => 'logo.png'
 		);
 
-		return $this->db->insert('schools', $data);
+        // Explicit empty profile values also support schemas without column defaults.
+        foreach (array('yearEstab', 'congDist', 'province', 'city', 'brgy', 'sitio',
+            'adminFName', 'adminMName', 'adminLName', 'adminMobile', 'adminTel',
+            'adminEmail', 'adminDesignation', 'recogNo') as $field) {
+            $data[$field] = '';
+        }
+        return $this->db->insert('schools', $data);
 	}
 
     public function all_fields_positive($id)
