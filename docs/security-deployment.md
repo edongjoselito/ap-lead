@@ -7,11 +7,48 @@ Deploy these files together, preserving the production database connection setti
 - `application/config/request_guard.php`
 - `application/libraries/Request_guard.php`
 - `application/libraries/Signup_captcha.php`
+- `application/libraries/School_signup_schema.php`
+- `application/models/Page_model.php`
 - `application/views/pages/school_signup.php`
 - `assets/css/school-signup.css`
 
 The signup page uses the landing page's navy (`#103f6e`), gold (`#f0aa20`),
 light blue surfaces, type styles, and existing `assets/r11-logo.jpg` seal.
+
+## Automatic school ID schema check
+
+Deploy `application/libraries/School_signup_schema.php` together with
+`application/models/Page_model.php` (upload the library first if deploying files
+individually). The model runs the check automatically when the application loads.
+No manual SQL import or public migration endpoint is needed.
+
+The check restores a missing primary key or `AUTO_INCREMENT` on `schools.recID`
+only when the table is empty and the column matches the expected unsigned integer
+definition. A populated table with both settings already correct is left unchanged.
+The migration records `20261003_schools_record_id` in `app_schema_migrations` after
+success; subsequent requests only check that marker. Existing indexes and column
+comments are preserved. No school or user rows are inserted, deleted, or updated.
+
+**Populated tables needing repair are skipped.** This implements the request to
+leave tables with data alone. Consequently, the known signup failure in a
+populated database will still require a separately authorized repair that preserves
+the existing records. The automatic check also skips conflicting primary keys,
+unexpected column definitions, and missing columns rather than guessing a repair.
+
+A database advisory lock prevents simultaneous requests from applying the same
+repair. Failure to obtain the lock, access the schema, or use `ALTER TABLE` leaves
+the migration pending, logs `School signup schema migration: ...` to the application
+and PHP error logs, and lets the rest of the page load. The application database
+user needs `ALTER` access for the repair to succeed. Take the usual database backup
+before deployment. MySQL/MariaDB table alterations commit implicitly, so this check
+runs before signup transactions and refuses to run inside an existing transaction.
+
+Regression checks use a disposable local database and leave the configured
+application database untouched:
+
+```sh
+APLEAD_SCHEMA_TESTS=1 php tests/integration/school_signup_schema.php
+```
 
 ## Production configuration
 

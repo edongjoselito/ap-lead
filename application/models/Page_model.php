@@ -13,6 +13,8 @@ class Page_model extends CI_Model{
         $this->ensure_password_change_schema();
         $this->ensure_email_username_schema();
         $this->ensure_signup_field_sizes();
+        $this->load->library('school_signup_schema');
+        $this->school_signup_schema->ensure($this->db);
         $this->ensure_learning_gap_archive_schema();
     }
 
