@@ -1,6 +1,16 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+/** Keep every supported grade selectable, including grades with no submissions. */
+function lg_grade_options($existing = array())
+{
+    $grades = array('Kindergarten');
+    for ($grade = 1; $grade <= 12; $grade++) $grades[] = 'Grade ' . $grade;
+    $extra = array_diff(array_filter(array_map('trim', $existing)), $grades);
+    natcasesort($extra);
+    return array_values(array_unique(array_merge($grades, $extra)));
+}
+
 /**
  * Plain-language interpretations for the Learning Gap dashboards.
  * Every function returns a list of HTML-safe sentences for lg_interpretation_box().

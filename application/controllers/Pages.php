@@ -1217,15 +1217,24 @@ class Pages extends CI_Controller
         $data['learning_area_filter'] = trim((string) $this->input->get('learning_area', true));
         $data['term_filter'] = trim((string) $this->input->get('term', true));
         $data['competency_filter'] = trim((string) $this->input->get('competency', true));
+        $data['district_filter'] = !$data['is_school'] ? trim((string) $this->input->get('district_id', true)) : '';
+        $data['school_filter'] = !$data['is_school'] ? trim((string) $this->input->get('school_id', true)) : '';
         $data['has_record_filters'] = $data['division_filter'] > 0
+            || $data['district_filter'] !== '' || $data['school_filter'] !== ''
             || $data['grade_filter'] !== ''
             || $data['learning_area_filter'] !== ''
             || $data['term_filter'] !== ''
             || $data['competency_filter'] !== '';
         $data['records'] = $this->Page_model->learning_gap_records($scope, $data['record_year']);
         // Build filter choices from this user's authorized scope before applying filters.
-        $data['record_filter_options'] = array('grade_level' => array(), 'learning_area' => array(), 'term' => array());
+        $this->load->helper('learning_gap');
+        $data['record_filter_options'] = array('grade_level' => array_combine(lg_grade_options(), lg_grade_options()), 'learning_area' => array(), 'term' => array());
+        $data['district_options'] = array();
         foreach ($data['records'] as $record) {
+            if ($data['division_filter'] === 0 || (int) $record->division_id === $data['division_filter']) {
+                $district_key = !empty($record->district_name) ? (string) $record->reporting_district_id : 'unassigned';
+                $data['district_options'][$district_key] = !empty($record->district_name) ? $record->district_name : 'Unassigned district';
+            }
             foreach ($data['record_filter_options'] as $field => $options) {
                 $value = trim((string) $record->$field);
                 if ($value !== '') {
@@ -1237,6 +1246,19 @@ class Pages extends CI_Controller
             natcasesort($options);
         }
         unset($options);
+        $data['record_filter_options']['grade_level'] = lg_grade_options(array_values($data['record_filter_options']['grade_level']));
+        natcasesort($data['district_options']);
+        if ($data['district_filter'] !== '') {
+            $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
+                $district_key = !empty($record->district_name) ? (string) $record->reporting_district_id : 'unassigned';
+                return $district_key === $data['district_filter'];
+            }));
+        }
+        if ($data['school_filter'] !== '') {
+            $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
+                return (string) $record->school_id === $data['school_filter'];
+            }));
+        }
         if ($data['division_filter'] > 0) {
             $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
                 return (int) $record->division_id === $data['division_filter'];
@@ -1286,6 +1308,42 @@ class Pages extends CI_Controller
             return (int) $school->record_count > 0;
         }));
         $data['total_school_count'] = count($data['schools']);
+        $data['district_filter'] = trim((string) $this->input->get('district_id', true));
+        $data['district_summary'] = array();
+        foreach ($this->Page_model->one_cond('district', 'division_id', (int) $this->session->division) as $district) {
+            $data['district_summary'][(string) $district->id] = array('id' => (string) $district->id,
+                'name' => $district->description, 'schools' => 0, 'submitted' => 0, 'records' => 0, 'latest' => null);
+        }
+        $data['missing_profile_count'] = 0;
+        foreach ($data['schools'] as $school) {
+            $key = (string) $school->district_id;
+            if (!isset($data['district_summary'][$key])) {
+                $key = 'unassigned';
+                if (!isset($data['district_summary'][$key])) {
+                    $data['district_summary'][$key] = array('id' => $key, 'name' => 'Unassigned district',
+                        'schools' => 0, 'submitted' => 0, 'records' => 0, 'latest' => null);
+                }
+            }
+            $school->district_key = $key;
+            $school->district_name = $data['district_summary'][$key]['name'];
+            $data['district_summary'][$key]['schools']++;
+            $data['district_summary'][$key]['submitted'] += (int) $school->record_count > 0 ? 1 : 0;
+            $data['district_summary'][$key]['records'] += (int) $school->record_count;
+            if ($school->latest_submission > $data['district_summary'][$key]['latest']) {
+                $data['district_summary'][$key]['latest'] = $school->latest_submission;
+            }
+            $data['missing_profile_count'] += (int) $school->missing_profile;
+        }
+        uasort($data['district_summary'], function ($a, $b) { return strnatcasecmp($a['name'], $b['name']); });
+        if ($data['district_filter'] !== '') {
+            if (!isset($data['district_summary'][$data['district_filter']])) {
+                show_error('The selected district is not available in your division.', 400);
+                return;
+            }
+            $data['schools'] = array_values(array_filter($data['schools'], function ($school) use ($data) {
+                return $school->district_key === $data['district_filter'];
+            }));
+        }
         $data['division'] = $this->Page_model->one_cond_row(
             'division',
             'id',
@@ -1384,7 +1442,7 @@ class Pages extends CI_Controller
 
         $is_update = (int) $this->input->post('record_id', true) > 0;
         if (!$this->Page_model->save_learning_gap_record((string) $this->session->username)) {
-            $this->session->set_flashdata('danger', 'Your school profile is not set up. Please contact your division administrator.');
+            $this->session->set_flashdata('danger', $this->Page_model->learning_gap_save_error());
             redirect('Pages/learning_gap');
             return;
         }

@@ -5,6 +5,7 @@ class Page_model extends CI_Model{
 
     private $learning_gap_archive_schema_ready = false;
     private $password_change_schema_ready = false;
+    private $learning_gap_ids_ready = false;
 
     public function __construct(){
         $this->load->database();
@@ -16,6 +17,8 @@ class Page_model extends CI_Model{
         $this->load->library('school_signup_schema');
         $this->school_signup_schema->ensure($this->db);
         $this->ensure_learning_gap_archive_schema();
+        $this->load->library('learning_gap_schema');
+        $this->learning_gap_ids_ready = $this->learning_gap_schema->ensure($this->db);
     }
 
 private function ensure_signup_field_sizes()
@@ -2171,10 +2174,11 @@ public function learning_gap_records($scope, $year = null)
 {
     $this->ensure_learning_gap_archive_schema();
     $this->ensure_learning_gap_summative_schema();
-    $this->db->select('lgr.*, s.schoolName, d.description AS division_name')
+    $this->db->select('lgr.*, s.schoolName, d.description AS division_name, COALESCE(s.district_id, lgr.district_id) AS reporting_district_id, district.description AS district_name')
         ->from('learning_gap_records lgr')
         ->join('schools s', 's.schoolID = lgr.school_id', 'left')
         ->join('division d', 'd.id = lgr.division_id', 'left')
+        ->join('district', 'district.id = COALESCE(s.district_id, lgr.district_id) AND district.division_id = lgr.division_id', 'left')
         ->where('lgr.fiscal_year', $this->learning_gap_year($year));
 
     $this->apply_learning_gap_scope($scope);
@@ -2197,7 +2201,8 @@ public function learning_gap_archive_years($scope)
 public function learning_gap_school_competency_summary($scope, $grade = '')
 {
     $competencies = array();
-    $grades = array();
+    $this->load->helper('learning_gap');
+    $grades = array_combine(lg_grade_options(), lg_grade_options());
     $school_ids = array();
     foreach ($this->learning_gap_records($scope) as $record) {
         $record_grade = trim((string) $record->grade_level);
@@ -2228,7 +2233,7 @@ public function learning_gap_school_competency_summary($scope, $grade = '')
             ?: strnatcasecmp($a['grade'], $b['grade'])
             ?: strnatcasecmp($a['text'], $b['text']);
     });
-    natcasesort($grades);
+    $grades = lg_grade_options(array_values($grades));
     return array('competency_rows' => $competencies, 'grade_options' => array_values($grades),
         'reporting_school_count' => count($school_ids));
 }
@@ -2624,24 +2629,51 @@ public function division_learning_area_options($division_id)
 public function learning_gap_school_submission_summary($division_id)
 {
     $this->ensure_learning_gap_archive_schema();
-    return $this->db
-        ->select('s.schoolID, s.schoolName, COUNT(lgr.id) AS record_count, MAX(lgr.created_at) AS latest_submission')
+    $schools = $this->db
+        ->select('s.schoolID, s.schoolName, s.district_id, 0 AS missing_profile, COUNT(lgr.id) AS record_count, MAX(lgr.created_at) AS latest_submission')
         ->from('schools s')
-        ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID AND lgr.fiscal_year = ' . (int) $this->learning_gap_year(), 'left')
+        ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID AND lgr.division_id = s.division_id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year(), 'left')
         ->where('s.division_id', (int) $division_id)
-        ->group_by('s.schoolID, s.schoolName')
+        ->group_by('s.schoolID, s.schoolName, s.district_id')
         ->order_by('s.schoolName', 'ASC')
         ->get()
         ->result();
+    // Keep imported submissions visible even when their school profile is missing.
+    $unlinked = $this->db
+        ->select("lgr.school_id AS schoolID, '' AS schoolName, CASE WHEN MIN(lgr.district_id) = MAX(lgr.district_id) THEN MAX(lgr.district_id) ELSE 0 END AS district_id, 1 AS missing_profile, COUNT(lgr.id) AS record_count, MAX(lgr.created_at) AS latest_submission", false)
+        ->from('learning_gap_records lgr')
+        ->join('schools s', 's.schoolID = lgr.school_id', 'left')
+        ->where('s.schoolID IS NULL', null, false)
+        ->where('lgr.division_id', (int) $division_id)
+        ->where('lgr.fiscal_year', $this->learning_gap_year())
+        ->group_by('lgr.school_id')->get()->result();
+    return array_merge($schools, $unlinked);
+}
+
+private $learning_gap_save_error = '';
+
+public function learning_gap_save_error()
+{
+    return $this->learning_gap_save_error;
 }
 
 public function save_learning_gap_record($school_id)
 {
+    $this->learning_gap_save_error = '';
+    if (!$this->learning_gap_ids_ready) {
+        $this->learning_gap_save_error = 'Records cannot be saved until the database record ID setup is repaired. Please contact your system administrator.';
+        return false;
+    }
     $this->ensure_learning_gap_proficiency_columns();
     $this->ensure_learning_gap_archive_schema();
     $this->ensure_learning_gap_summative_schema();
     $school = $this->Common->one_cond_row('schools', 'schoolID', $school_id);
     if (!$school) {
+        $this->learning_gap_save_error = 'Your school profile is not set up. Please contact your division administrator with your School ID.';
+        return false;
+    }
+    if ((int) $school->region_id <= 0 || (int) $school->division_id <= 0 || (int) $school->district_id <= 0) {
+        $this->learning_gap_save_error = 'Your school profile needs a region, division, and district before submitting. Please contact your division administrator.';
         return false;
     }
     $assessed = (int) $this->input->post('learners_assessed', true);
@@ -2683,12 +2715,27 @@ public function save_learning_gap_record($school_id)
         $data['cpl_summative_2'] = $cpl_summative_2 === '' ? null : $cpl_summative_2;
     }
     $record_id = (int) $this->input->post('record_id', true);
+    if ($record_id > 0 && !$this->learning_gap_record($record_id, $school_id)) {
+        $this->learning_gap_save_error = 'The selected record was not found in your school account for this fiscal year.';
+        return false;
+    }
+    $debug = $this->db->db_debug;
+    $this->db->db_debug = false;
     if ($record_id > 0) {
-        return $this->db->where('id', $record_id)->where('school_id', $school_id)
+        $saved = $this->db->where('id', $record_id)->where('school_id', $school_id)
             ->where('fiscal_year', $this->learning_gap_year())
             ->update('learning_gap_records', $data);
+    } else {
+        $saved = $this->db->insert('learning_gap_records', $data);
     }
-    return $this->db->insert('learning_gap_records', $data);
+    if (!$saved) {
+        $error = $this->db->error();
+        $reference = bin2hex(random_bytes(6));
+        log_message('error', 'Learning gap save failure [' . $reference . '] code=' . (int) $error['code']);
+        $this->learning_gap_save_error = 'The record could not be saved. Please retry or contact your system administrator with reference ' . $reference . '.';
+    }
+    $this->db->db_debug = $debug;
+    return $saved;
 }
 
 /** Keep existing Learning Gap Monitoring databases compatible with new fields. */

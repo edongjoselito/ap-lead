@@ -102,7 +102,24 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
             <?php if ($division_filter > 0) : ?>
                 <input type="hidden" name="division_id" value="<?= (int) $division_filter; ?>">
             <?php endif; ?>
+            <?php if ($school_filter !== '') : ?>
+                <input type="hidden" name="school_id" value="<?= html_escape($school_filter); ?>">
+            <?php endif; ?>
             <div class="rec-filter-grid">
+                <?php if (!$is_school) : ?>
+                    <div class="rec-field">
+                        <label for="filter-district">District</label>
+                        <select id="filter-district" name="district_id" class="custom-select">
+                            <option value="">All districts</option>
+                            <?php if ($district_filter !== '' && !isset($district_options[$district_filter])) : ?>
+                                <option value="<?= html_escape($district_filter); ?>" selected>Selected district (no records)</option>
+                            <?php endif; ?>
+                            <?php foreach ($district_options as $id => $name) : ?>
+                                <option value="<?= html_escape((string) $id); ?>" <?= $district_filter === (string) $id ? 'selected' : ''; ?>><?= html_escape($name); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
                 <?php foreach ($filters as $field => $filter) : ?>
                     <?php
                     $options = isset($record_filter_options[$field]) ? $record_filter_options[$field] : array();
@@ -135,6 +152,8 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                 <div class="rec-active">
                     <span class="rec-active-label">Active filters</span>
                     <?php if ($division_filter > 0) : ?><span class="rec-active-chip">Selected division</span><?php endif; ?>
+                    <?php if ($district_filter !== '') : ?><span class="rec-active-chip">District: <?= html_escape(isset($district_options[$district_filter]) ? $district_options[$district_filter] : 'Selected district'); ?></span><?php endif; ?>
+                    <?php if ($school_filter !== '') : ?><span class="rec-active-chip">School ID: <?= html_escape($school_filter); ?></span><?php endif; ?>
                     <?php foreach ($filters as $filter) : ?>
                         <?php if ($filter['value'] !== '') : ?>
                             <span class="rec-active-chip"><?= html_escape($filter['label'] . ': ' . $filter['value']); ?></span>
@@ -175,14 +194,15 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                     $assessed = (int) $row->learners_assessed;
                     $with_gap = (int) $row->learners_with_gap;
                     $competencies = $competency_items($row->least_learned_competency);
-                    $context = ($is_school ? '' : $row->schoolName . ', ') . $row->grade_level . ', ' . $row->learning_area . ', ' . $row->term;
+                    $school_label = trim((string) $row->schoolName) !== '' ? $row->schoolName : 'School ID ' . $row->school_id;
+                    $context = ($is_school ? '' : $school_label . ', ') . $row->grade_level . ', ' . $row->learning_area . ', ' . $row->term;
                     ?>
                     <li class="rec-item">
                         <div class="rec-item-main">
                             <div class="rec-identity">
                                 <?php if (!$is_school) : ?>
-                                    <strong><?= html_escape($row->schoolName); ?></strong>
-                                    <span><?= html_escape($row->division_name); ?> · <?= html_escape($row->grade_level); ?> · <?= html_escape($row->learning_area); ?> · <?= html_escape($row->term); ?></span>
+                                    <strong><?= html_escape($school_label); ?></strong>
+                                    <span><?= html_escape($row->division_name); ?> · <?= html_escape($row->district_name ?: 'Unassigned district'); ?> · <?= html_escape($row->grade_level); ?> · <?= html_escape($row->learning_area); ?> · <?= html_escape($row->term); ?></span>
                                 <?php else : ?>
                                     <strong><?= html_escape($row->grade_level); ?> · <?= html_escape($row->learning_area); ?></strong>
                                     <span><?= html_escape($row->term); ?></span>
