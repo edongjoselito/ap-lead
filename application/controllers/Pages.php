@@ -4597,8 +4597,8 @@ class Pages extends CI_Controller
                 return;
             }
 
-            $this->session->set_flashdata('success', 'School account created and activated. You can now sign in using your School ID or registered email address and password.');
-            redirect(base_url('signup') . '#signup-feedback');
+            $this->session->set_flashdata('signup_success', 'School account created and activated. You can now sign in using your School ID or registered email address and password.');
+            redirect(base_url('homepage') . '#portal', 'location', 303);
         }
     }
 

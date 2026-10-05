@@ -4,8 +4,9 @@ $division_count = count($division_list);
 $region_name = !empty($region->description) ? $region->description : 'Region XI - Davao Region';
 $login_failed = $this->session->flashdata('failed');
 $page_success = $this->session->flashdata('success');
+$signup_success = $this->session->flashdata('signup_success');
 $login_validation_errors = validation_errors();
-$open_login_modal = !empty($login_failed) || !empty($login_validation_errors);
+$open_login_modal = !empty($signup_success) || !empty($login_failed) || !empty($login_validation_errors);
 
 /*
  * People directory (governance section).
@@ -3060,6 +3061,7 @@ if ($seal_url === '') {
                         </svg></div>
                     <h2 id="login-title">Portal access</h2>
                     <p class="login-intro">Sign in using your authorized AP-LEAD account.</p>
+                    <?php if (!empty($signup_success)) : ?><div class="alert alert-success" role="status"><?= html_escape($signup_success); ?></div><?php endif; ?>
                     <?php if (!empty($login_failed)) : ?><div class="alert alert-danger" role="alert"><?= html_escape($login_failed); ?></div><?php endif; ?>
                     <?= $login_validation_errors; ?>
                     <?= form_open('log_in', array('id' => 'portalLoginForm')); ?>
