@@ -31,6 +31,9 @@
 <!-- App js -->
 <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
 
+<!-- Quiet nav (seamless page transitions) -->
+<script src="<?= base_url(); ?>assets/js/quiet-nav.js"></script>
+
 <script type="text/javascript">
                         $(document).on("click", ".open-AddBookDialog", function () {
                             var myBookId = $(this).data('id');

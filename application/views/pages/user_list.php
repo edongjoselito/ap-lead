@@ -596,7 +596,7 @@
                                 initComplete: function() {
                                     console.log('DataTables initialized');
                                     // Update account count from API response
-                                    table.on('xhr.dt', function(e, settings, json, xhr) {
+                                    this.api().on('xhr.dt', function(e, settings, json, xhr) {
                                         console.log('XHR response:', json);
                                         if (json && json.recordsTotal !== undefined) {
                                             $('.account-level').html('<i class="mdi mdi-account-multiple-outline"></i> ' + json.recordsTotal + ' account' + (json.recordsTotal === 1 ? '' : 's'));

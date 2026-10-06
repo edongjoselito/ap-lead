@@ -11,5 +11,8 @@
 <!-- App js -->
 <script src="<?= base_url(); ?>assets/js/app.min.js"></script>
 
+<!-- Quiet nav (seamless page transitions) -->
+<script src="<?= base_url(); ?>assets/js/quiet-nav.js"></script>
+
 </body>
 </html>
