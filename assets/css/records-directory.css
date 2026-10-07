@@ -257,6 +257,29 @@
 .rec-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .rec-actions form { display: inline-flex; margin: 0; }
 
+/* ---------- Grade CPL table ---------- */
+.rec-table-wrap { overflow-x: auto; }
+.rec-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rec-table th, .rec-table td {
+    padding: 11px 22px;
+    border-top: 1px solid #edf3f8;
+    text-align: left;
+    vertical-align: middle;
+}
+.rec-table thead th {
+    padding-top: 14px;
+    border-top: none;
+    color: var(--rec-faint);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.rec-table tbody th { color: var(--rec-navy); font-weight: 600; }
+.rec-table tbody tr:hover { background: #fbfdff; }
+.rec-table .rec-table-cpl { color: var(--rec-navy); font-weight: 600; }
+
 /* ---------- Empty state ---------- */
 .rec-empty { padding: 52px 24px; text-align: center; }
 .rec-empty i { color: #b9cdde; font-size: 2.6rem; }

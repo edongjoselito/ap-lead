@@ -2173,8 +2173,13 @@ private function apply_learning_gap_scope($scope, $alias = 'lgr')
 public function learning_gap_records($scope, $year = null)
 {
     $this->ensure_learning_gap_archive_schema();
+    $this->ensure_learning_gap_proficiency_columns();
     $this->ensure_learning_gap_summative_schema();
-    $this->db->select('lgr.*, s.schoolName, d.description AS division_name, COALESCE(s.district_id, lgr.district_id) AS reporting_district_id, district.description AS district_name')
+    // Submissions stay visible when the school profile is missing; the school
+    // account name (users.fname) is the next best label before the School ID.
+    // A LIMIT 1 subquery is used instead of a join so duplicate usernames can
+    // never multiply record rows (users.username has no unique index).
+    $this->db->select("lgr.*, COALESCE(NULLIF(TRIM(s.schoolName), ''), NULLIF(TRIM((SELECT su.fname FROM users su WHERE su.username = lgr.school_id AND su.position = 'school' LIMIT 1)), ''), '') AS schoolName, d.description AS division_name, COALESCE(s.district_id, lgr.district_id) AS reporting_district_id, district.description AS district_name")
         ->from('learning_gap_records lgr')
         ->join('schools s', 's.schoolID = lgr.school_id', 'left')
         ->join('division d', 'd.id = lgr.division_id', 'left')
@@ -2184,6 +2189,32 @@ public function learning_gap_records($scope, $year = null)
     $this->apply_learning_gap_scope($scope);
 
     return $this->db->order_by('lgr.created_at', 'DESC')->get()->result();
+}
+
+/**
+ * Districts inside the viewer's reporting scope, whether or not they have
+ * submitted records, so the records filter can list every assigned district.
+ */
+public function learning_gap_scope_districts($scope)
+{
+    if ($scope['type'] === 'division') {
+        $this->db->where('district.division_id', (int) $scope['id']);
+    } elseif ($scope['type'] === 'district') {
+        $this->db->where('district.id', (int) $scope['id']);
+    } elseif ($scope['type'] === 'region') {
+        $this->db->where(
+            'district.division_id IN (SELECT d_scope.id FROM division d_scope WHERE d_scope.region_id = '
+            . (int) $scope['id'] . ')',
+            null,
+            false
+        );
+    } else {
+        return array();
+    }
+    return $this->db->select('district.id, district.division_id, district.description')
+        ->from('district')
+        ->order_by('district.description', 'ASC')
+        ->get()->result();
 }
 
 public function learning_gap_archive_years($scope)
@@ -2256,6 +2287,7 @@ public function learning_gap_summary($scope)
 public function learning_gap_term_performance($scope)
 {
     $this->ensure_learning_gap_archive_schema();
+    $this->ensure_learning_gap_proficiency_columns();
     $this->ensure_learning_gap_summative_schema();
     $terms = array(
         'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
@@ -2477,6 +2509,7 @@ public function learning_gap_thematic_analysis($scope, $limit = 6)
 public function learning_gap_division_performance($region_id)
 {
     $this->ensure_learning_gap_archive_schema();
+    $this->ensure_learning_gap_proficiency_columns();
     $rows = array();
     foreach ($this->regional_divisions($region_id) as $division) {
         $rows[(int) $division->id] = array(
@@ -2748,7 +2781,15 @@ private function ensure_learning_gap_proficiency_columns()
         $this->db->query('ALTER TABLE learning_gap_records ADD proficiency_level VARCHAR(100) NULL AFTER class_proficiency_level');
     }
     // MELC is retained for legacy records, but is no longer captured in entry.
-    $this->db->query('ALTER TABLE learning_gap_records MODIFY melc_competency TEXT NULL');
+    // Only alter it while the column is still required so repeat calls stay cheap.
+    $melc = $this->db->query(
+        "SELECT IS_NULLABLE FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'learning_gap_records'
+           AND COLUMN_NAME = 'melc_competency' LIMIT 1"
+    )->row();
+    if ($melc && strtoupper((string) $melc->IS_NULLABLE) === 'NO') {
+        $this->db->query('ALTER TABLE learning_gap_records MODIFY melc_competency TEXT NULL');
+    }
 }
 
 private $summative_cpl_schema_ready = false;
@@ -2795,6 +2836,9 @@ public function ensure_learning_gap_summative_schema()
         if (!$this->db->field_exists('cpl_summative_enabled', 'schools')) {
             $this->db->query('ALTER TABLE schools ADD cpl_summative_enabled TINYINT(1) NOT NULL DEFAULT 0');
         }
+        // The summative columns are added AFTER class_proficiency_level, so the
+        // proficiency columns must exist first on databases that predate them.
+        $this->ensure_learning_gap_proficiency_columns();
         if (!$this->db->field_exists('cpl_summative_1', 'learning_gap_records')) {
             $this->db->query('ALTER TABLE learning_gap_records ADD cpl_summative_1 DECIMAL(5,2) NULL AFTER class_proficiency_level');
         }

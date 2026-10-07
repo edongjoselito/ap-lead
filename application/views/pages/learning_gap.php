@@ -121,6 +121,31 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
     </div>
     <?php endif; ?>
 
+    <?php if (!$entry_mode && !empty($grade_performance)): ?>
+    <div class="lgm-card">
+        <div class="lgm-card-head">
+            <div><h4><i class="mdi mdi-stairs-up mr-1"></i> CPL by Grade Level</h4><small><?= html_escape($scope_label); ?> · CPL is weighted by the number of assessed learners; only records with an encoded CPL contribute. Click a grade to review its records.</small></div>
+        </div>
+        <div class="table-responsive">
+            <table class="table summary-table mb-0">
+                <thead><tr><th>Grade level</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th><th>Mastery level</th></tr></thead>
+                <tbody>
+                    <?php foreach ($grade_performance as $grade_row): $grade_link = base_url('Pages/learning_gap_records?' . http_build_query(array('grade_level' => $grade_row->grade_level))); ?>
+                        <tr>
+                            <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><strong><?= html_escape($grade_row->grade_level); ?></strong></a></td>
+                            <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><?= (int) $grade_row->record_count; ?></a></td>
+                            <td><?= number_format((int) $grade_row->learners_assessed); ?></td>
+                            <td><?= number_format((int) $grade_row->learners_with_gap); ?></td>
+                            <td><strong><?= $grade_row->class_proficiency_level !== null ? number_format((float) $grade_row->class_proficiency_level, 2) . '%' : '—'; ?></strong></td>
+                            <td><?= $grade_row->class_proficiency_level !== null ? html_escape(lg_cpl_band((float) $grade_row->class_proficiency_level)) : '—'; ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <?php if (!$entry_mode && !empty($division_summary)): ?>
     <div class="lgm-card"><div class="lgm-card-head"><h4><i class="mdi mdi-office-building mr-1"></i> Summary by division</h4><small>Counts are direct sums from submitted records. Click any figure to review the source data.</small></div><div class="table-responsive"><table class="table summary-table mb-0"><thead><tr><th>Division</th><th>Schools reporting</th><th>Records</th><th>Recorded assessed</th><th>Recorded gap</th></tr></thead><tbody><?php foreach ($division_summary as $row): $record_link = base_url('Pages/learning_gap_records?division_id=' . (int) $row->division_id); ?><tr><td><strong><?= html_escape($row->division_name); ?></strong></td><td><a href="<?= $record_link; ?>" title="View <?= html_escape($row->division_name); ?> records"><?= (int) $row->school_count; ?></a></td><td><a href="<?= $record_link; ?>" title="View <?= html_escape($row->division_name); ?> records"><?= (int) $row->record_count; ?></a></td><td><a href="<?= $record_link; ?>" title="View <?= html_escape($row->division_name); ?> records"><?= number_format((int) $row->learners_assessed); ?></a></td><td><a href="<?= $record_link; ?>" title="View <?= html_escape($row->division_name); ?> records"><?= number_format((int) $row->learners_with_gap); ?></a></td></tr><?php endforeach; ?></tbody></table></div><?php if (!empty($division_interp)): ?><div class="lgm-interp-foot"><?= lg_interpretation_box($division_interp); ?></div><?php endif; ?></div>
     <?php endif; ?>

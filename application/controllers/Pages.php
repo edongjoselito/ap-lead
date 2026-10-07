@@ -1050,6 +1050,8 @@ class Pages extends CI_Controller
         }
         $data['grade_filter'] = trim((string) $this->input->get('grade_level', true));
         $data['records'] = $this->Page_model->learning_gap_records($scope);
+        $this->load->helper('learning_gap');
+        $data['grade_performance'] = lg_grade_performance($data['records']);
         if ($data['grade_filter'] !== '') {
             $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
                 return (string) $record->grade_level === $data['grade_filter'];
@@ -1229,11 +1231,23 @@ class Pages extends CI_Controller
         // Build filter choices from this user's authorized scope before applying filters.
         $this->load->helper('learning_gap');
         $data['record_filter_options'] = array('grade_level' => array_combine(lg_grade_options(), lg_grade_options()), 'learning_area' => array(), 'term' => array());
+        // The district filter lists every district in scope, not only those
+        // with submissions, so empty districts can also be checked.
         $data['district_options'] = array();
+        foreach ($this->Page_model->learning_gap_scope_districts($scope) as $district) {
+            if ($data['division_filter'] > 0 && (int) $district->division_id !== $data['division_filter']) {
+                continue;
+            }
+            $data['district_options'][(string) $district->id] = $district->description;
+        }
         foreach ($data['records'] as $record) {
             if ($data['division_filter'] === 0 || (int) $record->division_id === $data['division_filter']) {
+                // Records whose reporting district sits outside the scope list
+                // (e.g. a moved school) or has no district still stay filterable.
                 $district_key = !empty($record->district_name) ? (string) $record->reporting_district_id : 'unassigned';
-                $data['district_options'][$district_key] = !empty($record->district_name) ? $record->district_name : 'Unassigned district';
+                if (!isset($data['district_options'][$district_key])) {
+                    $data['district_options'][$district_key] = !empty($record->district_name) ? $record->district_name : 'Unassigned district';
+                }
             }
             foreach ($data['record_filter_options'] as $field => $options) {
                 $value = trim((string) $record->$field);
@@ -1285,6 +1299,7 @@ class Pages extends CI_Controller
                 return in_array($data['competency_filter'], $competencies, true);
             }));
         }
+        $data['grade_performance'] = lg_grade_performance($data['records']);
 
         $this->load->view('templates/header');
         $this->load->view('templates/menu');

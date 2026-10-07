@@ -167,6 +167,41 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
         </form>
     </section>
 
+    <?php if (!empty($grade_performance)) : ?>
+        <section class="rec-card" aria-labelledby="rec-grade-title">
+            <div class="rec-card-head">
+                <h2 id="rec-grade-title">Class Proficiency Level by grade level</h2>
+                <p>CPL is weighted by the number of assessed learners, so larger classes count proportionately. Only records with an encoded CPL contribute to the CPL column.</p>
+            </div>
+            <div class="rec-table-wrap">
+                <table class="rec-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Grade level</th>
+                            <th scope="col">Records</th>
+                            <th scope="col">Assessed</th>
+                            <th scope="col">With gap</th>
+                            <th scope="col">CPL</th>
+                            <th scope="col">Mastery level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($grade_performance as $grade_row) : ?>
+                            <tr>
+                                <th scope="row"><?= html_escape($grade_row->grade_level); ?></th>
+                                <td class="rec-num"><?= number_format($grade_row->record_count); ?></td>
+                                <td class="rec-num"><?= number_format($grade_row->learners_assessed); ?></td>
+                                <td class="rec-num"><?= number_format($grade_row->learners_with_gap); ?></td>
+                                <td class="rec-num rec-table-cpl"><?= $grade_row->class_proficiency_level !== null ? number_format((float) $grade_row->class_proficiency_level, 2) . '%' : '—'; ?></td>
+                                <td><?= $grade_row->class_proficiency_level !== null ? html_escape(lg_cpl_band((float) $grade_row->class_proficiency_level)) : '—'; ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    <?php endif; ?>
+
     <section class="rec-card" aria-labelledby="rec-list-title">
         <div class="rec-card-head">
             <h2 id="rec-list-title"><?= $is_school ? 'My encoded records' : 'Submitted records'; ?></h2>

@@ -12,6 +12,58 @@ function lg_grade_options($existing = array())
 }
 
 /**
+ * Aggregates submitted records into per-grade-level rows. CPL is weighted by
+ * the number of assessed learners, matching the per-term performance rollup,
+ * so larger classes contribute proportionately to the grade-level result.
+ */
+if (!function_exists('lg_grade_performance')) {
+    function lg_grade_performance(array $records)
+    {
+        $order = array_flip(lg_grade_options());
+        $rows = array();
+        foreach ($records as $record) {
+            $grade = trim((string) $record->grade_level);
+            if ($grade === '') continue;
+            if (!isset($rows[$grade])) {
+                $rows[$grade] = array(
+                    'grade_level' => $grade,
+                    'record_count' => 0,
+                    'learners_assessed' => 0,
+                    'learners_with_gap' => 0,
+                    'cpl_weighted' => 0.0,
+                    'cpl_learners' => 0,
+                    'cpl_record_count' => 0,
+                );
+            }
+            $assessed = (int) $record->learners_assessed;
+            $rows[$grade]['record_count']++;
+            $rows[$grade]['learners_assessed'] += $assessed;
+            $rows[$grade]['learners_with_gap'] += (int) $record->learners_with_gap;
+            if (isset($record->class_proficiency_level) && $record->class_proficiency_level !== '') {
+                $weight = max(1, $assessed);
+                $rows[$grade]['cpl_weighted'] += (float) $record->class_proficiency_level * $weight;
+                $rows[$grade]['cpl_learners'] += $weight;
+                $rows[$grade]['cpl_record_count']++;
+            }
+        }
+        uksort($rows, function ($a, $b) use ($order) {
+            $ai = isset($order[$a]) ? $order[$a] : PHP_INT_MAX;
+            $bi = isset($order[$b]) ? $order[$b] : PHP_INT_MAX;
+            return $ai === $bi ? strnatcasecmp($a, $b) : ($ai < $bi ? -1 : 1);
+        });
+        $result = array();
+        foreach ($rows as $row) {
+            $row['class_proficiency_level'] = $row['cpl_learners'] > 0
+                ? round($row['cpl_weighted'] / $row['cpl_learners'], 2)
+                : null;
+            unset($row['cpl_weighted'], $row['cpl_learners']);
+            $result[] = (object) $row;
+        }
+        return $result;
+    }
+}
+
+/**
  * Plain-language interpretations for the Learning Gap dashboards.
  * Every function returns a list of HTML-safe sentences for lg_interpretation_box().
  */

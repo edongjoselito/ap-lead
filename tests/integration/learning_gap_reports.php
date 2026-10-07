@@ -65,7 +65,7 @@ function save_report($model, $school, $grade, $extra = array()) {
 }
 try {
     // Use the installed column definitions, but never copy real reports or accounts.
-    foreach (array('learning_gap_records', 'schools', 'district', 'division') as $table) {
+    foreach (array('learning_gap_records', 'schools', 'district', 'division', 'users') as $table) {
         check($connection->query('CREATE TABLE `' . $table . '` LIKE `' . str_replace('`', '``', $source_database) . '`.`' . $table . '`'), 'Could not create fixture ' . $table);
     }
     // The test also runs before deploying the ID migration.
