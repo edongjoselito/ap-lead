@@ -17,6 +17,8 @@ class Page_model extends CI_Model{
         $this->load->library('school_signup_schema');
         $this->school_signup_schema->ensure($this->db);
         $this->ensure_learning_gap_archive_schema();
+        $this->ensure_learning_gap_summative_schema();
+        $this->ensure_shs_learning_area_settings();
         $this->load->library('learning_gap_schema');
         $this->learning_gap_ids_ready = $this->learning_gap_schema->ensure($this->db);
     }
@@ -1209,6 +1211,22 @@ function delete_with_attach($table,$segment,$attach){
 }
 
 
+/**
+ * Division-managed accounts joined to their district so the user list can
+ * group school and district accounts under their assigned district.
+ */
+public function division_users_with_district($division_id)
+{
+    return $this->db->select('users.*, district.description AS district_name')
+        ->from('users')
+        ->join('district', 'district.id = users.d_id AND district.division_id = users.p_id', 'left')
+        ->where('users.p_id', (int) $division_id)
+        ->order_by('district.description', 'ASC')
+        ->order_by('users.lname', 'ASC')
+        ->order_by('users.fname', 'ASC')
+        ->get()->result();
+}
+
 // Special query
 public function schools_with_district($id)
 {
@@ -2290,12 +2308,12 @@ public function learning_gap_term_performance($scope)
     $this->ensure_learning_gap_proficiency_columns();
     $this->ensure_learning_gap_summative_schema();
     $terms = array(
-        'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
-        'Term 2' => array('term' => 'Term 2', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
-        'Term 3' => array('term' => 'Term 3', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0),
+        'Term 1' => array('term' => 'Term 1', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0, 'cpl_end_term' => null, 'et_record_count' => 0),
+        'Term 2' => array('term' => 'Term 2', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0, 'cpl_end_term' => null, 'et_record_count' => 0),
+        'Term 3' => array('term' => 'Term 3', 'record_count' => 0, 'learners_assessed' => 0, 'learners_with_gap' => 0, 'class_proficiency_level' => null, 'cpl_record_count' => 0, 'cpl_summative_1' => null, 'cpl_summative_2' => null, 'cpl_summative_avg' => null, 's1_record_count' => 0, 's2_record_count' => 0, 'cpl_end_term' => null, 'et_record_count' => 0),
     );
 
-    $this->db->select('lgr.school_id, lgr.grade_level, lgr.term, lgr.learners_assessed, lgr.learners_with_gap, lgr.class_proficiency_level, lgr.cpl_summative_1, lgr.cpl_summative_2')
+    $this->db->select('lgr.school_id, lgr.grade_level, lgr.term, lgr.learners_assessed, lgr.learners_with_gap, lgr.class_proficiency_level, lgr.cpl_summative_1, lgr.cpl_summative_2, lgr.cpl_end_term')
         ->from('learning_gap_records lgr')
         ->where_in('lgr.term', array_keys($terms))
         ->where('lgr.fiscal_year', $this->learning_gap_year());
@@ -2309,6 +2327,8 @@ public function learning_gap_term_performance($scope)
     $s2_learners = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
     $savg_weighted = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
     $savg_learners = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
+    $et_weighted = array('Term 1' => 0.0, 'Term 2' => 0.0, 'Term 3' => 0.0);
+    $et_learners = array('Term 1' => 0, 'Term 2' => 0, 'Term 3' => 0);
     foreach ($this->db->get()->result() as $record) {
         $term = (string) $record->term;
         $assessed = (int) $record->learners_assessed;
@@ -2337,6 +2357,12 @@ public function learning_gap_term_performance($scope)
             $terms[$term]['s2_record_count']++;
             $summative_parts[] = (float) $record->cpl_summative_2;
         }
+        if ($record->cpl_end_term !== null && $record->cpl_end_term !== '') {
+            $et_weighted[$term] += (float) $record->cpl_end_term * $weight;
+            $et_learners[$term] += $weight;
+            $terms[$term]['et_record_count']++;
+            $summative_parts[] = (float) $record->cpl_end_term;
+        }
         if (!empty($summative_parts)) {
             $savg_weighted[$term] += (array_sum($summative_parts) / count($summative_parts)) * $weight;
             $savg_learners[$term] += $weight;
@@ -2355,6 +2381,9 @@ public function learning_gap_term_performance($scope)
         }
         if ($s2_learners[$term] > 0) {
             $row['cpl_summative_2'] = round($s2_weighted[$term] / $s2_learners[$term], 2);
+        }
+        if ($et_learners[$term] > 0) {
+            $row['cpl_end_term'] = round($et_weighted[$term] / $et_learners[$term], 2);
         }
         if ($savg_learners[$term] > 0) {
             $row['cpl_summative_avg'] = round($savg_weighted[$term] / $savg_learners[$term], 2);
@@ -2718,6 +2747,7 @@ public function save_learning_gap_record($school_id)
     $summative_enabled = (int) $school->cpl_summative_enabled === 1;
     $cpl_summative_1 = trim((string) $this->input->post('cpl_summative_1', true));
     $cpl_summative_2 = trim((string) $this->input->post('cpl_summative_2', true));
+    $cpl_end_term = trim((string) $this->input->post('cpl_end_term', true));
     $selected_competencies = $this->input->post('least_learned_competency', true);
     $least_learned_competency = is_array($selected_competencies)
         ? implode("\n", array_values(array_filter(array_map('trim', $selected_competencies))))
@@ -2746,6 +2776,7 @@ public function save_learning_gap_record($school_id)
     if ($summative_enabled) {
         $data['cpl_summative_1'] = $cpl_summative_1 === '' ? null : $cpl_summative_1;
         $data['cpl_summative_2'] = $cpl_summative_2 === '' ? null : $cpl_summative_2;
+        $data['cpl_end_term'] = $cpl_end_term === '' ? null : $cpl_end_term;
     }
     $record_id = (int) $this->input->post('record_id', true);
     if ($record_id > 0 && !$this->learning_gap_record($record_id, $school_id)) {
@@ -2802,6 +2833,7 @@ private $summative_cpl_schema_ready = false;
  */
 public function ensure_learning_gap_summative_schema()
 {
+    $this->ensure_learning_gap_endterm_schema();
     if ($this->summative_cpl_schema_ready) {
         return;
     }
@@ -2856,6 +2888,61 @@ public function ensure_learning_gap_summative_schema()
     }
 }
 
+private $endterm_cpl_schema_ready = false;
+private $shs_learning_areas_ready = false;
+
+/**
+ * End-of-term exam CPL column on learning gap records. Pairs with the
+ * summative CPL feature: schools flagged for summative encoding can also
+ * record the CPL result of the end-of-term exam for the same record.
+ * Runs once per database via app_schema_migrations.
+ */
+private function ensure_learning_gap_endterm_schema()
+{
+    if ($this->endterm_cpl_schema_ready) {
+        return;
+    }
+
+    $migration = '20261012_end_term_cpl';
+    $this->db->query("CREATE TABLE IF NOT EXISTS `app_schema_migrations` (
+        `migration` VARCHAR(190) NOT NULL,
+        `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`migration`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        $this->endterm_cpl_schema_ready = true;
+        return;
+    }
+
+    $lock = $this->db->query(
+        "SELECT GET_LOCK(CONCAT('ap_lead_endterm_cpl_', DATABASE()), 30) AS acquired"
+    )->row();
+    if (!$lock || (int) $lock->acquired !== 1) {
+        throw new RuntimeException('The Learning Gap database upgrade is currently busy. Please reload the page.');
+    }
+
+    try {
+        if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+            $this->endterm_cpl_schema_ready = true;
+            return;
+        }
+
+        $this->ensure_learning_gap_proficiency_columns();
+        if (!$this->db->field_exists('cpl_end_term', 'learning_gap_records')) {
+            $this->db->query('ALTER TABLE learning_gap_records ADD cpl_end_term DECIMAL(5,2) NULL AFTER class_proficiency_level');
+        }
+
+        $this->db->query(
+            'INSERT IGNORE INTO app_schema_migrations (migration) VALUES (?)',
+            array($migration)
+        );
+        $this->endterm_cpl_schema_ready = true;
+    } finally {
+        $this->db->query("SELECT RELEASE_LOCK(CONCAT('ap_lead_endterm_cpl_', DATABASE()))");
+    }
+}
+
 /** Whether the school is allowed to encode Summative 1/2 CPL per term. */
 public function school_summative_cpl_enabled($school_id)
 {
@@ -2905,8 +2992,97 @@ public function delete_learning_gap_record($id, $school_id)
         ->delete('learning_gap_records');
 }
 
+/**
+ * Senior-high grade levels were added to the encoding form after launch, so
+ * divisions configured earlier only have Grade 1-10 learning areas. Copy each
+ * division's configured learning areas to Grade 11 and Grade 12 once; the
+ * region can still adjust them through Learning Area Setup afterwards.
+ */
+public function ensure_shs_learning_area_settings()
+{
+    if ($this->shs_learning_areas_ready) {
+        return;
+    }
+
+    $migration = '20261012_shs_learning_areas';
+    $this->db->query("CREATE TABLE IF NOT EXISTS `app_schema_migrations` (
+        `migration` VARCHAR(190) NOT NULL,
+        `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`migration`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+        $this->shs_learning_areas_ready = true;
+        return;
+    }
+
+    $lock = $this->db->query(
+        "SELECT GET_LOCK(CONCAT('ap_lead_shs_learning_areas_', DATABASE()), 30) AS acquired"
+    )->row();
+    if (!$lock || (int) $lock->acquired !== 1) {
+        throw new RuntimeException('The Learning Gap database upgrade is currently busy. Please reload the page.');
+    }
+
+    try {
+        // Another request may have completed the migration while this request
+        // was waiting for the database lock.
+        if ($this->db->where('migration', $migration)->count_all_results('app_schema_migrations') > 0) {
+            $this->shs_learning_areas_ready = true;
+            return;
+        }
+
+        $this->db->query("CREATE TABLE IF NOT EXISTS `learning_area_settings` (
+            `id` INT UNSIGNED NOT NULL,
+            `division_id` INT NOT NULL,
+            `grade_level` VARCHAR(50) NOT NULL,
+            `learning_area` VARCHAR(150) NOT NULL,
+            `created_by` VARCHAR(45) NOT NULL DEFAULT 'system',
+            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        $senior_grades = array('Grade 11', 'Grade 12');
+        $divisions = $this->db->select('division_id')->distinct()->get('learning_area_settings')->result();
+        // Some databases predate AUTO_INCREMENT on this table, so ids are assigned
+        // explicitly; that stays compatible once the column auto-increments.
+        $next_id = (int) $this->db->select_max('id')->get('learning_area_settings')->row()->id + 1;
+        foreach ($divisions as $division) {
+            $division_id = (int) $division->division_id;
+            $areas = $this->db->select('learning_area')->distinct()
+                ->where('division_id', $division_id)
+                ->get('learning_area_settings')->result();
+            foreach ($senior_grades as $grade) {
+                foreach ($areas as $area) {
+                    $exists = $this->db->where('division_id', $division_id)
+                        ->where('grade_level', $grade)
+                        ->where('learning_area', $area->learning_area)
+                        ->count_all_results('learning_area_settings') > 0;
+                    if (!$exists) {
+                        $this->db->insert('learning_area_settings', array(
+                            'id' => $next_id++,
+                            'division_id' => $division_id,
+                            'grade_level' => $grade,
+                            'learning_area' => $area->learning_area,
+                            'created_by' => 'system',
+                        ));
+                    }
+                }
+            }
+        }
+
+        $this->db->query(
+            'INSERT IGNORE INTO app_schema_migrations (migration) VALUES (?)',
+            array($migration)
+        );
+        $this->shs_learning_areas_ready = true;
+    } finally {
+        $this->db->query("SELECT RELEASE_LOCK(CONCAT('ap_lead_shs_learning_areas_', DATABASE()))");
+    }
+}
+
 public function learning_area_settings($division_id)
 {
+    $this->ensure_shs_learning_area_settings();
     return $this->db->where('division_id', (int) $division_id)
         ->order_by('grade_level', 'ASC')->order_by('learning_area', 'ASC')
         ->get('learning_area_settings')->result();
@@ -2928,7 +3104,10 @@ public function add_learning_area_setting($division_id)
     if ($exists) {
         return false;
     }
+    // Databases that predate AUTO_INCREMENT on this table need explicit ids.
+    $next_id = (int) $this->db->select_max('id')->get('learning_area_settings')->row()->id + 1;
     return $this->db->insert('learning_area_settings', array(
+        'id' => $next_id,
         'division_id' => (int) $division_id,
         'grade_level' => $grade,
         'learning_area' => $area,
@@ -3335,6 +3514,7 @@ private function ensure_learning_competencies_table()
 
 public function learning_area_options($division_id, $grade_level)
 {
+    $this->ensure_shs_learning_area_settings();
     $areas = $this->db->select('learning_area')->where('division_id', (int) $division_id)
         ->where('grade_level', $grade_level)->order_by('learning_area', 'ASC')
         ->get('learning_area_settings')->result_array();

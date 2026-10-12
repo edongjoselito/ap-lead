@@ -27,7 +27,9 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
     .lgm-card{border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 5px 18px rgba(20,62,94,.05);margin-bottom:22px;overflow:hidden}.lgm-card-head{padding:18px 20px;border-bottom:1px solid var(--line);background:#f8fbfd}.lgm-card-head h4{margin:0;color:var(--blue);font-size:17px}.lgm-card-body{padding:20px}.summary-table{margin-bottom:0}.summary-table th{padding:14px 16px;border-top:0;background:#eaf4fa!important;color:#28516e;text-transform:uppercase;font-size:11px;letter-spacing:.04em}.summary-table th:not(:first-child),.summary-table td:not(:first-child){text-align:center}.summary-table td{padding:15px 16px;vertical-align:middle;border-color:#edf2f5}.summary-table tbody tr{transition:background .16s ease}.summary-table tbody tr:hover{background:#f4faff}.summary-table a{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:4px 8px;border-radius:6px;color:#164b73;font-weight:700;text-decoration:none;background:#eef7fc;transition:background .16s ease,color .16s ease}.summary-table a:hover{background:#d9edf8;color:#0f527d}
     .lgm-page label{font-weight:600;font-size:12px;color:#415769}.lgm-page .form-control,.lgm-page .custom-select{border-color:#cbd9e5}.lgm-page textarea.form-control{min-height:82px}.lgm-table{font-size:13px}.lgm-table th{background:#dcecf8;color:#173e5d;white-space:nowrap}.lgm-table td{vertical-align:top;min-width:115px}.lgm-table .wide{min-width:230px}.badge-status{background:#e4f3e9;color:#277241;padding:5px 8px;border-radius:20px;font-weight:600}.summary-table th{background:#edf5fa;color:#28516e}.competency-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;padding:12px;border:1px solid #cbd9e5;border-radius:5px;background:#f8fbfd}.competency-option{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;margin:0!important;border:1px solid #dce6ef;border-radius:6px;background:#fff;font-weight:400!important;cursor:pointer}.competency-option:hover{border-color:#2877a9;background:#f2f9fd}.competency-option input{margin-top:3px}.competency-options .text-muted{grid-column:1/-1;margin:0}
     .school-account-strip{display:flex;align-items:center;gap:15px;padding:17px 20px;margin:-2px 0 20px;border:1px solid #cfe2f0;border-radius:14px;background:#f3f9fd}.school-account-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#d8edf9;color:var(--blue);font-size:24px}.school-account-strip strong{display:block;color:#163f5d;font-size:16px}.school-account-strip small{color:#587183}.school-account-lock{margin-left:auto;color:#317149;font-size:12px;font-weight:700}.rate-preview{display:flex;align-items:center;min-height:38px;padding:0 12px;border:1px solid #b9d9c6;border-radius:5px;background:#edf8f1;color:#257142;font-weight:700}.form-section-title{margin:4px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--line);color:var(--blue);font-size:14px;font-weight:700}.required-note{color:#748697;font-size:12px}
-    .term-chart-card .lgm-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.term-chart-card .lgm-card-head small{color:#6b7d8d}.term-chart-wrap{position:relative;height:340px}.term-chart-empty{display:none;align-items:center;justify-content:center;height:100%;color:#748697;text-align:center}.term-chart-empty i{display:block;margin-bottom:8px;color:#9bb4c5;font-size:34px}
+    .term-chart-card .lgm-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.term-chart-card .lgm-card-head small{color:#6b7d8d}.term-chart-wrap{position:relative;height:340px}.term-chart-empty{display:none;align-items:center;justify-content:center;min-height:180px;color:#748697;text-align:center}.term-chart-empty i{display:block;margin-bottom:8px;color:#9bb4c5;font-size:34px}
+    .term-chart-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.term-chart-panel{padding:14px;border:1px solid var(--line);border-radius:12px;background:#fbfdfe}.term-chart-panel h5{margin:0 0 10px;color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.01em}.term-chart-panel .term-chart-wrap{height:250px}@media(max-width:991.98px){.term-chart-grid{grid-template-columns:1fr}.term-chart-panel .term-chart-wrap{height:230px}}
+    .grade-expand-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:6px;color:var(--blue);background:transparent;font-size:17px;cursor:pointer;transition:background .16s ease}.grade-expand-btn:hover{background:#e3f0f8}.grade-district-row>td{padding:0 16px 16px 44px!important;background:#f8fbfd}.grade-district-table{width:100%;font-size:12px;border-collapse:collapse}.grade-district-table th{padding:8px 10px;color:#5d7386;font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.04em;border-bottom:1px solid var(--line);text-align:left}.grade-district-table td{padding:8px 10px;color:#33475a;border-bottom:1px solid #ecf2f7}.grade-district-table tr:last-child td{border-bottom:0}.grade-district-table a{color:#1d6e9d;font-weight:600}
     .records-card{order:4}.data-entry-card{order:5}.lgm-page>.lgm-hero{order:1}.lgm-page>.alert{order:2}.lgm-page>.row{order:3}.lgm-page>.lgm-card:not(.records-card):not(.data-entry-card){order:4}.record-tools{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.record-filter{display:flex;align-items:end;gap:8px}.record-filter label{margin:0}.record-filter .custom-select{min-width:145px}@media(max-width:575px){.lgm-hero{padding:24px 22px}.lgm-hero h1{font-size:22px}.lgm-stat strong{font-size:27px}.summary-table th,.summary-table td{padding-left:11px;padding-right:11px}}
     /* Dashboard refinements */
     .lgm-page{--navy:#123d61;--accent:#2f8fc1;--mint:#e8f6ef;--muted:#64798a;gap:0}.lgm-hero{padding:31px 34px;background:linear-gradient(125deg,#103956 0%,#16618e 58%,#2f91bb 100%)}.lgm-hero:before{content:'';position:absolute;inset:auto 12% -120px auto;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.14),rgba(255,255,255,0) 67%)}.lgm-eyebrow{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:5px 9px;border:1px solid rgba(255,255,255,.28);border-radius:20px;background:rgba(10,44,68,.16);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#e5f6ff}.lgm-hero h1{position:relative;z-index:1;font-size:29px;letter-spacing:-.02em}.lgm-hero p{position:relative;z-index:1;max-width:630px;font-size:14px}.lgm-stat{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:21px 24px;border:0;border-radius:16px;box-shadow:0 7px 21px rgba(17,65,94,.08)}.lgm-stat:hover{transform:translateY(-4px);box-shadow:0 14px 29px rgba(17,65,94,.15)}.lgm-stat small{font-size:10px}.lgm-stat strong{font-size:34px;margin-top:9px}.lgm-stat-hint{margin-top:auto;padding-top:12px}.lgm-stat-icon{right:20px;top:20px;width:42px;height:42px;border-radius:12px}.lgm-card{border:0;border-radius:16px;box-shadow:0 7px 23px rgba(19,61,88,.07)}.lgm-card-head{padding:20px 24px;background:linear-gradient(180deg,#fbfdff,#f4f9fc);border-bottom-color:#e4edf3}.lgm-card-head h4{font-weight:700;letter-spacing:-.01em}.lgm-card-body{padding:25px 24px}.lgm-page .form-control,.lgm-page .custom-select{min-height:40px;border-color:#c9d9e4;border-radius:8px;background-color:#fff;box-shadow:none;transition:border-color .16s ease,box-shadow .16s ease}.lgm-page .form-control:focus,.lgm-page .custom-select:focus{border-color:#318fc0;box-shadow:0 0 0 3px rgba(49,143,192,.14)}.lgm-page textarea.form-control{min-height:100px;padding-top:10px}.form-section-title{display:flex;align-items:center;gap:8px;margin:8px 0 18px;padding:0 0 11px;border-bottom-color:#dfe9ef;font-size:15px}.form-section-title:before{content:'';width:4px;height:18px;border-radius:4px;background:linear-gradient(#2f91bb,#17527b)}.required-note{margin-left:auto}.competency-options{padding:14px;border:0;border-radius:12px;background:#f2f8fb}.competency-option{min-height:62px;padding:11px 12px;border-color:#d8e5ed;border-radius:10px;line-height:1.38;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease}.competency-option:hover{transform:translateY(-1px);border-color:#62a7ca;background:#fff;box-shadow:0 4px 10px rgba(23,82,123,.08)}.competency-option:has(input:checked){border-color:#2f8fc1;background:#e8f6fc;box-shadow:inset 3px 0 #2f8fc1}.competency-option input{width:16px;height:16px;accent-color:#247dac}.competency-options .text-muted{padding:12px;text-align:center;color:#74899a!important}.rate-preview{min-height:40px;border:0;border-radius:8px;background:var(--mint);color:#1e7451;box-shadow:inset 0 0 0 1px #cbe8d9}.school-account-strip{border:0;border-radius:14px;background:linear-gradient(120deg,#eff8fd,#f7fbfe);box-shadow:inset 0 0 0 1px #d3e7f3}.summary-table th{padding:13px 16px;background:#edf6fa!important}.summary-table td{padding:16px;border-color:#edf2f5}.summary-table td:first-child{font-weight:600;color:#244d6b}.summary-table tr:nth-child(even) td{background:#fbfdfe}.summary-table .competency-column{text-align:left!important}.record-filter{padding:8px 10px;border:1px solid #d7e4ec;border-radius:11px;background:#fff;box-shadow:0 3px 9px rgba(15,55,79,.04)}.record-filter .custom-select{min-width:155px;min-height:35px;font-size:13px}.record-filter .btn{min-height:35px;border-radius:7px}.ranking-context{display:inline-flex;align-items:center;margin-left:8px;padding:4px 8px;border-radius:20px;background:#dff1f9;color:#17658f;font-size:11px;font-weight:700;letter-spacing:0}.rank-pill{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;padding:0 7px;border-radius:8px;background:#e1f1f8;color:#135f8d;font-size:12px;font-weight:800}.summary-table tbody tr:first-child .rank-pill{background:#fff0c9;color:#966300}.summary-table tbody tr:nth-child(2) .rank-pill{background:#e8edf1;color:#536a79}.summary-table tbody tr:nth-child(3) .rank-pill{background:#f4e6d8;color:#93633d}@media(max-width:767px){.lgm-hero{padding:25px 23px;margin-top:14px}.lgm-hero h1{font-size:24px}.lgm-card-head,.lgm-card-body{padding-left:18px;padding-right:18px}.lgm-stat{margin-bottom:14px}.record-filter{width:100%;align-items:stretch;flex-wrap:wrap}.record-filter>div{flex:1 1 140px}.record-filter .custom-select{width:100%;min-width:0}.record-filter .btn{flex:1 1 100%}.required-note{margin-left:0}.form-section-title{align-items:flex-start;flex-wrap:wrap}}
@@ -56,20 +58,32 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
             <small>CPL uses only records with an encoded CPL value.</small>
         </div>
         <div class="lgm-card-body">
-            <div class="term-chart-wrap">
-                <canvas id="termPerformanceChart" role="img" aria-label="Chart of class proficiency level, learners assessed, and learners with learning gap for each term"></canvas>
-                <div id="termPerformanceEmpty" class="term-chart-empty"><div><i class="mdi mdi-chart-bar-stacked"></i>No per-term assessment data has been submitted yet.</div></div>
+            <div id="termPerformanceCharts" class="term-chart-grid">
+                <div class="term-chart-panel">
+                    <h5>Recorded Assessed Count</h5>
+                    <div class="term-chart-wrap"><canvas id="termAssessedChart" role="img" aria-label="Chart of recorded assessed learners for each term"></canvas></div>
+                </div>
+                <div class="term-chart-panel">
+                    <h5>Recorded Gap Count</h5>
+                    <div class="term-chart-wrap"><canvas id="termGapChart" role="img" aria-label="Chart of learners with a recorded learning gap for each term"></canvas></div>
+                </div>
+                <div class="term-chart-panel">
+                    <h5>CPL (%)</h5>
+                    <div class="term-chart-wrap"><canvas id="termCplChart" role="img" aria-label="Chart of class proficiency level for each term"></canvas></div>
+                </div>
             </div>
+            <div id="termPerformanceEmpty" class="term-chart-empty"><div><i class="mdi mdi-chart-bar-stacked"></i>No per-term assessment data has been submitted yet.</div></div>
             <?php if ($has_summative): ?>
             <div class="table-responsive mt-3">
                 <table class="table summary-table mb-0">
-                    <thead><tr><th>Term</th><th>CPL &ndash; Summative 1</th><th>CPL &ndash; Summative 2</th><th>Term CPL (summative avg)</th></tr></thead>
+                    <thead><tr><th>Term</th><th>CPL &ndash; Summative 1</th><th>CPL &ndash; Summative 2</th><th>CPL &ndash; End Term exam</th><th>Term CPL (assessment avg)</th></tr></thead>
                     <tbody>
                         <?php foreach ($term_performance as $term_row): ?>
                         <tr>
                             <td><strong><?= html_escape($term_row->term); ?></strong></td>
                             <td><?= $term_row->cpl_summative_1 !== null ? number_format((float) $term_row->cpl_summative_1, 2) . '%' : '—'; ?></td>
                             <td><?= $term_row->cpl_summative_2 !== null ? number_format((float) $term_row->cpl_summative_2, 2) . '%' : '—'; ?></td>
+                            <td><?= isset($term_row->cpl_end_term) && $term_row->cpl_end_term !== null ? number_format((float) $term_row->cpl_end_term, 2) . '%' : '—'; ?></td>
                             <td><strong><?= $term_row->cpl_summative_avg !== null ? number_format((float) $term_row->cpl_summative_avg, 2) . '%' : '—'; ?></strong></td>
                         </tr>
                         <?php endforeach; ?>
@@ -101,7 +115,8 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
             <div class="row">
                 <div class="col-md-3 form-group"><label>CPL &ndash; Summative 1</label><div class="input-group"><input type="number" min="0" max="100" step="0.01" name="cpl_summative_1" class="form-control" value="<?= html_escape($value('cpl_summative_1')); ?>"><div class="input-group-append"><span class="input-group-text">%</span></div></div></div>
                 <div class="col-md-3 form-group"><label>CPL &ndash; Summative 2</label><div class="input-group"><input type="number" min="0" max="100" step="0.01" name="cpl_summative_2" class="form-control" value="<?= html_escape($value('cpl_summative_2')); ?>"><div class="input-group-append"><span class="input-group-text">%</span></div></div></div>
-                <div class="col-md-6 form-group"><label>&nbsp;</label><small class="form-text text-muted mt-2 mb-0">Optional per-term summative CPL. Both values are averaged into the term CPL shown to your division.</small></div>
+                <div class="col-md-3 form-group"><label>CPL &ndash; End Term exam</label><div class="input-group"><input type="number" min="0" max="100" step="0.01" name="cpl_end_term" class="form-control" value="<?= html_escape($value('cpl_end_term')); ?>"><div class="input-group-append"><span class="input-group-text">%</span></div></div></div>
+                <div class="col-md-3 form-group"><label>&nbsp;</label><small class="form-text text-muted mt-2 mb-0">Optional per-term assessment CPL. Encoded values are averaged into the term CPL shown to your division.</small></div>
             </div>
             <?php endif; ?>
             <div class="row">
@@ -122,16 +137,28 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
     <?php endif; ?>
 
     <?php if (!$entry_mode && !empty($grade_performance)): ?>
+    <?php
+    $show_district_breakdown = !empty($grade_districts) && (int) $grade_districts['district_count'] > 1;
+    $grade_district_map = $show_district_breakdown ? $grade_districts['grades'] : array();
+    ?>
     <div class="lgm-card">
         <div class="lgm-card-head">
-            <div><h4><i class="mdi mdi-stairs-up mr-1"></i> CPL by Grade Level</h4><small><?= html_escape($scope_label); ?> · CPL is weighted by the number of assessed learners; only records with an encoded CPL contribute. Click a grade to review its records.</small></div>
+            <div><h4><i class="mdi mdi-stairs-up mr-1"></i> CPL by Grade Level</h4><small><?= html_escape($scope_label); ?> · CPL is weighted by the number of assessed learners; only records with an encoded CPL contribute. Click a grade to review its records.<?= $show_district_breakdown ? ' Expand a grade to see the per-district breakdown.' : ''; ?></small></div>
         </div>
         <div class="table-responsive">
             <table class="table summary-table mb-0">
-                <thead><tr><th>Grade level</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th><th>Mastery level</th></tr></thead>
+                <thead><tr><?= $show_district_breakdown ? '<th class="grade-expand-col"></th>' : ''; ?><th>Grade level</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th><th>Mastery level</th></tr></thead>
                 <tbody>
                     <?php foreach ($grade_performance as $grade_row): $grade_link = base_url('Pages/learning_gap_records?' . http_build_query(array('grade_level' => $grade_row->grade_level))); ?>
+                        <?php $grade_key = 'grade-districts-' . md5($grade_row->grade_level); $district_rows = isset($grade_district_map[$grade_row->grade_level]) ? $grade_district_map[$grade_row->grade_level] : array(); ?>
                         <tr>
+                            <?php if ($show_district_breakdown) : ?>
+                                <td class="grade-expand-col">
+                                    <?php if (!empty($district_rows)) : ?>
+                                        <button type="button" class="grade-expand-btn" data-target="<?= $grade_key; ?>" aria-expanded="false" aria-label="Show per-district breakdown for <?= html_escape($grade_row->grade_level); ?>"><i class="mdi mdi-chevron-right" aria-hidden="true"></i></button>
+                                    <?php endif; ?>
+                                </td>
+                            <?php endif; ?>
                             <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><strong><?= html_escape($grade_row->grade_level); ?></strong></a></td>
                             <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><?= (int) $grade_row->record_count; ?></a></td>
                             <td><?= number_format((int) $grade_row->learners_assessed); ?></td>
@@ -139,6 +166,35 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                             <td><strong><?= $grade_row->class_proficiency_level !== null ? number_format((float) $grade_row->class_proficiency_level, 2) . '%' : '—'; ?></strong></td>
                             <td><?= $grade_row->class_proficiency_level !== null ? html_escape(lg_cpl_band((float) $grade_row->class_proficiency_level)) : '—'; ?></td>
                         </tr>
+                        <?php if ($show_district_breakdown && !empty($district_rows)) : ?>
+                            <tr class="grade-district-row" id="<?= $grade_key; ?>" hidden>
+                                <td colspan="<?= $show_district_breakdown ? 7 : 6; ?>">
+                                    <table class="grade-district-table">
+                                        <thead><tr><th>District</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th></tr></thead>
+                                        <tbody>
+                                            <?php foreach ($district_rows as $district_row) : ?>
+                                                <?php
+                                                $district_label = $district_row->district_name;
+                                                if ($scope['type'] === 'region' && !empty($district_row->division_name)) {
+                                                    $district_label .= ' · ' . $district_row->division_name;
+                                                }
+                                                $district_link = $district_row->district_key !== 'unassigned'
+                                                    ? base_url('Pages/learning_gap_records?' . http_build_query(array('district_id' => $district_row->district_key, 'grade_level' => $grade_row->grade_level)))
+                                                    : '';
+                                                ?>
+                                                <tr>
+                                                    <td><?= $district_link !== '' ? '<a href="' . html_escape($district_link) . '" title="View ' . html_escape($district_label) . ' ' . html_escape($grade_row->grade_level) . ' records">' . html_escape($district_label) . '</a>' : html_escape($district_label); ?></td>
+                                                    <td><?= (int) $district_row->record_count; ?></td>
+                                                    <td><?= number_format((int) $district_row->learners_assessed); ?></td>
+                                                    <td><?= number_format((int) $district_row->learners_with_gap); ?></td>
+                                                    <td><strong><?= $district_row->class_proficiency_level !== null ? number_format((float) $district_row->class_proficiency_level, 2) . '%' : '—'; ?></strong></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -192,49 +248,88 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                 'cpl' => $row->class_proficiency_level === null ? null : (float) $row->class_proficiency_level,
                 's1' => $row->cpl_summative_1 === null ? null : (float) $row->cpl_summative_1,
                 's2' => $row->cpl_summative_2 === null ? null : (float) $row->cpl_summative_2,
+                'et' => isset($row->cpl_end_term) && $row->cpl_end_term !== null ? (float) $row->cpl_end_term : null,
             );
         }, $term_performance), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-        var canvas = document.getElementById('termPerformanceChart');
+        var grid = document.getElementById('termPerformanceCharts');
         var empty = document.getElementById('termPerformanceEmpty');
-        if (!canvas || typeof Chart === 'undefined') return;
+        var assessedCanvas = document.getElementById('termAssessedChart');
+        var gapCanvas = document.getElementById('termGapChart');
+        var cplCanvas = document.getElementById('termCplChart');
+        if (!grid || typeof Chart === 'undefined') return;
         var hasData = rows.some(function (row) { return row.assessed > 0 || row.gap > 0 || row.cpl !== null; });
-        var hasSummative = rows.some(function (row) { return row.s1 !== null || row.s2 !== null; });
+        var hasSummative = rows.some(function (row) { return row.s1 !== null || row.s2 !== null || row.et !== null; });
         if (!hasData && !hasSummative) {
-            canvas.style.display = 'none';
+            grid.style.display = 'none';
             empty.style.display = 'flex';
             return;
         }
-        var datasets = [
-            { label: 'Recorded Assessed Count', data: rows.map(function (row) { return row.assessed; }), backgroundColor: '#2877a9', borderColor: '#2877a9', borderWidth: 1, yAxisID: 'learners-axis' },
-            { label: 'Recorded Gap Count', data: rows.map(function (row) { return row.gap; }), backgroundColor: '#ef9f3d', borderColor: '#d9821b', borderWidth: 1, yAxisID: 'learners-axis' },
-            { type: 'line', label: 'CPL (%)', data: rows.map(function (row) { return row.cpl; }), borderColor: '#23835f', backgroundColor: 'rgba(35,131,95,.12)', pointBackgroundColor: '#23835f', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' }
+        var labels = rows.map(function (row) { return row.term; });
+        var countOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: { display: false },
+            tooltips: { callbacks: { label: function (item) { return Number(item.yLabel).toLocaleString() + ' learners'; } } },
+            scales: {
+                xAxes: [{ gridLines: { display: false }, barPercentage: .62, categoryPercentage: .72 }],
+                yAxes: [{ ticks: { beginAtZero: true, precision: 0, callback: function (value) { return Number(value).toLocaleString(); } }, scaleLabel: { display: true, labelString: 'Number of learners' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
+            }
+        };
+        new Chart(assessedCanvas.getContext('2d'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Recorded Assessed Count', data: rows.map(function (row) { return row.assessed; }), backgroundColor: '#2877a9', borderColor: '#2877a9', borderWidth: 1 }] },
+            options: countOptions
+        });
+        new Chart(gapCanvas.getContext('2d'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Recorded Gap Count', data: rows.map(function (row) { return row.gap; }), backgroundColor: '#ef9f3d', borderColor: '#d9821b', borderWidth: 1 }] },
+            options: countOptions
+        });
+        var cplDatasets = [
+            { type: 'line', label: 'CPL (%)', data: rows.map(function (row) { return row.cpl; }), borderColor: '#23835f', backgroundColor: 'rgba(35,131,95,.12)', pointBackgroundColor: '#23835f', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
         ];
         if (hasSummative) {
-            datasets.push(
-                { type: 'line', label: 'CPL Summative 1 (%)', data: rows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' },
-                { type: 'line', label: 'CPL Summative 2 (%)', data: rows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25, yAxisID: 'cpl-axis' }
+            cplDatasets.push(
+                { type: 'line', label: 'Summative 1 (%)', data: rows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25 },
+                { type: 'line', label: 'Summative 2 (%)', data: rows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25 },
+                { type: 'line', label: 'End Term exam (%)', data: rows.map(function (row) { return row.et; }), borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,.10)', pointBackgroundColor: '#c0392b', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [8, 3], fill: false, spanGaps: true, lineTension: .25 }
             );
         }
-        new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: rows.map(function (row) { return row.term; }),
-                datasets: datasets
-            },
+        new Chart(cplCanvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: labels, datasets: cplDatasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
-                tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { var label = data.datasets[item.datasetIndex].label || ''; var isPercent = data.datasets[item.datasetIndex].yAxisID === 'cpl-axis'; return label + ': ' + (isPercent ? (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(2) + '%') : Number(item.yLabel).toLocaleString()); } } },
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, boxWidth: 8 } },
+                tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { var label = data.datasets[item.datasetIndex].label || ''; return label + ': ' + (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(2) + '%'); } } },
                 scales: {
-                    xAxes: [{ gridLines: { display: false }, barPercentage: .72, categoryPercentage: .68 }],
-                    yAxes: [
-                        { id: 'learners-axis', position: 'left', ticks: { beginAtZero: true, precision: 0, callback: function (value) { return Number(value).toLocaleString(); } }, scaleLabel: { display: true, labelString: 'Number of learners' }, gridLines: { color: 'rgba(28,72,101,.08)' } },
-                        { id: 'cpl-axis', position: 'right', ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'CPL' }, gridLines: { drawOnChartArea: false } }
-                    ]
+                    xAxes: [{ gridLines: { display: false } }],
+                    yAxes: [{ ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'CPL' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
                 }
             }
         });
+    }());
+
+    (function () {
+        var buttons = document.querySelectorAll('.grade-expand-btn');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function () {
+                var target = document.getElementById(this.getAttribute('data-target'));
+                if (!target) return;
+                var open = target.hasAttribute('hidden') ? false : true;
+                if (open) {
+                    target.setAttribute('hidden', '');
+                } else {
+                    target.removeAttribute('hidden');
+                }
+                this.setAttribute('aria-expanded', open ? 'false' : 'true');
+                var icon = this.querySelector('i');
+                if (icon) {
+                    icon.className = open ? 'mdi mdi-chevron-right' : 'mdi mdi-chevron-down';
+                }
+            });
+        }
     }());
 </script>
 <?php endif; ?>

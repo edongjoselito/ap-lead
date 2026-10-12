@@ -1052,6 +1052,7 @@ class Pages extends CI_Controller
         $data['records'] = $this->Page_model->learning_gap_records($scope);
         $this->load->helper('learning_gap');
         $data['grade_performance'] = lg_grade_performance($data['records']);
+        $data['grade_districts'] = lg_grade_district_performance($data['records']);
         if ($data['grade_filter'] !== '') {
             $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
                 return (string) $record->grade_level === $data['grade_filter'];
@@ -1427,6 +1428,7 @@ class Pages extends CI_Controller
         if ($this->Page_model->school_summative_cpl_enabled((string) $this->session->username)) {
             $this->form_validation->set_rules('cpl_summative_1', 'CPL - Summative 1', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[100]');
             $this->form_validation->set_rules('cpl_summative_2', 'CPL - Summative 2', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[100]');
+            $this->form_validation->set_rules('cpl_end_term', 'CPL - End Term exam', 'trim|numeric|greater_than_equal_to[0]|less_than_equal_to[100]');
         }
         $this->form_validation->set_rules('learners_assessed', 'Number of Learners Assessed', 'trim|required|integer|greater_than_equal_to[0]');
         $this->form_validation->set_rules('learners_with_gap', 'Number of Learners with Learning Gap', 'trim|required|integer|greater_than_equal_to[0]');
@@ -1933,7 +1935,7 @@ class Pages extends CI_Controller
         $data['title'] = "Division User List";
         $data['division_scope'] = true;
 
-        $data['users'] = $this->Page_model->one_cond('users','p_id',$this->session->division);
+        $data['users'] = $this->Page_model->division_users_with_district($this->session->division);
 
         $this->load->view('templates/header_dt');
         $this->load->view('templates/menu');

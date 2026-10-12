@@ -247,8 +247,8 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                                 <span class="rec-stat-label">Proficiency</span>
                                 <span class="rec-stat-value rec-num"><?= isset($row->class_proficiency_level) ? number_format((float) $row->class_proficiency_level, 2) . '%' : '—'; ?></span>
                                 <span class="rec-stat-note"><?= isset($row->proficiency_level) ? html_escape($row->proficiency_level) : 'Not set'; ?></span>
-                                <?php if (isset($row->cpl_summative_1) || isset($row->cpl_summative_2)) : ?>
-                                    <span class="rec-stat-note rec-num">S1 <?= isset($row->cpl_summative_1) ? number_format((float) $row->cpl_summative_1, 2) . '%' : '—'; ?> · S2 <?= isset($row->cpl_summative_2) ? number_format((float) $row->cpl_summative_2, 2) . '%' : '—'; ?></span>
+                                <?php if (isset($row->cpl_summative_1) || isset($row->cpl_summative_2) || isset($row->cpl_end_term)) : ?>
+                                    <span class="rec-stat-note rec-num">S1 <?= isset($row->cpl_summative_1) ? number_format((float) $row->cpl_summative_1, 2) . '%' : '—'; ?> · S2 <?= isset($row->cpl_summative_2) ? number_format((float) $row->cpl_summative_2, 2) . '%' : '—'; ?> · ET <?= isset($row->cpl_end_term) ? number_format((float) $row->cpl_end_term, 2) . '%' : '—'; ?></span>
                                 <?php endif; ?>
                             </div>
                             <div class="rec-stat">
@@ -286,10 +286,13 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                                 if (isset($row->cpl_summative_2) && $row->cpl_summative_2 !== null) {
                                     $summative_values['Summative 2'] = (float) $row->cpl_summative_2;
                                 }
+                                if (isset($row->cpl_end_term) && $row->cpl_end_term !== null) {
+                                    $summative_values['End Term exam'] = (float) $row->cpl_end_term;
+                                }
                                 ?>
                                 <?php if (!empty($summative_values)) : ?>
                                     <div>
-                                        <h3>Summative CPL</h3>
+                                        <h3>Assessment CPL</h3>
                                         <p>
                                             <?php foreach ($summative_values as $summative_label => $summative_value) : ?>
                                                 <?= html_escape($summative_label); ?>: <strong><?= number_format($summative_value, 2); ?>%</strong><br>

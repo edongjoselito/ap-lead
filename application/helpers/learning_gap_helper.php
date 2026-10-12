@@ -64,6 +64,71 @@ if (!function_exists('lg_grade_performance')) {
 }
 
 /**
+ * Per-grade rollup broken down by district, built on the same weighted-CPL
+ * logic as lg_grade_performance(). Returns the district rows keyed by grade
+ * plus the number of distinct districts seen, so views can skip the breakdown
+ * entirely for single-district scopes.
+ */
+if (!function_exists('lg_grade_district_performance')) {
+    function lg_grade_district_performance(array $records)
+    {
+        $buckets = array();
+        $district_keys = array();
+        foreach ($records as $record) {
+            $grade = trim((string) $record->grade_level);
+            if ($grade === '') continue;
+            $has_district = !empty($record->district_name);
+            $district_key = $has_district ? (string) $record->reporting_district_id : 'unassigned';
+            $key = $grade . '|' . $district_key;
+            if (!isset($buckets[$key])) {
+                $buckets[$key] = array(
+                    'grade_level' => $grade,
+                    'district_key' => $district_key,
+                    'district_name' => $has_district ? $record->district_name : 'Unassigned district',
+                    'division_name' => isset($record->division_name) ? $record->division_name : '',
+                    'record_count' => 0,
+                    'learners_assessed' => 0,
+                    'learners_with_gap' => 0,
+                    'cpl_weighted' => 0.0,
+                    'cpl_learners' => 0,
+                    'cpl_record_count' => 0,
+                );
+            }
+            $assessed = (int) $record->learners_assessed;
+            $buckets[$key]['record_count']++;
+            $buckets[$key]['learners_assessed'] += $assessed;
+            $buckets[$key]['learners_with_gap'] += (int) $record->learners_with_gap;
+            if (isset($record->class_proficiency_level) && $record->class_proficiency_level !== '') {
+                $weight = max(1, $assessed);
+                $buckets[$key]['cpl_weighted'] += (float) $record->class_proficiency_level * $weight;
+                $buckets[$key]['cpl_learners'] += $weight;
+                $buckets[$key]['cpl_record_count']++;
+            }
+            $district_keys[$district_key] = true;
+        }
+        $grades = array();
+        foreach ($buckets as $key => $row) {
+            $row['class_proficiency_level'] = $row['cpl_learners'] > 0
+                ? round($row['cpl_weighted'] / $row['cpl_learners'], 2)
+                : null;
+            unset($row['cpl_weighted'], $row['cpl_learners']);
+            $grades[$row['grade_level']][] = (object) $row;
+        }
+        foreach ($grades as &$district_rows) {
+            usort($district_rows, function ($a, $b) {
+                // Keep 'Unassigned district' last within each grade.
+                if ($a->district_key === 'unassigned' xor $b->district_key === 'unassigned') {
+                    return $a->district_key === 'unassigned' ? 1 : -1;
+                }
+                return strnatcasecmp($a->district_name, $b->district_name);
+            });
+        }
+        unset($district_rows);
+        return array('grades' => $grades, 'district_count' => count($district_keys));
+    }
+}
+
+/**
  * Plain-language interpretations for the Learning Gap dashboards.
  * Every function returns a list of HTML-safe sentences for lg_interpretation_box().
  */

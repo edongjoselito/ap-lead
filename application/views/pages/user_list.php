@@ -290,6 +290,20 @@
                                 font-weight: 600;
                             }
 
+                            tr.district-group td {
+                                padding: 10px 16px;
+                                color: var(--ul-primary);
+                                background: #eaf5fc;
+                                font-size: 12px;
+                                font-weight: 800;
+                                letter-spacing: .05em;
+                                text-transform: uppercase;
+                            }
+
+                            tr.district-group:hover td {
+                                background: #eaf5fc;
+                            }
+
                             .pagination-wrapper {
                                 display: flex;
                                 align-items: center;
@@ -430,18 +444,24 @@
                             </div>
                             <div class="workspace-panel-body">
                                 <div class="table-responsive">
-                                    <table id="datatable" class="table table-bordered dt-responsive nowrap" style="width: 100%;">
+                                    <table id="datatable" class="table table-bordered dt-responsive nowrap" style="width: 100%;"<?= !empty($division_scope) ? ' data-dt-group="district"' : ''; ?>>
                                         <thead>
                                             <tr>
                                                 <th data-name="account">Account</th>
                                                 <th data-name="username">Username</th>
+                                                <?php if (!empty($division_scope)) : ?><th data-name="district">District</th><?php endif; ?>
                                                 <th data-name="position">Position</th>
                                                 <th>Manage</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php foreach($users as $row): ?>
-                                            <tr>
+                                            <?php
+                                                $district_group = !empty($row->district_name)
+                                                    ? $row->district_name
+                                                    : (in_array($row->position, array('school', 'district'), true) ? 'Unassigned district' : 'Division office');
+                                            ?>
+                                            <tr<?= !empty($division_scope) ? ' data-district="' . html_escape($district_group) . '"' : ''; ?>>
                                                 <td>
                                                     <div class="account-cell">
                                                         <span class="account-avatar"><?= strtoupper(substr($row->fname, 0, 1) . (!empty($row->lname) ? substr($row->lname, 0, 1) : '')); ?></span>
@@ -449,6 +469,7 @@
                                                     </div>
                                                 </td>
                                                 <td><span class="username-text"><?= html_escape($row->username); ?></span></td>
+                                                <?php if (!empty($division_scope)) : ?><td><?= !empty($row->district_name) ? html_escape($row->district_name) : '<span class="text-muted">' . html_escape($district_group) . '</span>'; ?></td><?php endif; ?>
                                                 <td><span class="account-level"><?= html_escape($row->position); ?></span></td>
                                                 <td>
                                                     <div class="user-actions">
@@ -545,65 +566,5 @@
                         }
                         }
 
-                        $(document).ready(function() {
-                            console.log('Initializing DataTables with client-side processing');
-                            var table = $('#datatable').DataTable({
-                                pageLength: 20,
-                                lengthMenu: [[10, 20, 50, 100], [10, 20, 50, 100]],
-                                order: [[0, 'asc']],
-                                responsive: true,
-                                columns: [
-                                    {
-                                        data: 'account',
-                                        render: function(data, type, row) {
-                                            return '<div class="account-cell">' +
-                                                '<span class="account-avatar">' + row.initials + '</span>' +
-                                                '<span class="account-name">' + data + '</span>' +
-                                                '</div>';
-                                        }
-                                    },
-                                    { data: 'username', render: function(data) { return '<span class="username-text">' + data + '</span>'; } },
-                                    { data: 'position', render: function(data) { return '<span class="account-level">' + data + '</span>'; } },
-                                    {
-                                        data: 'id',
-                                        render: function(data, type, row) {
-                                            var actions = '';
-                                            <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
-                                            actions += '<a class="btn btn-primary btn-sm" href="<?= base_url(); ?>pages/user_update/' + data + '"><i class="mdi mdi-pencil-outline"></i> Edit</a> ';
-                                            <?php } ?>
-                                            <?php if($this->session->position == 'admin'){ ?>
-                                            actions += '<a href="#profile" class="open-AddBookDialog btn btn-primary btn-sm waves-effect waves-light" data-id="' + data + '" data-animation="slit" data-plugin="custommodal" data-overlayspeed="100" data-overlaycolor="#36404a">Change profile</a> ';
-                                            <?php } ?>
-                                            actions += '<form action="<?= base_url(); ?>pages/user_reset_password" method="post" style="display:inline;" onsubmit="return confirm(\'Reset this user\\\'s password?\');">' +
-                                                '<input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">' +
-                                                '<input type="hidden" name="id" value="' + data + '">' +
-                                                '<button type="submit" class="btn btn-warning btn-sm waves-effect waves-light"><i class="mdi mdi-lock-reset"></i> Reset</button>' +
-                                                '</form> ';
-                                            <?php if(in_array($this->session->position, array('admin', 'division', 'ict', 'district'), true)){ ?>
-                                            actions += '<form action="<?= base_url(); ?>pages/user_delete" method="post" style="display:inline" onsubmit="return confirm(\'Delete this user account?\')">' +
-                                                '<input type="hidden" name="<?= html_escape($this->security->get_csrf_token_name()); ?>" value="<?= html_escape($this->security->get_csrf_hash()); ?>">' +
-                                                '<input type="hidden" name="id" value="' + parseInt(data, 10) + '">' +
-                                                '<button type="submit" class="btn btn-danger btn-sm"><i class="mdi mdi-trash-can-outline"></i> Delete</button></form>';
-                                            <?php } ?>
-                                            return '<div class="user-actions">' + actions + '</div>';
-                                        }
-                                    }
-                                ],
-                                language: {
-                                    search: "_INPUT_",
-                                    searchPlaceholder: "Search users..."
-                                },
-                                initComplete: function() {
-                                    console.log('DataTables initialized');
-                                    // Update account count from API response
-                                    this.api().on('xhr.dt', function(e, settings, json, xhr) {
-                                        console.log('XHR response:', json);
-                                        if (json && json.recordsTotal !== undefined) {
-                                            $('.account-level').html('<i class="mdi mdi-account-multiple-outline"></i> ' + json.recordsTotal + ' account' + (json.recordsTotal === 1 ? '' : 's'));
-                                        }
-                                    });
-                                }
-                            });
-                        });
                         </script>
                         </div>

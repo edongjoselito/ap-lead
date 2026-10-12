@@ -86,7 +86,12 @@ if ($div_encoded_total > 0) {
     .scope-lg .empty-state { padding:25px; color:var(--muted); text-align:center; }
     .scope-lg .lg-glance-stat { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #edf2f5; }.scope-lg .lg-glance-stat:last-child { border-bottom:0; padding-bottom:0; }.scope-lg .lg-glance-stat:first-child { padding-top:0; }.scope-lg .lg-glance-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 48px; width:48px; height:48px; border-radius:13px; font-size:22px; }.scope-lg .lg-glance-icon.navy { color:var(--navy); background:var(--sky); }.scope-lg .lg-glance-icon.green { color:var(--green); background:#e9f7f0; }.scope-lg .lg-glance-text { flex:1; min-width:0; }.scope-lg .lg-glance-text strong { display:block; color:var(--navy); font-size:22px; line-height:1.1; }.scope-lg .lg-glance-text small { color:var(--muted); font-size:12px; }.scope-lg .lg-glance-link { color:var(--blue); font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap; }.scope-lg .lg-glance-link:hover { text-decoration:underline; }
     .scope-lg .lg-quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.scope-lg .lg-quick-action { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:16px; border:1px solid var(--line); border-radius:12px; background:#fbfdfe; color:var(--ink); text-decoration:none; transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease; }.scope-lg .lg-quick-action:hover { border-color:var(--blue); box-shadow:0 6px 16px rgba(18,63,99,.10); transform:translateY(-2px); text-decoration:none; }.scope-lg .lg-quick-action i { color:var(--blue); font-size:22px; }.scope-lg .lg-quick-action strong { color:var(--navy); font-size:13px; font-weight:700; }.scope-lg .lg-quick-action small { color:var(--muted); font-size:11px; }
-    .scope-lg .performance-chart-wrap { position:relative; height:330px; }.scope-lg .chart-empty { display:none; align-items:center; justify-content:center; height:100%; color:var(--muted); text-align:center; }.scope-lg .chart-empty i { display:block; margin-bottom:8px; color:#9cb6c7; font-size:36px; }
+    .scope-lg .performance-chart-wrap { position:relative; height:330px; }
+    .scope-lg .performance-chart-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .scope-lg .performance-chart-panel { padding:16px; border:1px solid var(--line); border-radius:12px; background:#fbfdfe; }
+    .scope-lg .performance-chart-panel h5 { margin:0 0 12px; color:var(--navy); font-size:13px; font-weight:700; letter-spacing:.01em; }
+    .scope-lg .performance-chart-panel .performance-chart-wrap { height:280px; }
+    @media (max-width:991.98px) { .scope-lg .performance-chart-grid { grid-template-columns:1fr; } .scope-lg .performance-chart-panel .performance-chart-wrap { height:250px; } }.scope-lg .chart-empty { display:none; align-items:center; justify-content:center; height:100%; color:var(--muted); text-align:center; }.scope-lg .chart-empty i { display:block; margin-bottom:8px; color:#9cb6c7; font-size:36px; }
     .scope-lg .analysis-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 9px; border-radius:999px; color:#176a50; background:#e7f6ef; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }.scope-lg .theme-summary { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:13px; }.scope-lg .theme-summary span { padding:6px 10px; border-radius:8px; color:#516879; background:#eef5f8; font-size:11px; }.scope-lg .theme-insight { margin-bottom:17px; padding:13px 15px; border-left:4px solid #2c8bb7; border-radius:0 9px 9px 0; color:#38556a; background:#eff8fc; font-size:12px; line-height:1.55; }.scope-lg .theme-insight strong { color:var(--navy); }.scope-lg .theme-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }.scope-lg .theme-item { padding:15px; border:1px solid var(--line); border-radius:12px; background:#fbfdfe; }.scope-lg .theme-item-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }.scope-lg .theme-item h5 { margin:0; color:var(--navy); font-size:13px; line-height:1.4; }.scope-lg .theme-count { flex:0 0 auto; color:var(--blue); font-size:17px; font-weight:800; }.scope-lg .theme-bar { height:6px; margin:11px 0 9px; border-radius:999px; background:#e8f0f4; overflow:hidden; }.scope-lg .theme-bar span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#257eac,#43a98a); }.scope-lg .theme-meta { color:var(--muted); font-size:10px; }.scope-lg .theme-example { margin:10px 0 0; color:#526778; font-size:11px; font-style:italic; line-height:1.45; }.scope-lg .analysis-note { margin:14px 0 0; color:var(--muted); font-size:10px; }
     @media (max-width:991.98px) { .scope-lg .theme-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:767.98px) { .scope-lg .lg-hero { align-items:flex-start; flex-direction:column; padding:24px; }.scope-lg .lg-hero-actions,.scope-lg .lg-hero .btn { width:100%; }.scope-lg .lg-card-head { padding:18px; }.scope-lg .lg-card-body { padding:18px; }.scope-lg .lg-quick-grid,.scope-lg .theme-grid { grid-template-columns:1fr; }.scope-lg .performance-chart-wrap { height:300px; } }
@@ -197,10 +202,17 @@ if ($div_encoded_total > 0) {
             <span class="analysis-badge"><i class="mdi mdi-chart-timeline-variant"></i> CPL coverage: <?= number_format($cpl_record_count); ?>/<?= number_format($record_count); ?> records</span>
         </div>
         <div class="lg-card-body">
-            <div class="performance-chart-wrap">
-                <canvas id="scopeTermPerformanceChart" role="img" aria-label="CPL and percentage of learners with gap per term"></canvas>
-                <div id="scopeTermPerformanceEmpty" class="chart-empty"><div><i class="mdi mdi-chart-line-variant"></i>No per-term assessment data has been submitted yet.</div></div>
+            <div id="scopeTermPerformanceCharts" class="performance-chart-grid">
+                <div class="performance-chart-panel">
+                    <h5>Recorded Gap Rate (%)</h5>
+                    <div class="performance-chart-wrap"><canvas id="scopeGapRateChart" role="img" aria-label="Percentage of learners with a recorded gap per term"></canvas></div>
+                </div>
+                <div class="performance-chart-panel">
+                    <h5>CPL (%)</h5>
+                    <div class="performance-chart-wrap"><canvas id="scopeCplChart" role="img" aria-label="Class proficiency level per term"></canvas></div>
+                </div>
             </div>
+            <div id="scopeTermPerformanceEmpty" class="chart-empty"><div><i class="mdi mdi-chart-line-variant"></i>No per-term assessment data has been submitted yet.</div></div>
             <?php
             $has_summative = false;
             foreach ($term_performance as $term_row) {
@@ -213,19 +225,20 @@ if ($div_encoded_total > 0) {
             <?php if ($has_summative) : ?>
                 <div class="table-responsive mt-3">
                     <table class="table table-sm mb-0">
-                        <thead><tr><th>Term</th><th class="text-center">CPL &ndash; Summative 1</th><th class="text-center">CPL &ndash; Summative 2</th><th class="text-center">Term CPL (summative avg)</th></tr></thead>
+                        <thead><tr><th>Term</th><th class="text-center">CPL &ndash; Summative 1</th><th class="text-center">CPL &ndash; Summative 2</th><th class="text-center">CPL &ndash; End Term exam</th><th class="text-center">Term CPL (assessment avg)</th></tr></thead>
                         <tbody>
                             <?php foreach ($term_performance as $term_row) : ?>
                                 <tr>
                                     <td><strong><?= html_escape($term_row->term); ?></strong></td>
                                     <td class="text-center"><?= $term_row->cpl_summative_1 !== null ? number_format((float) $term_row->cpl_summative_1, 2) . '%' : '—'; ?></td>
                                     <td class="text-center"><?= $term_row->cpl_summative_2 !== null ? number_format((float) $term_row->cpl_summative_2, 2) . '%' : '—'; ?></td>
+                                    <td class="text-center"><?= isset($term_row->cpl_end_term) && $term_row->cpl_end_term !== null ? number_format((float) $term_row->cpl_end_term, 2) . '%' : '—'; ?></td>
                                     <td class="text-center"><strong><?= $term_row->cpl_summative_avg !== null ? number_format((float) $term_row->cpl_summative_avg, 2) . '%' : '—'; ?></strong></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <p class="analysis-note">Summative CPL is encoded only by schools with the feature enabled; term average is the mean of the encoded summatives, weighted by assessed learners.</p>
+                    <p class="analysis-note">Summative and End Term exam CPL are encoded only by schools with the feature enabled; term average is the mean of the encoded assessments, weighted by assessed learners.</p>
                 </div>
             <?php endif; ?>
             <?= lg_interpretation_box($term_interp); ?>
@@ -348,44 +361,63 @@ if ($div_encoded_total > 0) {
                 'cpl' => $row->class_proficiency_level === null ? null : round((float) $row->class_proficiency_level, 2),
                 's1' => $row->cpl_summative_1 === null ? null : round((float) $row->cpl_summative_1, 2),
                 's2' => $row->cpl_summative_2 === null ? null : round((float) $row->cpl_summative_2, 2),
+                'et' => isset($row->cpl_end_term) && $row->cpl_end_term !== null ? round((float) $row->cpl_end_term, 2) : null,
                 'gapPercentage' => $assessed > 0 ? round(((int) $row->learners_with_gap / $assessed) * 100, 2) : null,
                 'assessed' => $assessed,
             );
         }, $term_performance), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-        var termCanvas = document.getElementById('scopeTermPerformanceChart');
+        var chartGrid = document.getElementById('scopeTermPerformanceCharts');
+        var gapRateCanvas = document.getElementById('scopeGapRateChart');
+        var cplCanvas = document.getElementById('scopeCplChart');
         var termEmpty = document.getElementById('scopeTermPerformanceEmpty');
         var hasTermData = termRows.some(function (row) { return row.assessed > 0 || row.cpl !== null; });
-        var hasSummative = termRows.some(function (row) { return row.s1 !== null || row.s2 !== null; });
-        if (termCanvas && (hasTermData || hasSummative)) {
-            var termDatasets = [
-                { label: 'Recorded Gap Rate (%)', data: termRows.map(function (row) { return row.gapPercentage; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 },
-                { type: 'line', label: 'CPL (%)', data: termRows.map(function (row) { return row.cpl; }), borderColor: '#20805c', backgroundColor: 'rgba(32,128,92,.10)', pointBackgroundColor: '#20805c', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
-            ];
-            if (hasSummative) {
-                termDatasets.push(
-                    { type: 'line', label: 'CPL Summative 1 (%)', data: termRows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25 },
-                    { type: 'line', label: 'CPL Summative 2 (%)', data: termRows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25 }
-                );
-            }
-            new Chart(termCanvas.getContext('2d'), {
+        var hasSummative = termRows.some(function (row) { return row.s1 !== null || row.s2 !== null || row.et !== null; });
+        if (chartGrid && gapRateCanvas && cplCanvas && (hasTermData || hasSummative)) {
+            var termLabels = termRows.map(function (row) { return row.term; });
+            var percentScale = {
+                xAxes: [{ gridLines: { display: false }, barPercentage: .58, categoryPercentage: .68 }],
+                yAxes: [{ ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'Percentage' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
+            };
+            new Chart(gapRateCanvas.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: termRows.map(function (row) { return row.term; }),
-                    datasets: termDatasets
+                    labels: termLabels,
+                    datasets: [{ label: 'Recorded Gap Rate (%)', data: termRows.map(function (row) { return row.gapPercentage; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
-                    tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { return data.datasets[item.datasetIndex].label + ': ' + (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(1) + '%'); } } },
-                    scales: {
-                        xAxes: [{ gridLines: { display: false }, barPercentage: .58, categoryPercentage: .68 }],
-                        yAxes: [{ ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'Percentage' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
-                    }
+                    legend: { display: false },
+                    tooltips: { callbacks: { label: function (item) { return 'Recorded Gap Rate: ' + (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(1) + '%'); } } },
+                    scales: percentScale
                 }
             });
-        } else if (termCanvas && termEmpty) {
-            termCanvas.style.display = 'none';
+            var cplDatasets = [
+                { type: 'line', label: 'CPL (%)', data: termRows.map(function (row) { return row.cpl; }), borderColor: '#20805c', backgroundColor: 'rgba(32,128,92,.10)', pointBackgroundColor: '#20805c', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
+            ];
+            if (hasSummative) {
+                cplDatasets.push(
+                    { type: 'line', label: 'Summative 1 (%)', data: termRows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25 },
+                    { type: 'line', label: 'Summative 2 (%)', data: termRows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25 },
+                    { type: 'line', label: 'End Term exam (%)', data: termRows.map(function (row) { return row.et; }), borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,.10)', pointBackgroundColor: '#c0392b', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [8, 3], fill: false, spanGaps: true, lineTension: .25 }
+                );
+            }
+            new Chart(cplCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: termLabels,
+                    datasets: cplDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, boxWidth: 8 } },
+                    tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { return data.datasets[item.datasetIndex].label + ': ' + (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(1) + '%'); } } },
+                    scales: percentScale
+                }
+            });
+        } else if (chartGrid && termEmpty) {
+            chartGrid.style.display = 'none';
             termEmpty.style.display = 'flex';
         }
     }());
