@@ -112,6 +112,12 @@ try {
 
     check(!save_report($model, 'QA-A', 'Grade 1', array('record_id'=>$foreign_id)), 'Foreign-school edit allowed.');
     check(strpos($model->learning_gap_save_error(), 'selected record') !== false, 'Wrong foreign-record error.');
+    check(!save_report($model, 'QA-A', 'Grade 1', array('learning_area' => 'English')), 'A non-AP record was saved.');
+    check(strpos($model->learning_gap_save_error(), 'Araling Panlipunan') !== false, 'Wrong non-AP error.');
+    $connection->insert('learning_gap_records', array('school_id' => 'QA-A', 'region_id' => 12, 'division_id' => 61, 'district_id' => 11, 'fiscal_year' => 2026, 'grade_level' => 'Grade 1', 'learning_area' => 'English', 'term' => 'Term 1', 'least_learned_competency' => 'Shared competency', 'learners_assessed' => 1, 'learners_with_gap' => 1, 'intervention_action' => 'Practice', 'intervention_status' => 'Planned', 'created_by' => 'clmd', 'created_at' => '2026-06-01 08:00:00'));
+    $english_id = (int) $connection->insert_id();
+    check(!save_report($model, 'QA-A', 'Grade 1', array('record_id' => $english_id)), 'A non-AP record was overwritten through ap-lead.');
+    check($connection->where('id', $english_id)->get('learning_gap_records')->row()->learning_area === 'English', 'A non-AP record changed subject.');
     check(!save_report($model, 'QA-MISSING', 'Grade 1'), 'Missing school saved.');
     check(strpos($model->learning_gap_save_error(), 'school profile') !== false, 'Missing profile diagnostic lost.');
     check($connection->query("CREATE TRIGGER reject_qa_report BEFORE INSERT ON learning_gap_records FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Simulated failure'"), 'Failure fixture failed.');

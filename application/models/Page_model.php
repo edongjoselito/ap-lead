@@ -2157,8 +2157,20 @@ private function learning_gap_year($year = null)
     return $year === null ? (int) $this->session->fy : (int) $year;
 }
 
+// ap-lead is for Araling Panlipunan. clmd-conn shares this database and stores
+// every learning area, so reads and writes here stay inside these names.
+private $learning_gap_ap_areas = array('Araling Panlipunan', 'Araling Panlipunan (AP)', 'AP');
+
+/** For LEFT JOIN conditions, where a WHERE clause would drop rows with no records. */
+private function learning_gap_ap_condition($column)
+{
+    return $column . ' IN (' . implode(', ', array_map(array($this->db, 'escape'), $this->learning_gap_ap_areas)) . ')';
+}
+
 private function apply_learning_gap_scope($scope, $alias = 'lgr')
 {
+    $prefix = $alias === '' ? '' : $alias . '.';
+    $this->db->where_in($prefix . 'learning_area', $this->learning_gap_ap_areas);
     // District accounts must never receive a wider scope from a caller.
     if ($this->session->position === 'district') {
         $district_id = (int) $this->session->district;
@@ -2166,9 +2178,12 @@ private function apply_learning_gap_scope($scope, $alias = 'lgr')
             show_error('Your account has no assigned district.', 403);
             return;
         }
+        // One school is narrower, so it stays, and the district rules below still apply.
+        if ($scope['type'] === 'school') {
+            $this->db->where($prefix . 'school_id', $scope['id']);
+        }
         $scope = array('type' => 'district', 'id' => $district_id);
     }
-    $prefix = $alias === '' ? '' : $alias . '.';
     if ($scope['type'] === 'school') {
         $this->db->where($prefix . 'school_id', $scope['id']);
     } elseif ($scope['type'] === 'district') {
@@ -2233,6 +2248,21 @@ public function learning_gap_scope_districts($scope)
         ->from('district')
         ->order_by('district.description', 'ASC')
         ->get()->result();
+}
+
+/** Schools inside the viewer's reporting scope, including those with no submissions yet. */
+public function learning_gap_scope_schools($scope)
+{
+    if ($scope['type'] === 'division') {
+        $this->db->where('division_id', (int) $scope['id']);
+    } elseif ($scope['type'] === 'district') {
+        $this->db->where('district_id', (int) $scope['id']);
+    } else {
+        return array();
+    }
+    return $this->db->select('schoolID, schoolName, district_id')
+        ->order_by('schoolName', 'ASC')
+        ->get('schools')->result();
 }
 
 public function learning_gap_archive_years($scope)
@@ -2556,6 +2586,7 @@ public function learning_gap_division_performance($region_id)
 
     $records = $this->db
         ->select('division_id, school_id, grade_level, learners_assessed, learners_with_gap, class_proficiency_level')
+        ->where_in('learning_area', $this->learning_gap_ap_areas)
         ->where('region_id', (int) $region_id)
         ->where('fiscal_year', $this->learning_gap_year())
         ->get('learning_gap_records')
@@ -2594,7 +2625,7 @@ public function learning_gap_division_summary($region_id)
     $this->ensure_learning_gap_archive_schema();
     $this->db->select('d.id AS division_id, d.description AS division_name, COUNT(lgr.id) AS record_count, COUNT(DISTINCT lgr.school_id) AS school_count, (SELECT COUNT(*) FROM schools school_totals WHERE school_totals.division_id = d.id) AS total_school_count, COALESCE(SUM(lgr.learners_assessed), 0) AS learners_assessed, COALESCE(SUM(lgr.learners_with_gap), 0) AS learners_with_gap')
         ->from('division d')
-        ->join('learning_gap_records lgr', 'lgr.division_id = d.id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year(), 'left')
+        ->join('learning_gap_records lgr', 'lgr.division_id = d.id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year() . ' AND ' . $this->learning_gap_ap_condition('lgr.learning_area'), 'left', false)
         ->where('d.region_id', (int) $region_id)
         ->group_by('d.id, d.description')
         ->order_by('learners_with_gap', 'DESC');
@@ -2610,6 +2641,7 @@ public function learning_gap_competency_ranking($division_id, $learning_area = '
 {
     $this->ensure_learning_gap_archive_schema();
     $records = $this->db->select('id, school_id, grade_level, learning_area, term, least_learned_competency')
+        ->where_in('learning_area', $this->learning_gap_ap_areas)
         ->where('division_id', (int) $division_id)
         ->where('fiscal_year', $this->learning_gap_year())
         ->get('learning_gap_records')->result();
@@ -2676,6 +2708,7 @@ public function learning_gap_competency_ranking($division_id, $learning_area = '
 public function division_learning_area_options($division_id)
 {
     $areas = $this->db->distinct()->select('learning_area')
+        ->where_in('learning_area', $this->learning_gap_ap_areas)
         ->where('division_id', (int) $division_id)
         ->order_by('learning_area', 'ASC')
         ->get('learning_area_settings')->result_array();
@@ -2694,7 +2727,7 @@ public function learning_gap_school_submission_summary($division_id)
     $schools = $this->db
         ->select('s.schoolID, s.schoolName, s.district_id, 0 AS missing_profile, COUNT(lgr.id) AS record_count, MAX(lgr.created_at) AS latest_submission')
         ->from('schools s')
-        ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID AND lgr.division_id = s.division_id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year(), 'left')
+        ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID AND lgr.division_id = s.division_id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year() . ' AND ' . $this->learning_gap_ap_condition('lgr.learning_area'), 'left', false)
         ->where('s.division_id', (int) $division_id)
         ->group_by('s.schoolID, s.schoolName, s.district_id')
         ->order_by('s.schoolName', 'ASC')
@@ -2706,6 +2739,7 @@ public function learning_gap_school_submission_summary($division_id)
         ->from('learning_gap_records lgr')
         ->join('schools s', 's.schoolID = lgr.school_id', 'left')
         ->where('s.schoolID IS NULL', null, false)
+        ->where_in('lgr.learning_area', $this->learning_gap_ap_areas)
         ->where('lgr.division_id', (int) $division_id)
         ->where('lgr.fiscal_year', $this->learning_gap_year())
         ->group_by('lgr.school_id')->get()->result();
@@ -2736,6 +2770,11 @@ public function save_learning_gap_record($school_id)
     }
     if ((int) $school->region_id <= 0 || (int) $school->division_id <= 0 || (int) $school->district_id <= 0) {
         $this->learning_gap_save_error = 'Your school profile needs a region, division, and district before submitting. Please contact your division administrator.';
+        return false;
+    }
+    $learning_area = strtolower(trim((string) $this->input->post('learning_area', true)));
+    if (!in_array($learning_area, array_map('strtolower', $this->learning_gap_ap_areas), true)) {
+        $this->learning_gap_save_error = 'This system accepts Araling Panlipunan records only.';
         return false;
     }
     $assessed = (int) $this->input->post('learners_assessed', true);
@@ -2980,6 +3019,7 @@ public function learning_gap_record($id, $school_id)
 {
     $this->ensure_learning_gap_archive_schema();
     return $this->db->where('id', (int) $id)->where('school_id', $school_id)
+        ->where_in('learning_area', $this->learning_gap_ap_areas)
         ->where('fiscal_year', $this->learning_gap_year())
         ->get('learning_gap_records')->row();
 }
@@ -2988,6 +3028,7 @@ public function delete_learning_gap_record($id, $school_id)
 {
     $this->ensure_learning_gap_archive_schema();
     return $this->db->where('id', (int) $id)->where('school_id', $school_id)
+        ->where_in('learning_area', $this->learning_gap_ap_areas)
         ->where('fiscal_year', $this->learning_gap_year())
         ->delete('learning_gap_records');
 }
@@ -3516,6 +3557,7 @@ public function learning_area_options($division_id, $grade_level)
 {
     $this->ensure_shs_learning_area_settings();
     $areas = $this->db->select('learning_area')->where('division_id', (int) $division_id)
+        ->where_in('learning_area', $this->learning_gap_ap_areas)
         ->where('grade_level', $grade_level)->order_by('learning_area', 'ASC')
         ->get('learning_area_settings')->result_array();
     return array_map(function ($area) { return $area['learning_area']; }, $areas);
