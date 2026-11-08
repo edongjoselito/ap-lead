@@ -1143,9 +1143,20 @@ class Pages extends CI_Controller
             return;
         }
         $grade = trim((string) $this->input->get('grade_level', true));
-        $data = $this->Page_model->learning_gap_school_competency_summary($scope, $grade);
+        $assessment = trim((string) $this->input->get('assessment', true));
+        $district = $position === 'district' ? '' : trim((string) $this->input->get('district_id', true));
+        $data = $this->Page_model->learning_gap_school_competency_summary($scope, $grade, $assessment, $district);
         $data['title'] = 'Learning Gap Summary';
         $data['grade_filter'] = $grade;
+        $data['assessment_filter'] = $assessment;
+        $data['district_filter'] = $district;
+        $data['district_options'] = array();
+        if ($position !== 'district') {
+            foreach ($this->Page_model->learning_gap_scope_districts($scope) as $district_row) {
+                $data['district_options'][(string) $district_row->id] = $district_row->description;
+            }
+            natcasesort($data['district_options']);
+        }
         $data['is_region'] = $is_region;
         $data['is_district'] = $position === 'district';
         $this->load->view('templates/header');
@@ -1175,6 +1186,14 @@ class Pages extends CI_Controller
 
         $this->load->helper('learning_gap');
         $records = lg_unique_records($this->Page_model->learning_gap_records($scope));
+        // An optional grade filter narrows every level of the drill-down, so a
+        // grade click shows districts, schools, and charts for that grade only.
+        $grade_filter = trim((string) $this->input->get('grade_id', true));
+        if ($grade_filter !== '') {
+            $records = array_values(array_filter($records, function ($record) use ($grade_filter) {
+                return strcasecmp((string) $record->grade_level, $grade_filter) === 0;
+            }));
+        }
         $rollup = lg_scope_rollup(
             $this->Page_model->learning_gap_scope_districts($scope),
             $this->Page_model->learning_gap_scope_schools($scope),
@@ -1226,18 +1245,24 @@ class Pages extends CI_Controller
             return isset($keep[(string) $record->school_id]);
         }));
 
+        $division_row = $this->Page_model->one_cond_row('division', 'id', (int) $this->session->division);
         $data = array(
             'title' => 'Learning Gap Analytics',
             'level' => $level,
             'is_district_account' => $is_district_account,
-            'division' => $this->Page_model->one_cond_row('division', 'id', (int) $this->session->division),
+            'division' => $division_row,
+            'region' => !empty($division_row) && !empty($division_row->region_id)
+                ? $this->Page_model->one_cond_row('region', 'id', $division_row->region_id)
+                : null,
             'district' => $district,
             'school' => $school,
             'metrics' => $metrics,
             'units' => $units,
+            'grade_filter' => $grade_filter,
             'term_performance' => lg_term_rollup($level_records),
             'grade_performance' => lg_grade_performance($level_records),
             'priority_records' => $school ? lg_priority_records($level_records) : array(),
+            'proficiency_distribution' => $school ? array() : lg_proficiency_distribution($district ? $units : array_values($rollup['schools'])),
         );
         $named_units = array_values(array_filter($units, function ($unit) { return $unit->key !== 'unassigned'; }));
         $data['unit_interpretation'] = lg_analytics_interpretation($named_units, $level === 'division' ? 'district' : 'school');
@@ -1317,7 +1342,10 @@ class Pages extends CI_Controller
             : 0;
         $data['learning_area_filter'] = trim((string) $this->input->get('learning_area', true));
         $data['term_filter'] = trim((string) $this->input->get('term', true));
+        // The exact-competency filter is no longer offered in the UI, but the
+        // param stays supported so summary drill links keep working.
         $data['competency_filter'] = trim((string) $this->input->get('competency', true));
+        $data['assessment_filter'] = trim((string) $this->input->get('assessment', true));
         $data['district_filter'] = !$data['is_school'] ? trim((string) $this->input->get('district_id', true)) : '';
         $data['school_filter'] = !$data['is_school'] ? trim((string) $this->input->get('school_id', true)) : '';
         $data['has_record_filters'] = $data['division_filter'] > 0
@@ -1325,6 +1353,7 @@ class Pages extends CI_Controller
             || $data['grade_filter'] !== ''
             || $data['learning_area_filter'] !== ''
             || $data['term_filter'] !== ''
+            || $data['assessment_filter'] !== ''
             || $data['competency_filter'] !== '';
         $data['records'] = $this->Page_model->learning_gap_records($scope, $data['record_year']);
         // Build filter choices from this user's authorized scope before applying filters.
@@ -1390,6 +1419,11 @@ class Pages extends CI_Controller
         if ($data['term_filter'] !== '') {
             $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
                 return (string) $record->term === $data['term_filter'];
+            }));
+        }
+        if ($data['assessment_filter'] !== '') {
+            $data['records'] = array_values(array_filter($data['records'], function ($record) use ($data) {
+                return lg_record_has_assessment($record, $data['assessment_filter']);
             }));
         }
         if ($data['competency_filter'] !== '') {

@@ -7,14 +7,6 @@ $district_name = !empty($district->description) ? $district->description : 'Dist
 $form = !empty($edit_record) ? $edit_record : (object) array();
 $value = function ($field) use ($form) { return isset($form->{$field}) ? (string) $form->{$field} : ''; };
 $this->load->helper('learning_gap');
-$term_interp = $entry_mode ? array() : lg_term_interpretation($term_performance, (int) $summary->record_count);
-$has_summative = false;
-foreach ($term_performance as $term_row) {
-    if (isset($term_row->cpl_summative_avg) && $term_row->cpl_summative_avg !== null) {
-        $has_summative = true;
-        break;
-    }
-}
 $division_interp = $entry_mode ? array() : lg_division_summary_interpretation($division_summary);
 $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_interpretation($competency_ranking, $learning_area_filter, $term_filter);
 ?>
@@ -51,51 +43,6 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
         <div class="col-md-6"><a class="lgm-stat-link" href="<?= base_url('Pages/learning_gap_records'); ?>"><div class="lgm-stat"><span class="lgm-stat-icon"><i class="mdi mdi-file-document-outline"></i></span><small>Encoded records</small><strong><?= (int) $summary->record_count; ?></strong><span class="lgm-stat-hint">View submitted learning gap records <i class="mdi mdi-arrow-right"></i></span></div></a></div>
         <div class="col-md-6"><a class="lgm-stat-link" href="<?= base_url('Pages/learning_gap_records'); ?>"><div class="lgm-stat"><span class="lgm-stat-icon"><i class="mdi mdi-account-group-outline"></i></span><small>Recorded assessed count</small><strong><?= number_format((int) $summary->learners_assessed); ?></strong><span class="lgm-stat-hint">Sum across submitted records <i class="mdi mdi-arrow-right"></i></span></div></a></div>
     </div><?php endif; ?>
-
-    <?php if (!$entry_mode): ?>
-    <div class="lgm-card term-chart-card">
-        <div class="lgm-card-head">
-            <div><h4><i class="mdi mdi-chart-bar mr-1"></i> CPL and Recorded Assessment Counts per Term</h4><small><?= html_escape($scope_label); ?> · Counts are direct sums from submitted records.</small></div>
-            <small>CPL uses only records with an encoded CPL value.</small>
-        </div>
-        <div class="lgm-card-body">
-            <div id="termPerformanceCharts" class="term-chart-grid">
-                <div class="term-chart-panel">
-                    <h5>Recorded Assessed Count</h5>
-                    <div class="term-chart-wrap"><canvas id="termAssessedChart" role="img" aria-label="Chart of recorded assessed learners for each term"></canvas></div>
-                </div>
-                <div class="term-chart-panel">
-                    <h5>Recorded Gap Count</h5>
-                    <div class="term-chart-wrap"><canvas id="termGapChart" role="img" aria-label="Chart of learners with a recorded learning gap for each term"></canvas></div>
-                </div>
-                <div class="term-chart-panel">
-                    <h5>CPL (%)</h5>
-                    <div class="term-chart-wrap"><canvas id="termCplChart" role="img" aria-label="Chart of class proficiency level for each term"></canvas></div>
-                </div>
-            </div>
-            <div id="termPerformanceEmpty" class="term-chart-empty"><div><i class="mdi mdi-chart-bar-stacked"></i>No per-term assessment data has been submitted yet.</div></div>
-            <?php if ($has_summative): ?>
-            <div class="table-responsive mt-3">
-                <table class="table summary-table mb-0">
-                    <thead><tr><th>Term</th><th>CPL &ndash; Summative 1</th><th>CPL &ndash; Summative 2</th><th>CPL &ndash; End Term exam</th><th>Term CPL (assessment avg)</th></tr></thead>
-                    <tbody>
-                        <?php foreach ($term_performance as $term_row): ?>
-                        <tr>
-                            <td><strong><?= html_escape($term_row->term); ?></strong></td>
-                            <td><?= $term_row->cpl_summative_1 !== null ? number_format((float) $term_row->cpl_summative_1, 2) . '%' : '—'; ?></td>
-                            <td><?= $term_row->cpl_summative_2 !== null ? number_format((float) $term_row->cpl_summative_2, 2) . '%' : '—'; ?></td>
-                            <td><?= isset($term_row->cpl_end_term) && $term_row->cpl_end_term !== null ? number_format((float) $term_row->cpl_end_term, 2) . '%' : '—'; ?></td>
-                            <td><strong><?= $term_row->cpl_summative_avg !== null ? number_format((float) $term_row->cpl_summative_avg, 2) . '%' : '—'; ?></strong></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <?php endif; ?>
-            <?= lg_interpretation_box($term_interp); ?>
-        </div>
-    </div>
-    <?php endif; ?>
 
     <?php if ($is_school && $entry_mode): ?>
     <div class="lgm-card data-entry-card" id="data-entry">
@@ -144,13 +91,16 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
     ?>
     <div class="lgm-card">
         <div class="lgm-card-head">
-            <div><h4><i class="mdi mdi-stairs-up mr-1"></i> CPL by Grade Level</h4><small><?= html_escape($scope_label); ?> · CPL is weighted by the number of assessed learners; only records with an encoded CPL contribute. Click a grade to review its records.<?= $show_district_breakdown ? ' Expand a grade to see the per-district breakdown.' : ''; ?></small></div>
+            <div><h4><i class="mdi mdi-stairs-up mr-1"></i> CPL by Grade Level Analytics</h4><small><?= html_escape($scope_label); ?> · CPL is weighted by the number of assessed learners; only records with an encoded CPL contribute. Click a grade for its district analytics<?= $show_district_breakdown ? ', or expand it here for the per-district breakdown' : ''; ?>; a district drills down to its schools.</small></div>
+        </div>
+        <div class="lgm-card-body">
+            <div class="term-chart-wrap" style="height:300px"><canvas id="gradePerformanceChart" role="img" aria-label="Recorded gap rate and CPL per grade level"></canvas></div>
         </div>
         <div class="table-responsive">
             <table class="table summary-table mb-0">
-                <thead><tr><?= $show_district_breakdown ? '<th class="grade-expand-col"></th>' : ''; ?><th>Grade level</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th><th>Mastery level</th></tr></thead>
+                <thead><tr><?= $show_district_breakdown ? '<th class="grade-expand-col"></th>' : ''; ?><th>Grade level</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th><th>Mastery level</th><th>75% &amp; above</th></tr></thead>
                 <tbody>
-                    <?php foreach ($grade_performance as $grade_row): $grade_link = base_url('Pages/learning_gap_records?' . http_build_query(array('grade_level' => $grade_row->grade_level))); ?>
+                    <?php foreach ($grade_performance as $grade_row): $grade_link = base_url('Pages/learning_gap_analytics?' . http_build_query(array('grade_id' => $grade_row->grade_level))); $grade_records_link = base_url('Pages/learning_gap_records?' . http_build_query(array('grade_level' => $grade_row->grade_level))); ?>
                         <?php $grade_key = 'grade-districts-' . md5($grade_row->grade_level); $district_rows = isset($grade_district_map[$grade_row->grade_level]) ? $grade_district_map[$grade_row->grade_level] : array(); ?>
                         <tr>
                             <?php if ($show_district_breakdown) : ?>
@@ -160,18 +110,19 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                                     <?php endif; ?>
                                 </td>
                             <?php endif; ?>
-                            <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><strong><?= html_escape($grade_row->grade_level); ?></strong></a></td>
-                            <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><?= (int) $grade_row->record_count; ?></a></td>
+                            <td><a href="<?= html_escape($grade_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> district analytics"><strong><?= html_escape($grade_row->grade_level); ?></strong></a></td>
+                            <td><a href="<?= html_escape($grade_records_link); ?>" title="View <?= html_escape($grade_row->grade_level); ?> records"><?= (int) $grade_row->record_count; ?></a></td>
                             <td><?= number_format((int) $grade_row->learners_assessed); ?></td>
                             <td><?= number_format((int) $grade_row->learners_with_gap); ?></td>
                             <td><strong><?= $grade_row->class_proficiency_level !== null ? number_format((float) $grade_row->class_proficiency_level, 2) . '%' : '—'; ?></strong></td>
                             <td><?= $grade_row->class_proficiency_level !== null ? html_escape(lg_cpl_band((float) $grade_row->class_proficiency_level)) : '—'; ?></td>
+                            <td><strong><?= $grade_row->mastery_rate !== null ? number_format((float) $grade_row->mastery_rate, 2) . '%' : '—'; ?></strong></td>
                         </tr>
                         <?php if ($show_district_breakdown && !empty($district_rows)) : ?>
                             <tr class="grade-district-row" id="<?= $grade_key; ?>" hidden>
-                                <td colspan="<?= $show_district_breakdown ? 7 : 6; ?>">
+                                <td colspan="<?= $show_district_breakdown ? 8 : 7; ?>">
                                     <table class="grade-district-table">
-                                        <thead><tr><th>District</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th></tr></thead>
+                                        <thead><tr><th>District</th><th>Records</th><th>Assessed</th><th>With gap</th><th>CPL</th><th>75% &amp; above</th></tr></thead>
                                         <tbody>
                                             <?php foreach ($district_rows as $district_row) : ?>
                                                 <?php
@@ -180,15 +131,16 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
                                                     $district_label .= ' · ' . $district_row->division_name;
                                                 }
                                                 $district_link = $district_row->district_key !== 'unassigned'
-                                                    ? base_url('Pages/learning_gap_records?' . http_build_query(array('district_id' => $district_row->district_key, 'grade_level' => $grade_row->grade_level)))
+                                                    ? base_url('Pages/learning_gap_analytics?' . http_build_query(array('district_id' => $district_row->district_key, 'grade_id' => $grade_row->grade_level)))
                                                     : '';
                                                 ?>
                                                 <tr>
-                                                    <td><?= $district_link !== '' ? '<a href="' . html_escape($district_link) . '" title="View ' . html_escape($district_label) . ' ' . html_escape($grade_row->grade_level) . ' records">' . html_escape($district_label) . '</a>' : html_escape($district_label); ?></td>
+                                                    <td><?= $district_link !== '' ? '<a href="' . html_escape($district_link) . '" title="View ' . html_escape($district_label) . ' schools for ' . html_escape($grade_row->grade_level) . '">' . html_escape($district_label) . '</a>' : html_escape($district_label); ?></td>
                                                     <td><?= (int) $district_row->record_count; ?></td>
                                                     <td><?= number_format((int) $district_row->learners_assessed); ?></td>
                                                     <td><?= number_format((int) $district_row->learners_with_gap); ?></td>
                                                     <td><strong><?= $district_row->class_proficiency_level !== null ? number_format((float) $district_row->class_proficiency_level, 2) . '%' : '—'; ?></strong></td>
+                                                    <td><?= isset($district_row->mastery_rate) && $district_row->mastery_rate !== null ? number_format((float) $district_row->mastery_rate, 2) . '%' : '—'; ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
@@ -241,72 +193,37 @@ $ranking_interp = $entry_mode || !$has_ranking_filter ? array() : lg_ranking_int
 <script src="<?= base_url('assets/libs/chart-js/Chart.bundle.min.js'); ?>"></script>
 <script>
     (function () {
-        var rows = <?= json_encode(array_map(function ($row) {
+        // Per-grade overview graph: recorded gap bars with the CPL line across grade levels.
+        var gradeRows = <?= json_encode(array_values(array_map(function ($row) {
             return array(
-                'term' => (string) $row->term,
-                'assessed' => (int) $row->record_count > 0 ? (int) $row->learners_assessed : null,
-                'gap' => (int) $row->record_count > 0 ? (int) $row->learners_with_gap : null,
-                'cpl' => $row->class_proficiency_level === null ? null : (float) $row->class_proficiency_level,
-                's1' => $row->cpl_summative_1 === null ? null : (float) $row->cpl_summative_1,
-                's2' => $row->cpl_summative_2 === null ? null : (float) $row->cpl_summative_2,
-                'et' => isset($row->cpl_end_term) && $row->cpl_end_term !== null ? (float) $row->cpl_end_term : null,
+                'grade' => (string) $row->grade_level,
+                'gap' => $row->gap_rate === null ? null : round((float) $row->gap_rate, 2),
+                'cpl' => $row->class_proficiency_level === null ? null : round((float) $row->class_proficiency_level, 2),
             );
-        }, $term_performance), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-        var grid = document.getElementById('termPerformanceCharts');
-        var empty = document.getElementById('termPerformanceEmpty');
-        var assessedCanvas = document.getElementById('termAssessedChart');
-        var gapCanvas = document.getElementById('termGapChart');
-        var cplCanvas = document.getElementById('termCplChart');
-        if (!grid || typeof Chart === 'undefined') return;
-        var hasData = rows.some(function (row) { return row.assessed > 0 || row.gap > 0 || row.cpl !== null; });
-        var hasSummative = rows.some(function (row) { return row.s1 !== null || row.s2 !== null || row.et !== null; });
-        if (!hasData && !hasSummative) {
-            grid.style.display = 'none';
-            empty.style.display = 'flex';
+        }, isset($grade_performance) ? $grade_performance : array())), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        var gradeCanvas = document.getElementById('gradePerformanceChart');
+        if (!gradeCanvas || typeof Chart === 'undefined') return;
+        if (!gradeRows.some(function (row) { return row.gap !== null || row.cpl !== null; })) {
+            gradeCanvas.closest('.term-chart-wrap').style.display = 'none';
             return;
         }
-        var labels = rows.map(function (row) { return row.term; });
-        var countOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            legend: { display: false },
-            tooltips: { callbacks: { label: function (item) { return Number(item.yLabel).toLocaleString() + ' learners'; } } },
-            scales: {
-                xAxes: [{ gridLines: { display: false }, barPercentage: .62, categoryPercentage: .72 }],
-                yAxes: [{ ticks: { beginAtZero: true, precision: 0, callback: function (value) { return Number(value).toLocaleString(); } }, scaleLabel: { display: true, labelString: 'Number of learners' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
-            }
-        };
-        new Chart(assessedCanvas.getContext('2d'), {
+        new Chart(gradeCanvas.getContext('2d'), {
             type: 'bar',
-            data: { labels: labels, datasets: [{ label: 'Recorded Assessed Count', data: rows.map(function (row) { return row.assessed; }), backgroundColor: '#2877a9', borderColor: '#2877a9', borderWidth: 1 }] },
-            options: countOptions
-        });
-        new Chart(gapCanvas.getContext('2d'), {
-            type: 'bar',
-            data: { labels: labels, datasets: [{ label: 'Recorded Gap Count', data: rows.map(function (row) { return row.gap; }), backgroundColor: '#ef9f3d', borderColor: '#d9821b', borderWidth: 1 }] },
-            options: countOptions
-        });
-        var cplDatasets = [
-            { type: 'line', label: 'CPL (%)', data: rows.map(function (row) { return row.cpl; }), borderColor: '#23835f', backgroundColor: 'rgba(35,131,95,.12)', pointBackgroundColor: '#23835f', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
-        ];
-        if (hasSummative) {
-            cplDatasets.push(
-                { type: 'line', label: 'Summative 1 (%)', data: rows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25 },
-                { type: 'line', label: 'Summative 2 (%)', data: rows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25 },
-                { type: 'line', label: 'End Term exam (%)', data: rows.map(function (row) { return row.et; }), borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,.10)', pointBackgroundColor: '#c0392b', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [8, 3], fill: false, spanGaps: true, lineTension: .25 }
-            );
-        }
-        new Chart(cplCanvas.getContext('2d'), {
-            type: 'line',
-            data: { labels: labels, datasets: cplDatasets },
+            data: {
+                labels: gradeRows.map(function (row) { return row.grade; }),
+                datasets: [
+                    { label: 'Recorded Gap Rate (%)', data: gradeRows.map(function (row) { return row.gap; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 },
+                    { type: 'line', label: 'CPL (%)', data: gradeRows.map(function (row) { return row.cpl; }), borderColor: '#23835f', backgroundColor: 'rgba(35,131,95,.12)', pointBackgroundColor: '#23835f', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, borderWidth: 2, fill: false, spanGaps: true, lineTension: .25 }
+                ]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, boxWidth: 8 } },
                 tooltips: { mode: 'index', intersect: false, callbacks: { label: function (item, data) { var label = data.datasets[item.datasetIndex].label || ''; return label + ': ' + (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(2) + '%'); } } },
                 scales: {
-                    xAxes: [{ gridLines: { display: false } }],
-                    yAxes: [{ ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'CPL' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
+                    xAxes: [{ gridLines: { display: false }, ticks: { autoSkip: false }, barPercentage: .62, categoryPercentage: .72 }],
+                    yAxes: [{ ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'Percentage' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
                 }
             }
         });

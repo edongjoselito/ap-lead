@@ -2277,7 +2277,7 @@ public function learning_gap_archive_years($scope)
         ->get()->result();
 }
 
-public function learning_gap_school_competency_summary($scope, $grade = '')
+public function learning_gap_school_competency_summary($scope, $grade = '', $assessment = '', $district = '')
 {
     $competencies = array();
     $this->load->helper('learning_gap');
@@ -2287,6 +2287,11 @@ public function learning_gap_school_competency_summary($scope, $grade = '')
         $record_grade = trim((string) $record->grade_level);
         if ($record_grade !== '') $grades[$record_grade] = $record_grade;
         if ($grade !== '' && $record_grade !== $grade) continue;
+        if ($assessment !== '' && !lg_record_has_assessment($record, $assessment)) continue;
+        if ($district !== '') {
+            $district_key = !empty($record->district_name) ? (string) $record->reporting_district_id : 'unassigned';
+            if ($district_key !== $district) continue;
+        }
         foreach (preg_split('/\r\n|\r|\n/', (string) $record->least_learned_competency) as $text) {
             $text = trim($text);
             if ($text === '') continue;
@@ -2430,7 +2435,7 @@ public function learning_gap_term_performance($scope)
  * This keeps school-submitted text inside the application and groups common
  * planning themes using a transparent education-focused keyword taxonomy.
  */
-public function learning_gap_thematic_analysis($scope, $limit = 6)
+public function learning_gap_thematic_analysis($scope, $limit = 6, $term = null)
 {
     $this->ensure_learning_gap_archive_schema();
     $catalog = array(
@@ -2488,6 +2493,9 @@ public function learning_gap_thematic_analysis($scope, $limit = 6)
     $this->db->select('lgr.school_id, lgr.intervention_action, lgr.remarks')
         ->from('learning_gap_records lgr')
         ->where('lgr.fiscal_year', $this->learning_gap_year());
+    if ($term !== null && $term !== '') {
+        $this->db->where('lgr.term', (string) $term);
+    }
     $this->apply_learning_gap_scope($scope);
 
     $source_count = 0;
@@ -2729,6 +2737,9 @@ public function learning_gap_school_submission_summary($division_id)
         ->from('schools s')
         ->join('learning_gap_records lgr', 'lgr.school_id = s.schoolID AND lgr.division_id = s.division_id AND lgr.fiscal_year = ' . (int) $this->learning_gap_year() . ' AND ' . $this->learning_gap_ap_condition('lgr.learning_area'), 'left', false)
         ->where('s.division_id', (int) $division_id)
+        // Schools whose user account was deleted no longer count toward the
+        // submission status; only a live school login can submit records.
+        ->where("EXISTS (SELECT 1 FROM users u WHERE u.username = s.schoolID AND u.position = 'school')", null, false)
         ->group_by('s.schoolID, s.schoolName, s.district_id')
         ->order_by('s.schoolName', 'ASC')
         ->get()

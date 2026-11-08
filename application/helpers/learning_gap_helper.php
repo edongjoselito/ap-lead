@@ -12,6 +12,37 @@ function lg_grade_options($existing = array())
 }
 
 /**
+ * Within-term assessment choices for the record and summary filters.
+ * The end-term label differs per app (CLMD encodes an interim exam).
+ */
+function lg_assessment_options($end_term_label = 'End Term exam')
+{
+    return array(
+        'summative_1' => 'Summative 1',
+        'summative_2' => 'Summative 2',
+        'end_term' => $end_term_label,
+    );
+}
+
+/** Maps an assessment filter key to its stored CPL column on a record. */
+function lg_assessment_column($key)
+{
+    $map = array(
+        'summative_1' => 'cpl_summative_1',
+        'summative_2' => 'cpl_summative_2',
+        'end_term' => 'cpl_end_term',
+    );
+    return isset($map[$key]) ? $map[$key] : null;
+}
+
+/** True when the record has an encoded CPL for the given assessment key. */
+function lg_record_has_assessment($record, $key)
+{
+    $column = lg_assessment_column($key);
+    return $column !== null && isset($record->$column) && $record->$column !== null && $record->$column !== '';
+}
+
+/**
  * Aggregates submitted records into per-grade-level rows. CPL is weighted by
  * the number of assessed learners, matching the per-term performance rollup,
  * so larger classes contribute proportionately to the grade-level result.
@@ -25,41 +56,16 @@ if (!function_exists('lg_grade_performance')) {
             $grade = trim((string) $record->grade_level);
             if ($grade === '') continue;
             if (!isset($rows[$grade])) {
-                $rows[$grade] = array(
-                    'grade_level' => $grade,
-                    'record_count' => 0,
-                    'learners_assessed' => 0,
-                    'learners_with_gap' => 0,
-                    'cpl_weighted' => 0.0,
-                    'cpl_learners' => 0,
-                    'cpl_record_count' => 0,
-                );
+                $rows[$grade] = lg_rollup_row(array('grade_level' => $grade));
             }
-            $assessed = (int) $record->learners_assessed;
-            $rows[$grade]['record_count']++;
-            $rows[$grade]['learners_assessed'] += $assessed;
-            $rows[$grade]['learners_with_gap'] += (int) $record->learners_with_gap;
-            if (isset($record->class_proficiency_level) && $record->class_proficiency_level !== '') {
-                $weight = max(1, $assessed);
-                $rows[$grade]['cpl_weighted'] += (float) $record->class_proficiency_level * $weight;
-                $rows[$grade]['cpl_learners'] += $weight;
-                $rows[$grade]['cpl_record_count']++;
-            }
+            lg_rollup_add($rows[$grade], $record);
         }
         uksort($rows, function ($a, $b) use ($order) {
             $ai = isset($order[$a]) ? $order[$a] : PHP_INT_MAX;
             $bi = isset($order[$b]) ? $order[$b] : PHP_INT_MAX;
             return $ai === $bi ? strnatcasecmp($a, $b) : ($ai < $bi ? -1 : 1);
         });
-        $result = array();
-        foreach ($rows as $row) {
-            $row['class_proficiency_level'] = $row['cpl_learners'] > 0
-                ? round($row['cpl_weighted'] / $row['cpl_learners'], 2)
-                : null;
-            unset($row['cpl_weighted'], $row['cpl_learners']);
-            $result[] = (object) $row;
-        }
-        return $result;
+        return array_values(array_map('lg_rollup_finish', $rows));
     }
 }
 
@@ -81,38 +87,20 @@ if (!function_exists('lg_grade_district_performance')) {
             $district_key = $has_district ? (string) $record->reporting_district_id : 'unassigned';
             $key = $grade . '|' . $district_key;
             if (!isset($buckets[$key])) {
-                $buckets[$key] = array(
+                $buckets[$key] = lg_rollup_row(array(
                     'grade_level' => $grade,
                     'district_key' => $district_key,
                     'district_name' => $has_district ? $record->district_name : 'Unassigned district',
                     'division_name' => isset($record->division_name) ? $record->division_name : '',
-                    'record_count' => 0,
-                    'learners_assessed' => 0,
-                    'learners_with_gap' => 0,
-                    'cpl_weighted' => 0.0,
-                    'cpl_learners' => 0,
-                    'cpl_record_count' => 0,
-                );
+                ));
             }
-            $assessed = (int) $record->learners_assessed;
-            $buckets[$key]['record_count']++;
-            $buckets[$key]['learners_assessed'] += $assessed;
-            $buckets[$key]['learners_with_gap'] += (int) $record->learners_with_gap;
-            if (isset($record->class_proficiency_level) && $record->class_proficiency_level !== '') {
-                $weight = max(1, $assessed);
-                $buckets[$key]['cpl_weighted'] += (float) $record->class_proficiency_level * $weight;
-                $buckets[$key]['cpl_learners'] += $weight;
-                $buckets[$key]['cpl_record_count']++;
-            }
+            lg_rollup_add($buckets[$key], $record);
             $district_keys[$district_key] = true;
         }
         $grades = array();
         foreach ($buckets as $key => $row) {
-            $row['class_proficiency_level'] = $row['cpl_learners'] > 0
-                ? round($row['cpl_weighted'] / $row['cpl_learners'], 2)
-                : null;
-            unset($row['cpl_weighted'], $row['cpl_learners']);
-            $grades[$row['grade_level']][] = (object) $row;
+            $row = lg_rollup_finish($row);
+            $grades[$row->grade_level][] = $row;
         }
         foreach ($grades as &$district_rows) {
             usort($district_rows, function ($a, $b) {
@@ -154,6 +142,17 @@ if (!function_exists('lg_rollup_row')) {
             'cpl_weighted' => 0.0,
             'cpl_learners' => 0,
             'cpl_record_count' => 0,
+            's1_weighted' => 0.0,
+            's1_learners' => 0,
+            's1_record_count' => 0,
+            's2_weighted' => 0.0,
+            's2_learners' => 0,
+            's2_record_count' => 0,
+            'et_weighted' => 0.0,
+            'et_learners' => 0,
+            'et_record_count' => 0,
+            'savg_weighted' => 0.0,
+            'savg_learners' => 0,
         );
     }
 }
@@ -165,11 +164,26 @@ if (!function_exists('lg_rollup_add')) {
         $row['record_count']++;
         $row['learners_assessed'] += $assessed;
         $row['learners_with_gap'] += (int) $record->learners_with_gap;
+        $weight = max(1, $assessed);
         if (isset($record->class_proficiency_level) && $record->class_proficiency_level !== '') {
-            $weight = max(1, $assessed);
             $row['cpl_weighted'] += (float) $record->class_proficiency_level * $weight;
             $row['cpl_learners'] += $weight;
             $row['cpl_record_count']++;
+        }
+        // Within-term assessment CPL values (Summative 1, Summative 2,
+        // End Term / Interim exam) are pooled per assessed count.
+        $summative_parts = array();
+        foreach (array('cpl_summative_1' => 's1', 'cpl_summative_2' => 's2', 'cpl_end_term' => 'et') as $field => $prefix) {
+            if (isset($record->{$field}) && $record->{$field} !== '') {
+                $row[$prefix . '_weighted'] += (float) $record->{$field} * $weight;
+                $row[$prefix . '_learners'] += $weight;
+                $row[$prefix . '_record_count']++;
+                $summative_parts[] = (float) $record->{$field};
+            }
+        }
+        if (!empty($summative_parts)) {
+            $row['savg_weighted'] += (array_sum($summative_parts) / count($summative_parts)) * $weight;
+            $row['savg_learners'] += $weight;
         }
     }
 }
@@ -180,10 +194,32 @@ if (!function_exists('lg_rollup_finish')) {
         $row['gap_rate'] = $row['learners_assessed'] > 0
             ? ($row['learners_with_gap'] / $row['learners_assessed']) * 100
             : null;
+        // Mastery = share of learners who met expectations (75%+ is the target).
+        $row['mastery_rate'] = $row['gap_rate'] !== null
+            ? round(100 - $row['gap_rate'], 2)
+            : null;
         $row['class_proficiency_level'] = $row['cpl_learners'] > 0
             ? round($row['cpl_weighted'] / $row['cpl_learners'], 2)
             : null;
-        unset($row['cpl_weighted'], $row['cpl_learners']);
+        $row['cpl_summative_1'] = $row['s1_learners'] > 0
+            ? round($row['s1_weighted'] / $row['s1_learners'], 2)
+            : null;
+        $row['cpl_summative_2'] = $row['s2_learners'] > 0
+            ? round($row['s2_weighted'] / $row['s2_learners'], 2)
+            : null;
+        $row['cpl_end_term'] = $row['et_learners'] > 0
+            ? round($row['et_weighted'] / $row['et_learners'], 2)
+            : null;
+        $row['cpl_summative_avg'] = $row['savg_learners'] > 0
+            ? round($row['savg_weighted'] / $row['savg_learners'], 2)
+            : null;
+        unset(
+            $row['cpl_weighted'], $row['cpl_learners'],
+            $row['s1_weighted'], $row['s1_learners'],
+            $row['s2_weighted'], $row['s2_learners'],
+            $row['et_weighted'], $row['et_learners'],
+            $row['savg_weighted'], $row['savg_learners']
+        );
         return (object) $row;
     }
 }
@@ -515,5 +551,115 @@ if (!function_exists('lg_ranking_interpretation')) {
             $lines[] = 'The top three competencies are all in <strong>' . html_escape($grades[0]) . '</strong>, so support can focus on that grade level.';
         }
         return $lines;
+    }
+}
+
+if (!function_exists('lg_proficiency_levels')) {
+    /** Proficiency level bands derived from CPL (DepEd descriptors). */
+    function lg_proficiency_levels()
+    {
+        return array(
+            array('minimum' => 90, 'label' => 'Highly Proficient'),
+            array('minimum' => 75, 'label' => 'Proficient'),
+            array('minimum' => 50, 'label' => 'Nearly Proficient'),
+            array('minimum' => 25, 'label' => 'Low Proficient'),
+            array('minimum' => 0, 'label' => 'Not Proficient'),
+        );
+    }
+}
+
+if (!function_exists('lg_proficiency_level')) {
+    function lg_proficiency_level($percentage)
+    {
+        if (!is_numeric($percentage) || $percentage < 0 || $percentage > 100) {
+            return '';
+        }
+        foreach (lg_proficiency_levels() as $level) {
+            if ($percentage >= $level['minimum']) {
+                return $level['label'];
+            }
+        }
+        return '';
+    }
+}
+
+if (!function_exists('lg_group_rollup')) {
+    /** Rolls records up by one field, such as grade_level or learning_area. */
+    function lg_group_rollup(array $records, $field)
+    {
+        $rows = array();
+        foreach ($records as $record) {
+            $name = trim((string) $record->$field);
+            if ($name === '') continue;
+            if (!isset($rows[$name])) {
+                $rows[$name] = lg_rollup_row(array('name' => $name));
+            }
+            lg_rollup_add($rows[$name], $record);
+        }
+        uksort($rows, function ($a, $b) {
+            // Kindergarten comes before Grade 1.
+            if ($a === 'Kindergarten' xor $b === 'Kindergarten') {
+                return $a === 'Kindergarten' ? -1 : 1;
+            }
+            return strnatcasecmp($a, $b);
+        });
+        return array_values(array_map('lg_rollup_finish', $rows));
+    }
+}
+
+if (!function_exists('lg_proficiency_distribution')) {
+    /**
+     * Counts schools per proficiency level from lg_scope_rollup() school rows. Each
+     * school sits in the level of its weighted CPL. Schools without a CPL keep their
+     * own row, so the counts always add up to every school in scope.
+     */
+    function lg_proficiency_distribution(array $schools)
+    {
+        $rows = array();
+        $ceiling = '100';
+        foreach (lg_proficiency_levels() as $level) {
+            $rows[$level['label']] = array('label' => $level['label'], 'range' => $level['minimum'] . '–' . $ceiling . '%', 'count' => 0);
+            $ceiling = number_format($level['minimum'] - 0.01, 2);
+        }
+        $no_cpl = 'No CPL encoded';
+        $rows[$no_cpl] = array('label' => $no_cpl, 'range' => '—', 'count' => 0);
+
+        foreach ($schools as $school) {
+            $label = lg_proficiency_level($school->class_proficiency_level);
+            $rows[isset($rows[$label]) ? $label : $no_cpl]['count']++;
+        }
+
+        $total = count($schools);
+        return array_values(array_map(function ($row) use ($total) {
+            $row['share'] = $total > 0 ? ($row['count'] / $total) * 100 : 0;
+            return (object) $row;
+        }, $rows));
+    }
+}
+
+if (!function_exists('lg_report_performance_table')) {
+    /**
+     * One report table for term, learning area or grade rows. Measures stay numeric,
+     * with the unit in the heading, so Excel can still calculate on them.
+     */
+    function lg_report_performance_table(array $rows, $label, $name_field = 'name')
+    {
+        $table = array(array($label, 'Records', 'Assessed', 'With gap', 'Gap rate (%)', 'CPL (%)', '75% & above (%)', 'Proficiency level', 'Mastery'));
+        foreach ($rows as $row) {
+            $cpl = $row->class_proficiency_level;
+            $mastery = isset($row->mastery_rate) ? $row->mastery_rate : null;
+            $table[] = array(
+                $row->$name_field,
+                (int) $row->record_count,
+                (int) $row->learners_assessed,
+                (int) $row->learners_with_gap,
+                $row->gap_rate === null ? null : round((float) $row->gap_rate, 1),
+                $cpl === null ? null : round((float) $cpl, 2),
+                $mastery === null ? null : round((float) $mastery, 1),
+                $cpl === null ? null : lg_proficiency_level($cpl),
+                $cpl === null ? null : lg_cpl_band((float) $cpl),
+            );
+        }
+        return $table;
     }
 }

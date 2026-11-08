@@ -6,7 +6,11 @@
 $scope = array('type' => 'division', 'id' => (int) $this->session->division);
 $summary = $this->Page_model->learning_gap_summary($scope);
 $term_performance = $this->Page_model->learning_gap_term_performance($scope);
-$thematic_analysis = $this->Page_model->learning_gap_thematic_analysis($scope);
+$this->load->helper('learning_gap');
+$theme_term = trim((string) $this->input->get('theme_term', true));
+$thematic_analysis = $this->Page_model->learning_gap_thematic_analysis($scope, 6, $theme_term !== '' ? $theme_term : null);
+$grade_records = lg_unique_records($this->Page_model->learning_gap_records($scope));
+$grade_performance = lg_grade_performance($grade_records);
 $records_url = base_url('Pages/learning_gap_records');
 $overview_url = base_url('Pages/learning_gap');
 $record_count = (int) $summary->record_count;
@@ -27,7 +31,6 @@ $div_setup_url = base_url('Pages/division_setup');
 $div_districts_url = base_url('pages/district_account/' . (int) $this->session->division);
 $div_schools_url = base_url('pages/schools_division/' . (int) $this->session->division);
 
-$this->load->helper('learning_gap');
 $term_interp = lg_term_interpretation($term_performance, $record_count);
 
 $theme_interp = array();
@@ -198,18 +201,18 @@ if ($div_encoded_total > 0) {
 
     <section class="lg-card">
         <div class="lg-card-head">
-            <div><h4>Division CPL and Recorded Gap Rate per Term</h4><p>Gap rate = sum of recorded gap counts ÷ sum of recorded assessed counts. CPL is weighted by assessed count for records with a CPL value.</p></div>
+            <div><h4>Division CPL and Recorded Gap</h4><p>CPL trend per term with within-term assessments as bars; recorded gap is shown per grade level, not per term. CPL is weighted by assessed count for records with a CPL value.</p></div>
             <span class="analysis-badge"><i class="mdi mdi-chart-timeline-variant"></i> CPL coverage: <?= number_format($cpl_record_count); ?>/<?= number_format($record_count); ?> records</span>
         </div>
         <div class="lg-card-body">
             <div id="scopeTermPerformanceCharts" class="performance-chart-grid">
                 <div class="performance-chart-panel">
-                    <h5>Recorded Gap Rate (%)</h5>
-                    <div class="performance-chart-wrap"><canvas id="scopeGapRateChart" role="img" aria-label="Percentage of learners with a recorded gap per term"></canvas></div>
+                    <h5>CPL (%) — within-term assessments</h5>
+                    <div class="performance-chart-wrap"><canvas id="scopeCplChart" role="img" aria-label="Class proficiency level per term with within-term assessment bars"></canvas></div>
                 </div>
                 <div class="performance-chart-panel">
-                    <h5>CPL (%)</h5>
-                    <div class="performance-chart-wrap"><canvas id="scopeCplChart" role="img" aria-label="Class proficiency level per term"></canvas></div>
+                    <h5>Recorded Gap Rate (%) by grade level</h5>
+                    <div class="performance-chart-wrap"><canvas id="scopeGapRateChart" role="img" aria-label="Percentage of learners with a recorded gap per grade level"></canvas></div>
                 </div>
             </div>
             <div id="scopeTermPerformanceEmpty" class="chart-empty"><div><i class="mdi mdi-chart-line-variant"></i>No per-term assessment data has been submitted yet.</div></div>
@@ -247,8 +250,19 @@ if ($div_encoded_total > 0) {
 
     <section class="lg-card">
         <div class="lg-card-head">
-            <div><h4>Automated Thematic Analysis</h4><p>Recurring themes detected from school-submitted Intervention / Action and Remarks.</p></div>
-            <span class="analysis-badge"><i class="mdi mdi-auto-fix"></i> NLP-assisted</span>
+            <div><h4>Automated Thematic Analysis</h4><p>Recurring themes detected from school-submitted Intervention / Action and Remarks<?= $theme_term !== '' ? ' in <strong>' . html_escape($theme_term) . '</strong>' : ' across all terms'; ?>.</p></div>
+            <div class="d-flex align-items-center" style="gap:10px">
+                <form method="get" action="" class="d-flex align-items-center" style="gap:6px">
+                    <label class="mb-0 small text-muted" for="themeTerm">Term</label>
+                    <select name="theme_term" id="themeTerm" class="custom-select custom-select-sm" style="width:auto" onchange="this.form.submit()">
+                        <option value="">All terms</option>
+                        <?php foreach (array('Term 1', 'Term 2', 'Term 3') as $term_option) : ?>
+                            <option value="<?= $term_option; ?>" <?= $theme_term === $term_option ? 'selected' : ''; ?>><?= $term_option; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+                <span class="analysis-badge"><i class="mdi mdi-auto-fix"></i> NLP-assisted</span>
+            </div>
         </div>
         <div class="lg-card-body">
             <?php if (empty($thematic_analysis['themes'])) : ?>
@@ -366,44 +380,58 @@ if ($div_encoded_total > 0) {
                 'assessed' => $assessed,
             );
         }, $term_performance), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        var gradeRows = <?= json_encode(array_values(array_filter(array_map(function ($row) {
+            return array(
+                'grade' => (string) $row->grade_level,
+                'gap' => $row->gap_rate === null ? null : round((float) $row->gap_rate, 2),
+            );
+        }, $grade_performance), function ($row) { return $row['gap'] !== null; })), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         var chartGrid = document.getElementById('scopeTermPerformanceCharts');
         var gapRateCanvas = document.getElementById('scopeGapRateChart');
         var cplCanvas = document.getElementById('scopeCplChart');
         var termEmpty = document.getElementById('scopeTermPerformanceEmpty');
         var hasTermData = termRows.some(function (row) { return row.assessed > 0 || row.cpl !== null; });
         var hasSummative = termRows.some(function (row) { return row.s1 !== null || row.s2 !== null || row.et !== null; });
-        if (chartGrid && gapRateCanvas && cplCanvas && (hasTermData || hasSummative)) {
+        if (chartGrid && gapRateCanvas && cplCanvas && (hasTermData || hasSummative || gradeRows.length > 0)) {
             var termLabels = termRows.map(function (row) { return row.term; });
             var percentScale = {
-                xAxes: [{ gridLines: { display: false }, barPercentage: .58, categoryPercentage: .68 }],
+                xAxes: [{ gridLines: { display: false }, barPercentage: .78, categoryPercentage: .72 }],
                 yAxes: [{ ticks: { beginAtZero: true, max: 100, callback: function (value) { return value + '%'; } }, scaleLabel: { display: true, labelString: 'Percentage' }, gridLines: { color: 'rgba(28,72,101,.08)' } }]
             };
+            // Recorded gap is charted per grade level (not per term) as its own panel.
             new Chart(gapRateCanvas.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: termLabels,
-                    datasets: [{ label: 'Recorded Gap Rate (%)', data: termRows.map(function (row) { return row.gapPercentage; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 }]
+                    labels: gradeRows.map(function (row) { return row.grade; }),
+                    datasets: [{ label: 'Recorded Gap Rate (%)', data: gradeRows.map(function (row) { return row.gap; }), backgroundColor: 'rgba(229,145,43,.78)', borderColor: '#d57d16', borderWidth: 1 }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     legend: { display: false },
                     tooltips: { callbacks: { label: function (item) { return 'Recorded Gap Rate: ' + (item.yLabel === null ? 'No data' : Number(item.yLabel).toFixed(1) + '%'); } } },
-                    scales: percentScale
+                    scales: {
+                        xAxes: [{ gridLines: { display: false }, barPercentage: .58, categoryPercentage: .68 }],
+                        yAxes: [percentScale.yAxes[0]]
+                    }
                 }
             });
-            var cplDatasets = [
-                { type: 'line', label: 'CPL (%)', data: termRows.map(function (row) { return row.cpl; }), borderColor: '#20805c', backgroundColor: 'rgba(32,128,92,.10)', pointBackgroundColor: '#20805c', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, fill: false, spanGaps: true, lineTension: .25 }
+            // Within-term assessments are bars inside each term; the term CPL is the line over them.
+            var assessmentSets = [
+                { key: 's1', label: 'Summative 1 (%)', color: '#7a5fb0' },
+                { key: 's2', label: 'Summative 2 (%)', color: '#b0653a' },
+                { key: 'et', label: 'End Term exam (%)', color: '#2f8fc1' }
             ];
-            if (hasSummative) {
-                cplDatasets.push(
-                    { type: 'line', label: 'Summative 1 (%)', data: termRows.map(function (row) { return row.s1; }), borderColor: '#7a5fb0', backgroundColor: 'rgba(122,95,176,.10)', pointBackgroundColor: '#7a5fb0', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [6, 4], fill: false, spanGaps: true, lineTension: .25 },
-                    { type: 'line', label: 'Summative 2 (%)', data: termRows.map(function (row) { return row.s2; }), borderColor: '#b0653a', backgroundColor: 'rgba(176,101,58,.10)', pointBackgroundColor: '#b0653a', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [2, 3], fill: false, spanGaps: true, lineTension: .25 },
-                    { type: 'line', label: 'End Term exam (%)', data: termRows.map(function (row) { return row.et; }), borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,.10)', pointBackgroundColor: '#c0392b', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, borderDash: [8, 3], fill: false, spanGaps: true, lineTension: .25 }
-                );
-            }
+            var cplDatasets = assessmentSets.filter(function (set) {
+                return termRows.some(function (row) { return row[set.key] !== null; });
+            }).map(function (set) {
+                return { label: set.label, data: termRows.map(function (row) { return row[set.key]; }), backgroundColor: set.color, borderColor: set.color, borderWidth: 0 };
+            });
+            cplDatasets.push(
+                { type: 'line', label: 'CPL (%)', data: termRows.map(function (row) { return row.cpl; }), borderColor: '#20805c', backgroundColor: 'rgba(32,128,92,.10)', pointBackgroundColor: '#20805c', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, borderWidth: 2, fill: false, spanGaps: true, lineTension: .25 }
+            );
             new Chart(cplCanvas.getContext('2d'), {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: termLabels,
                     datasets: cplDatasets

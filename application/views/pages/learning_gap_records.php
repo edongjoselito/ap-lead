@@ -37,6 +37,73 @@ $gap_rate = $learners_assessed > 0 ? ($learners_with_gap / $learners_assessed) *
 /* A school only ever sees its own rows, so a school count would always read 1.
    Its second tile counts the grade and learning area pairs it has covered. */
 $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
+
+/* Division, district, and regional accounts get a directory grouped district
+   → school → grade. Inside a school each grade is one consolidated component:
+   learner counts are summed, competencies are merged, and CPL is averaged
+   across the contributing records, weighted by assessed learners. */
+$district_groups = array();
+if (!$is_school) {
+    $grade_rank = array_flip(lg_grade_options());
+    foreach ($records as $row) {
+        $district_key = !empty($row->district_name) ? (string) $row->reporting_district_id : 'unassigned';
+        $district_name = !empty($row->district_name) ? $row->district_name : 'Unassigned district';
+        if (!isset($district_groups[$district_key])) {
+            $district_groups[$district_key] = array('name' => $district_name, 'schools' => array());
+        }
+        $school_key = (string) $row->school_id;
+        if (!isset($district_groups[$district_key]['schools'][$school_key])) {
+            $district_groups[$district_key]['schools'][$school_key] = array(
+                'name' => trim((string) $row->schoolName) !== '' ? $row->schoolName : 'School ID ' . $row->school_id,
+                'grades' => array(),
+                'record_count' => 0,
+            );
+        }
+        $school_group =& $district_groups[$district_key]['schools'][$school_key];
+        $school_group['record_count']++;
+        $grade_key = trim((string) $row->grade_level);
+        if (!isset($school_group['grades'][$grade_key])) {
+            $school_group['grades'][$grade_key] = array(
+                'records' => 0, 'assessed' => 0, 'with_gap' => 0,
+                'cpl_weighted' => 0.0, 'cpl_weight' => 0,
+                'competencies' => array(), 'terms' => array(), 'areas' => array(), 'rows' => array(),
+            );
+        }
+        $grade_group =& $school_group['grades'][$grade_key];
+        $grade_group['records']++;
+        $grade_group['assessed'] += (int) $row->learners_assessed;
+        $grade_group['with_gap'] += (int) $row->learners_with_gap;
+        if ($row->class_proficiency_level !== null && $row->class_proficiency_level !== '') {
+            $weight = max(1, (int) $row->learners_assessed);
+            $grade_group['cpl_weighted'] += (float) $row->class_proficiency_level * $weight;
+            $grade_group['cpl_weight'] += $weight;
+        }
+        foreach ($competency_items($row->least_learned_competency) as $competency_text) {
+            $grade_group['competencies'][$competency_text] = true;
+        }
+        if (trim((string) $row->term) !== '') {
+            $grade_group['terms'][(string) $row->term] = true;
+        }
+        if (trim((string) $row->learning_area) !== '') {
+            $grade_group['areas'][(string) $row->learning_area] = true;
+        }
+        $grade_group['rows'][] = $row;
+        unset($grade_group, $school_group);
+    }
+    uasort($district_groups, function ($a, $b) { return strnatcasecmp($a['name'], $b['name']); });
+    foreach ($district_groups as &$district_group) {
+        uasort($district_group['schools'], function ($a, $b) { return strnatcasecmp($a['name'], $b['name']); });
+        foreach ($district_group['schools'] as &$school_group) {
+            uksort($school_group['grades'], function ($a, $b) use ($grade_rank) {
+                $rank_a = isset($grade_rank[$a]) ? $grade_rank[$a] : 999;
+                $rank_b = isset($grade_rank[$b]) ? $grade_rank[$b] : 999;
+                return $rank_a === $rank_b ? strnatcasecmp($a, $b) : $rank_a - $rank_b;
+            });
+        }
+        unset($school_group);
+    }
+    unset($district_group);
+}
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/records-directory.css'); ?>?v=<?= filemtime(FCPATH . 'assets/css/records-directory.css'); ?>">
 
@@ -138,8 +205,13 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                     </div>
                 <?php endforeach; ?>
                 <div class="rec-field">
-                    <label for="filter-competency">Exact competency</label>
-                    <input id="filter-competency" name="competency" class="form-control" value="<?= html_escape($competency_filter); ?>" placeholder="Enter full competency text">
+                    <label for="filter-assessment">Assessment</label>
+                    <select id="filter-assessment" name="assessment" class="custom-select">
+                        <option value="">All assessments</option>
+                        <?php foreach (lg_assessment_options('End Term exam') as $assessment_key => $assessment_label) : ?>
+                            <option value="<?= $assessment_key; ?>" <?= $assessment_filter === $assessment_key ? 'selected' : ''; ?>><?= html_escape($assessment_label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="rec-filter-actions">
                     <button class="btn btn-primary" type="submit">Apply filters</button>
@@ -159,6 +231,9 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                             <span class="rec-active-chip"><?= html_escape($filter['label'] . ': ' . $filter['value']); ?></span>
                         <?php endif; ?>
                     <?php endforeach; ?>
+                    <?php if ($assessment_filter !== '') : ?>
+                        <span class="rec-active-chip">Assessment: <?= html_escape(lg_assessment_options('End Term exam')[$assessment_filter] ?? $assessment_filter); ?></span>
+                    <?php endif; ?>
                     <?php if ($competency_filter !== '') : ?>
                         <span class="rec-active-chip">Competency: <?= html_escape($competency_filter); ?></span>
                     <?php endif; ?>
@@ -167,46 +242,11 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
         </form>
     </section>
 
-    <?php if (!empty($grade_performance)) : ?>
-        <section class="rec-card" aria-labelledby="rec-grade-title">
-            <div class="rec-card-head">
-                <h2 id="rec-grade-title">Class Proficiency Level by grade level</h2>
-                <p>CPL is weighted by the number of assessed learners, so larger classes count proportionately. Only records with an encoded CPL contribute to the CPL column.</p>
-            </div>
-            <div class="rec-table-wrap">
-                <table class="rec-table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Grade level</th>
-                            <th scope="col">Records</th>
-                            <th scope="col">Assessed</th>
-                            <th scope="col">With gap</th>
-                            <th scope="col">CPL</th>
-                            <th scope="col">Mastery level</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($grade_performance as $grade_row) : ?>
-                            <tr>
-                                <th scope="row"><?= html_escape($grade_row->grade_level); ?></th>
-                                <td class="rec-num"><?= number_format($grade_row->record_count); ?></td>
-                                <td class="rec-num"><?= number_format($grade_row->learners_assessed); ?></td>
-                                <td class="rec-num"><?= number_format($grade_row->learners_with_gap); ?></td>
-                                <td class="rec-num rec-table-cpl"><?= $grade_row->class_proficiency_level !== null ? number_format((float) $grade_row->class_proficiency_level, 2) . '%' : '—'; ?></td>
-                                <td><?= $grade_row->class_proficiency_level !== null ? html_escape(lg_cpl_band((float) $grade_row->class_proficiency_level)) : '—'; ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    <?php endif; ?>
-
     <section class="rec-card" aria-labelledby="rec-list-title">
         <div class="rec-card-head">
             <h2 id="rec-list-title"><?= $is_school ? 'My encoded records' : 'Submitted records'; ?></h2>
             <span class="rec-count rec-num"><?= number_format($record_count); ?></span>
-            <p><?= $has_record_filters ? 'Showing records matching your filters.' : 'Showing all records within your assigned scope.'; ?> Expand a record to review its competencies and intervention details.</p>
+            <p><?= $has_record_filters ? 'Showing records matching your filters.' : 'Showing all records within your assigned scope.'; ?> <?= $is_school ? 'Expand a record to review its competencies and intervention details.' : 'Records are grouped per district, then per school; each grade level inside a school is consolidated into one component. Open a district to see its schools.'; ?></p>
         </div>
 
         <?php if (empty($records)) : ?>
@@ -221,6 +261,94 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                 <?php endif; ?>
             </div>
         <?php else : ?>
+            <?php if (!$is_school) : ?>
+                <div class="rec-groups">
+                    <?php foreach ($district_groups as $district_group) : ?>
+                        <?php
+                        $district_school_count = count($district_group['schools']);
+                        $district_record_count = array_sum(array_map(function ($school_group) { return $school_group['record_count']; }, $district_group['schools']));
+                        ?>
+                        <details class="rec-district" <?= $has_record_filters || count($district_groups) <= 2 ? 'open' : ''; ?>>
+                            <summary class="rec-district-head">
+                                <span class="rec-district-name"><i class="mdi mdi-map-marker-radius-outline" aria-hidden="true"></i> <?= html_escape($district_group['name']); ?></span>
+                                <span class="rec-district-meta rec-num"><?= number_format($district_school_count); ?> school<?= $district_school_count === 1 ? '' : 's'; ?> · <?= number_format($district_record_count); ?> record<?= $district_record_count === 1 ? '' : 's'; ?></span>
+                            </summary>
+                            <div class="rec-district-body">
+                                <?php foreach ($district_group['schools'] as $school_key => $school_group) : ?>
+                                    <section class="rec-school">
+                                        <header class="rec-school-head">
+                                            <strong><i class="mdi mdi-school-outline" aria-hidden="true"></i> <?= html_escape($school_group['name']); ?></strong>
+                                            <span class="rec-school-meta rec-num"><?= number_format($school_group['record_count']); ?> record<?= $school_group['record_count'] === 1 ? '' : 's'; ?></span>
+                                            <a class="btn btn-sm btn-outline-primary" href="<?= base_url('Pages/learning_gap_analytics?' . http_build_query(array('school_id' => $school_key))); ?>"><i class="mdi mdi-chart-timeline-variant" aria-hidden="true"></i> School analytics</a>
+                                        </header>
+                                        <ul class="rec-list">
+                                            <?php foreach ($school_group['grades'] as $grade_key => $grade_group) : ?>
+                                                <?php
+                                                $grade_cpl = $grade_group['cpl_weight'] > 0 ? $grade_group['cpl_weighted'] / $grade_group['cpl_weight'] : null;
+                                                $grade_gap_rate = $grade_group['assessed'] > 0 ? ($grade_group['with_gap'] / $grade_group['assessed']) * 100 : null;
+                                                $competency_list = array_keys($grade_group['competencies']);
+                                                natcasesort($competency_list);
+                                                ?>
+                                                <li class="rec-item">
+                                                    <div class="rec-item-main">
+                                                        <div class="rec-identity">
+                                                            <strong><?= html_escape($grade_key); ?></strong>
+                                                            <span><?= html_escape(implode(' · ', array_keys($grade_group['areas']))); ?> · <?= html_escape(implode(', ', array_keys($grade_group['terms']))); ?></span>
+                                                        </div>
+                                                        <div class="rec-stat">
+                                                            <span class="rec-stat-label">Proficiency</span>
+                                                            <span class="rec-stat-value rec-num"><?= $grade_cpl !== null ? number_format($grade_cpl, 2) . '%' : '—'; ?></span>
+                                                            <span class="rec-stat-note"><?= $grade_cpl !== null ? html_escape(lg_cpl_band($grade_cpl)) : 'No CPL encoded'; ?></span>
+                                                        </div>
+                                                        <div class="rec-stat">
+                                                            <span class="rec-stat-label">Assessed</span>
+                                                            <span class="rec-stat-value rec-num"><?= number_format($grade_group['assessed']); ?></span>
+                                                        </div>
+                                                        <div class="rec-stat rec-stat-gap">
+                                                            <span class="rec-stat-label">With gap</span>
+                                                            <span class="rec-stat-value rec-num"><?= number_format($grade_group['with_gap']); ?></span>
+                                                            <span class="rec-stat-note rec-num"><?= $grade_gap_rate !== null ? number_format($grade_gap_rate, 1) . '% of assessed' : '—'; ?></span>
+                                                        </div>
+                                                        <span class="rec-status unset"><?= number_format($grade_group['records']); ?> record<?= $grade_group['records'] === 1 ? '' : 's'; ?></span>
+                                                    </div>
+                                                    <details class="rec-detail">
+                                                        <summary>Competencies &amp; source records<span class="sr-only"> for <?= html_escape($school_group['name'] . ' ' . $grade_key); ?></span></summary>
+                                                        <div class="rec-detail-grid">
+                                                            <div class="rec-competencies">
+                                                                <h3>Least learned competencies (merged)</h3>
+                                                                <?php if (empty($competency_list)) : ?>
+                                                                    <p>—</p>
+                                                                <?php else : ?>
+                                                                    <ul class="rec-competency-list">
+                                                                        <?php foreach ($competency_list as $competency_text) : ?>
+                                                                            <li><?= html_escape($competency_text); ?></li>
+                                                                        <?php endforeach; ?>
+                                                                    </ul>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <?php foreach ($grade_group['rows'] as $source_row) : ?>
+                                                                <div class="rec-source">
+                                                                    <h3><?= html_escape(trim($source_row->learning_area . ' · ' . $source_row->term, ' ·')); ?> — <?= number_format((int) $source_row->learners_assessed); ?> assessed, <?= number_format((int) $source_row->learners_with_gap); ?> with gap</h3>
+                                                                    <p>
+                                                                        <?php if (trim((string) $source_row->intervention_action) !== '') : ?>Intervention: <?= html_escape($source_row->intervention_action); ?><?= $source_row->intervention_status ? ' (' . html_escape($source_row->intervention_status) . ')' : ''; ?><br><?php endif; ?>
+                                                                        <?php if (trim((string) $source_row->remarks) !== '') : ?>Remarks: <?= html_escape($source_row->remarks); ?><?php endif; ?>
+                                                                        <?php if (trim((string) $source_row->intervention_action) === '' && trim((string) $source_row->remarks) === '') : ?>—<?php endif; ?>
+                                                                    </p>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    </details>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </section>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($is_school) : ?>
             <ul class="rec-list">
                 <?php foreach ($records as $row) : ?>
                     <?php
@@ -321,6 +449,7 @@ $breadth_count = $is_school ? count($area_pairs) : count($school_ids);
                     </li>
                 <?php endforeach; ?>
             </ul>
+            <?php endif; ?>
         <?php endif; ?>
     </section>
 </div>
