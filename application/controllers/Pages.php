@@ -29,6 +29,14 @@ class Pages extends CI_Controller
             show_error('Authentication is required to access this resource.', 401);
         }
 
+        // A division site only serves that division. This also catches sessions
+        // that began before the admin narrowed the site's scope.
+        if ($this->session->logged_in && !$this->account_fits_site($this->session->position, $this->session->division)) {
+            $this->session->sess_destroy();
+            redirect(base_url('homepage'));
+            return;
+        }
+
         // Accounts issued a temporary password may only change that password
         // or sign out. This guard also protects direct dashboard URLs.
         $password_change_methods = array('password_change_required', 'change_password_user', 'logout');
@@ -119,6 +127,7 @@ class Pages extends CI_Controller
             // Per-school Summative CPL feature is controlled by admin (sa) only.
             'summative_cpl_access' => array('admin'),
             'summative_cpl_toggle' => array('admin'),
+            'site_settings' => array('admin'),
         );
 
         if (isset($role_policies[$method])) {
@@ -153,6 +162,24 @@ class Pages extends CI_Controller
                 || strpos($method, 'tana_') === 0 || in_array($method, $legacy_sbm_methods, true))) {
             show_error('This legacy SBM feature is not available in the Least Learned Competencies Monitoring system.', 403);
         }
+    }
+
+    /** The admin account always keeps access, so it can change the site's scope back. */
+    private function account_fits_site($position, $division_id)
+    {
+        $brand = site_brand();
+        $position = strtolower(trim((string) $position));
+        if (!$brand['is_division'] || $position === 'admin') return true;
+        return $position !== 'region' && (int) $division_id === $brand['division_id'];
+    }
+
+    /** The divisions a form may offer: the site's own, or every Region XI division. */
+    private function selectable_divisions()
+    {
+        $brand = site_brand();
+        return $brand['is_division']
+            ? $this->Page_model->one_cond('division', 'id', $brand['division_id'])
+            : $this->Page_model->one_cond('division', 'region_id', 12);
     }
 
     private function require_post()
@@ -2377,7 +2404,7 @@ class Pages extends CI_Controller
             }
 
             $data['title'] = "New User";
-            $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
+            $data['division'] = $this->selectable_divisions();
             if ($this->session->position === 'district') {
                 $this->district_learning_gap_scope();
                 $data['pos'] = array_values(array_filter($this->Page_model->no_cond('position'), function ($position) {
@@ -2671,6 +2698,17 @@ class Pages extends CI_Controller
                 return;
             }
             $user_id = $this->Page_model->login();
+
+            if ($user_id && !$this->account_fits_site($user_id['position'], $user_id['p_id'])) {
+                $message = 'This AP-LEAD site is only for ' . site_brand()['name'] . '. Please use your own division\'s site.';
+                if ($this->input->is_ajax_request()) {
+                    echo json_encode(['success' => false, 'message' => $message]);
+                    return;
+                }
+                $this->session->set_flashdata('failed', $message);
+                redirect(base_url() . 'homepage');
+                return;
+            }
 
             if ($user_id) {
                 $this->clear_login_failures($login_identifier);
@@ -3163,6 +3201,11 @@ class Pages extends CI_Controller
         $division_id = $this->input->post('division_id');
         if (!is_scalar($division_id) || !ctype_digit((string) $division_id) || (int) $division_id < 1) {
             $this->output->set_status_header(400)->set_content_type('application/json')->set_output('[]');
+            return;
+        }
+        $brand = site_brand();
+        if ($brand['is_division'] && (int) $division_id !== $brand['division_id']) {
+            $this->output->set_content_type('application/json')->set_output('[]');
             return;
         }
 
@@ -4727,7 +4770,7 @@ class Pages extends CI_Controller
             'captcha_error' => $error,
             'account_saved' => $account_saved,
             'signup_values' => $this->input->post(NULL, false),
-            'division' => $this->Page_model->one_cond('division', 'region_id', 12),
+            'division' => $this->selectable_divisions(),
             'districts' => $division_id > 0 ? $this->Page_model->get_districts_by_division($division_id) : array(),
         );
         $this->load->view('pages/school_signup', $data);
@@ -4779,8 +4822,11 @@ class Pages extends CI_Controller
             $user_email = $this->input->post('schoolEmail');
 
             $division = $this->Page_model->one_cond_row('division', 'id', (int) $this->input->post('division_id'));
-            if (!$division || (int) $division->region_id !== 12) {
-                $this->render_school_signup('Please select a valid Region XI division.', true);
+            $brand = site_brand();
+            if (!$division || ($brand['is_division']
+                ? (int) $division->id !== $brand['division_id']
+                : (int) $division->region_id !== 12)) {
+                $this->render_school_signup('Please select a valid ' . $brand['name'] . ' division.', true);
                 return;
             }
 
@@ -4829,7 +4875,7 @@ class Pages extends CI_Controller
             if (!file_exists(APPPATH . 'views/pages/' . $page . '.php')) {
                 show_404();
             }
-            $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
+            $data['division'] = $this->selectable_divisions();
 
 
             $this->load->view('pages/' . $page, $data);
@@ -5041,29 +5087,29 @@ class Pages extends CI_Controller
     private function homepage_data()
     {
         $region_id = 12;
+        $brand = site_brand();
 
         return array(
-            'title' => 'AP-LEAD Region XI',
+            'title' => 'AP-LEAD ' . $brand['name'],
             'region' => $this->Page_model->one_cond_row('region', 'id', $region_id),
             'divisions' => $this->Page_model->homepage_divisions($region_id),
+            'district_count' => $brand['is_division'] ? $this->Page_model->division_district_count($brand['division_id']) : 0,
         );
     }
 
     function authors()
     {
-
-        $page = "authors";
-        $this->load->view('templates/css_author');
-        if (!file_exists(APPPATH . 'views/' . $page . '.php')) {
-            show_404();
-        }
-        $data['title'] = "Authors";
-        $this->load->view('templates/nav');
-        $this->load->view($page, $data);
+        // Retired with the homepage's people directory; old links land on the homepage.
+        redirect(base_url('homepage'));
     }
 
     function about()
     {
+        // This older page describes the regional program.
+        if (site_brand()['is_division']) {
+            redirect(base_url('homepage'));
+            return;
+        }
 
         $page = "about";
 
@@ -5182,7 +5228,7 @@ class Pages extends CI_Controller
             $data['title'] = "Update School Information";
             $data['data'] = $school_record;
 
-            $data['division'] = $this->Page_model->one_cond('division', 'region_id', 12);
+            $data['division'] = $this->selectable_divisions();
             $data['districts'] = $this->Page_model->get_districts_by_division($data['data']->division_id);
 
             $this->load->view('templates/header');
@@ -5462,44 +5508,17 @@ class Pages extends CI_Controller
             ? (string) $data['division']->homepage_logo
             : '';
 
-        if (!empty($_FILES['homepage_logo']['name'])) {
-            $upload_directory = FCPATH . 'uploads/division_logos/';
-
-            if (!is_dir($upload_directory) && !mkdir($upload_directory, 0755, true)) {
-                $data['upload_error'] = 'The division logo directory could not be created.';
-                $this->load->view('templates/header');
-                $this->load->view('templates/menu');
-                $this->load->view('pages/' . $page, $data);
-                $this->load->view('templates/footer');
-                $this->load->view('templates/footer_basic');
-                return;
-            }
-
-            $upload_config = array(
-                'upload_path' => $upload_directory,
-                'allowed_types' => 'jpg|jpeg|png',
-                'max_size' => 2048,
-                'max_width' => 2000,
-                'max_height' => 2000,
-                'encrypt_name' => true,
-                'file_ext_tolower' => true,
-            );
-            $this->load->library('upload');
-            $this->upload->initialize($upload_config);
-
-            if (!$this->upload->do_upload('homepage_logo')) {
-                $data['upload_error'] = strip_tags($this->upload->display_errors('', ''));
-                $this->load->view('templates/header');
-                $this->load->view('templates/menu');
-                $this->load->view('pages/' . $page, $data);
-                $this->load->view('templates/footer');
-                $this->load->view('templates/footer_basic');
-                return;
-            }
-
-            $uploaded_file = $this->upload->data();
-            $new_logo = 'uploads/division_logos/' . $uploaded_file['file_name'];
+        $upload = $this->upload_division_logo();
+        if ($upload['error'] !== '') {
+            $data['upload_error'] = $upload['error'];
+            $this->load->view('templates/header');
+            $this->load->view('templates/menu');
+            $this->load->view('pages/' . $page, $data);
+            $this->load->view('templates/footer');
+            $this->load->view('templates/footer_basic');
+            return;
         }
+        $new_logo = $upload['path'];
 
         $updated = $this->Page_model->update_division_setup($division_id, $new_logo);
 
@@ -5512,15 +5531,118 @@ class Pages extends CI_Controller
             return;
         }
 
-        if ($new_logo !== null && strpos($old_logo, 'uploads/division_logos/') === 0) {
-            $old_logo_file = FCPATH . 'uploads/division_logos/' . basename($old_logo);
-            if (is_file($old_logo_file)) {
-                unlink($old_logo_file);
-            }
+        if ($new_logo !== null) {
+            $this->remove_division_logo($old_logo);
         }
 
         $this->session->set_flashdata('success', 'Division setup updated successfully.');
         redirect(base_url() . 'pages/division_setup');
+    }
+
+    /** @return array path (null when no file was chosen) and error ('' on success) */
+    private function upload_division_logo()
+    {
+        if (empty($_FILES['homepage_logo']['name'])) {
+            return array('path' => null, 'error' => '');
+        }
+
+        $upload_directory = FCPATH . 'uploads/division_logos/';
+        if (!is_dir($upload_directory) && !mkdir($upload_directory, 0755, true)) {
+            return array('path' => null, 'error' => 'The division logo directory could not be created.');
+        }
+
+        $this->load->library('upload');
+        $this->upload->initialize(array(
+            'upload_path' => $upload_directory,
+            'allowed_types' => 'jpg|jpeg|png',
+            'max_size' => 2048,
+            'max_width' => 2000,
+            'max_height' => 2000,
+            'encrypt_name' => true,
+            'file_ext_tolower' => true,
+        ));
+        if (!$this->upload->do_upload('homepage_logo')) {
+            return array('path' => null, 'error' => strip_tags($this->upload->display_errors('', '')));
+        }
+
+        $uploaded_file = $this->upload->data();
+        return array('path' => 'uploads/division_logos/' . $uploaded_file['file_name'], 'error' => '');
+    }
+
+    private function remove_division_logo($logo)
+    {
+        if (strpos((string) $logo, 'uploads/division_logos/') !== 0) return;
+        $file = FCPATH . 'uploads/division_logos/' . basename($logo);
+        if (is_file($file)) unlink($file);
+    }
+
+    /** Admin only (see $role_policies): the site's scope and logo. */
+    public function site_settings()
+    {
+        $current = $this->Page_model->site_settings();
+        $data = array(
+            'title' => 'Site Settings',
+            'divisions' => $this->Page_model->site_settings_divisions(),
+            'form' => $current,
+            'error' => '',
+        );
+
+        if ($this->input->method() === 'post') {
+            $data['form'] = array(
+                'deployment_mode' => $this->input->post('deployment_mode') === 'division' ? 'division' : 'region',
+                'division_id' => (int) $this->input->post('division_id'),
+            );
+            $data['error'] = $this->save_site_settings_form($data['form'], $current);
+            if ($data['error'] === '') {
+                $this->session->set_flashdata('success', 'Site settings saved.');
+                redirect(base_url('Pages/site_settings'));
+                return;
+            }
+        }
+
+        $this->load->view('templates/header');
+        $this->load->view('templates/menu');
+        $this->load->view('pages/site_settings', $data);
+        $this->load->view('templates/footer');
+        $this->load->view('templates/footer_basic');
+    }
+
+    /** @return string What went wrong, or '' once everything is saved. */
+    private function save_site_settings_form($form, $current)
+    {
+        $is_division = $form['deployment_mode'] === 'division';
+        $division = null;
+        $new_logo = null;
+
+        if ($is_division) {
+            $division = $this->Page_model->one_cond_row('division', 'id', $form['division_id']);
+            if (!$division) return 'Please select the division this site is for.';
+
+            $upload = $this->upload_division_logo();
+            if ($upload['error'] !== '') return $upload['error'];
+            $new_logo = $upload['path'];
+        }
+
+        // A site in Region mode keeps no division, so one can't linger unnoticed.
+        $division_id = $is_division ? $form['division_id'] : 0;
+        if (!$this->Page_model->save_site_settings($form['deployment_mode'], $division_id)) {
+            if ($new_logo !== null) $this->remove_division_logo($new_logo);
+            return 'The settings could not be saved. Please try again.';
+        }
+
+        if ($new_logo !== null) {
+            $this->Page_model->set_division_logo($division->id, $new_logo);
+            $this->remove_division_logo(!empty($division->homepage_logo) ? $division->homepage_logo : '');
+        }
+
+        if ($this->db->table_exists('audit_trail')) {
+            unset($current['division']);
+            $this->Page_model->log_audit_trail('UPDATE', 'site_settings', null, $current, array(
+                'deployment_mode' => $form['deployment_mode'],
+                'division_id' => $division_id,
+            ));
+        }
+        return '';
     }
 
     public function division_sgc_details()

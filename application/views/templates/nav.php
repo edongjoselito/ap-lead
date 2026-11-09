@@ -24,7 +24,6 @@
                         </ul>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="#">Features</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="<?= base_url(); ?>Pages/authors">Authors</a></li>
                      <li class="nav-item"><a class="nav-link" href="<?= base_url(); ?>Pages/data_privacy">Data Privacy</a></li>
                 </ul>
             </div>

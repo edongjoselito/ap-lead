@@ -25,7 +25,7 @@
                     <p class="textwrap">
                     <span class="rp">Republic of the Philippines</span>
                         <span class="de">Department of Education</span>
-                        <span class="r">Region XI</span>
+                        <?php if (!site_brand()['is_division']) : ?><span class="r">Region XI</span><?php endif; ?>
                         <span class="r">School Division of <?= html_escape($div->description); ?></span>
                         <span class="r">Region Office Address</span>
                     </p>

@@ -18,7 +18,8 @@
     $signup_value = function ($field) use ($signup_values) {
         return isset($signup_values[$field]) && is_scalar($signup_values[$field]) ? (string) $signup_values[$field] : '';
     };
-    $selected_division_id = $signup_value('division_id');
+    $brand = site_brand();
+    $selected_division_id = $brand['is_division'] ? (string) $brand['division_id'] : $signup_value('division_id');
     $selected_district_id = $signup_value('d_id');
     $district_options = isset($districts) && is_array($districts) ? $districts : array();
 
@@ -41,14 +42,14 @@
     <div class="signup-shell">
         <header class="signup-nav">
             <a href="<?= base_url(); ?>" class="signup-brand" aria-label="AP-LEAD home">
-                <span class="signup-brand-mark"><img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal" width="52" height="52"></span>
-                <span class="signup-brand-text"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · REGIONAL OFFICE XI</span></span>
+                <span class="signup-brand-mark"><img src="<?= base_url($brand['logo']); ?>" alt="<?= html_escape($brand['logo_alt']); ?>" width="52" height="52"<?= $brand['is_division'] ? ' style="border-radius:12px;object-fit:contain;"' : ''; ?>></span>
+                <span class="signup-brand-text"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · <?= html_escape(strtoupper($brand['office'])); ?></span></span>
             </a>
         </header>
         <div class="signup-layout">
             <aside class="signup-sidebar" aria-label="Registration guide">
                 <div class="signup-sidebar-intro">
-                    <span class="signup-region"><span aria-hidden="true"></span> FOR REGION XI SCHOOLS</span>
+                    <span class="signup-region"><span aria-hidden="true"></span> FOR <?= html_escape(strtoupper($brand['name'])); ?> SCHOOLS</span>
                     <h2>Better insights.<br><em>Stronger schools.</em></h2>
                     <p>Join AP-LEAD to monitor learner progress and turn assessment results into meaningful classroom support.</p>
                 </div>
@@ -216,7 +217,7 @@
             </main>
         </div>
         <footer class="signup-footer">
-            <span>© <?= date('Y'); ?> Department of Education Regional Office XI</span>
+            <span>© <?= date('Y'); ?> Department of Education <?= html_escape($brand['office']); ?></span>
             <button type="button" class="signup-footer-link" data-toggle="modal" data-target="#privacyModal">Privacy notice</button>
         </footer>
     </div>
@@ -230,10 +231,10 @@
                 </div>
                 <div class="modal-body">
                     <p>
-                        I declare that I am authorized to register and manage this school account in AP-LEAD Region XI. I attest that the school identification, official email address, division, and district information I provide is accurate and complete, and I will keep these details up to date.
+                        I declare that I am authorized to register and manage this school account in AP-LEAD <?= html_escape($brand['name']); ?>. I attest that the school identification, official email address, division, and district information I provide is accurate and complete, and I will keep these details up to date.
                     </p>
                     <p>
-                        I understand that AP-LEAD supports the monitoring of learner progress, assessment results, and least learned competencies in Araling Panlipunan. School submissions help identify learning gaps and guide instructional interventions, technical assistance, and recommendations at the school, district, division, and regional levels.
+                        I understand that AP-LEAD supports the monitoring of learner progress, assessment results, and least learned competencies in Araling Panlipunan. School submissions help identify learning gaps and guide instructional interventions, technical assistance, and recommendations at the school, district, <?= $brand['is_division'] ? 'and division' : 'division, and regional'; ?> levels.
                     </p>
                     <p>
                         I acknowledge that the registration details and school data submitted through this account will be collected, stored, and processed for account administration, learning assessment monitoring, reporting, and educational support. I will submit only information necessary for these purposes, protect account credentials, and handle learner and school information responsibly, sharing it only with authorized personnel for official use.
@@ -257,7 +258,7 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close privacy notice">×</button>
                 </div>
                 <div class="modal-body signup-privacy">
-                    <p>AP-LEAD helps the Department of Education Regional Office XI and its Schools Division Offices track learner progress and identify least learned competencies in Araling Panlipunan. This notice explains what the system collects from your school and how that information is handled.</p>
+                    <p>AP-LEAD helps <?= $brand['is_division'] ? 'the Department of Education ' . html_escape($brand['office']) . ' and its districts' : 'the Department of Education Regional Office XI and its Schools Division Offices'; ?> track learner progress and identify least learned competencies in Araling Panlipunan. This notice explains what the system collects from your school and how that information is handled.</p>
 
                     <h3>What we collect</h3>
                     <ul>
@@ -271,7 +272,7 @@
                     <h3>How we use it</h3>
                     <ul>
                         <li>To create your account, sign you in, and show only the screens your role allows.</li>
-                        <li>To combine school results into district, division, and regional summaries that guide interventions and technical assistance.</li>
+                        <li>To combine school results into district<?= $brand['is_division'] ? ' and division' : ', division, and regional'; ?> summaries that guide interventions and technical assistance.</li>
                         <li>To keep the system secure, investigate problems, and block automated sign-ups and repeated sign-in attempts.</li>
                     </ul>
                     <p>Your information is never sold or used for advertising or any commercial purpose. Apart from the reCAPTCHA security check described below, it is not shared outside DepEd.</p>
@@ -280,7 +281,7 @@
                     <ul>
                         <li><strong>Your school:</strong> its own account and records.</li>
                         <li><strong>District and division offices:</strong> the schools under their office, for monitoring and follow-up.</li>
-                        <li><strong>Regional Office XI:</strong> region-wide summaries and records, for planning and reporting.</li>
+                        <?php if (!$brand['is_division']) : ?><li><strong>Regional Office XI:</strong> region-wide summaries and records, for planning and reporting.</li><?php endif; ?>
                         <li><strong>Google reCAPTCHA:</strong> receives device and browser information during the security check, under Google’s <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</li>
                     </ul>
 
@@ -296,7 +297,7 @@
                     <p>Under the Data Privacy Act, you may ask what information is held about your school, have errors corrected, object to processing, or ask for an account to be deactivated when it is no longer needed. You may also file a complaint with the National Privacy Commission.</p>
 
                     <h3>Questions or requests</h3>
-                    <p class="mb-0">For account concerns or corrections, contact your Schools Division Office system administrator. For other privacy concerns, contact the Data Protection Officer of DepEd Regional Office XI.</p>
+                    <p class="mb-0">For account concerns or corrections, contact your Schools Division Office system administrator. For other privacy concerns, contact the Data Protection Officer of DepEd <?= html_escape($brand['office']); ?>.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-signup-close" data-dismiss="modal">Close</button>

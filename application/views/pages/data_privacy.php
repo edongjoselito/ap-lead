@@ -282,7 +282,6 @@
           <a href="<?= base_url(); ?>">Home</a>
           <a href="<?= base_url(); ?>Pages/about">About</a>
           <a href="<?= base_url(); ?>Pages/data_privacy" class="active">Privacy</a>
-          <a href="<?= base_url(); ?>Pages/authors">Authors</a>
         </div>
       </div>
     </div>
@@ -337,8 +336,8 @@
           <p>The system uses your data only for SBM monitoring and technical assistance. Nothing else:</p>
           <ul>
             <li>Your login credentials are checked on every page load so you only see what your role allows.</li>
-            <li>Checklist and TANA results are rolled up into division and region reports so supervisors can see where help is needed.</li>
-            <li>TA forms and action plans are shared upward (school → district → division → region) so coaches and supervisors can follow up on flagged priorities.</li>
+            <li>Checklist and TANA results are rolled up into <?= site_brand()['is_division'] ? 'district and division' : 'division and region'; ?> reports so supervisors can see where help is needed.</li>
+            <li>TA forms and action plans are shared upward (school → district → division<?= site_brand()['is_division'] ? '' : ' → region'; ?>) so coaches and supervisors can follow up on flagged priorities.</li>
             <li>Login timestamps help us troubleshoot account issues and detect unusual access patterns.</li>
             <li>We do <strong>not</strong> use your data for advertising, marketing, or any commercial activity.</li>
           </ul>
@@ -358,7 +357,7 @@
             <li><strong>School</strong> — You see only your own school's checklist, TA, TANA, and action plan.</li>
             <li><strong>District</strong> — You see summary counts and school lists for your district only. You cannot open another district's data.</li>
             <li><strong>Division</strong> — You see district summaries and the full school directory under your division.</li>
-            <li><strong>Region / Admin</strong> — You see division-level dashboards and region-wide completion reports.</li>
+            <?php if (!site_brand()['is_division']) : ?><li><strong>Region / Admin</strong> — You see division-level dashboards and region-wide completion reports.</li><?php endif; ?>
           </ul>
           <div class="highlight-box">
             <i class="bi bi-lock me-2" style="color: var(--maroon);"></i>
@@ -418,7 +417,7 @@
         <div class="policy-card-body">
           <p>If something about your data doesn't look right, or you want your account deactivated, reach out to:</p>
           <p style="margin-bottom: 4px;"><strong>Field Technical Assistance Division (FTAD)</strong></p>
-          <p style="color: var(--muted); font-size: 14px; margin-bottom: 0;">You may also contact your Schools Division Office ICT coordinator or the regional ICT unit for faster response on account issues.</p>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 0;">You may also contact your Schools Division Office ICT coordinator<?= site_brand()['is_division'] ? '' : ' or the regional ICT unit'; ?> for faster response on account issues.</p>
         </div>
       </div>
 
@@ -427,7 +426,7 @@
 
   <footer class="footer-bar">
     <div class="container">
-      <strong>FTAD OneView</strong> — School-Based Management Monitoring System &nbsp;|&nbsp; 2022 – <?= date('Y'); ?> &nbsp;|&nbsp; DepEd Region XI
+      <strong>FTAD OneView</strong> — School-Based Management Monitoring System &nbsp;|&nbsp; 2022 – <?= date('Y'); ?> &nbsp;|&nbsp; DepEd <?= html_escape(site_brand()['name']); ?>
     </div>
   </footer>
 

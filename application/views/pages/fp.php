@@ -13,14 +13,15 @@ $reset_errors = validation_errors();
 ?>
 <!doctype html>
 <html lang="en">
+<?php $brand = site_brand(); ?>
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#123f6d">
     <meta name="robots" content="noindex">
-    <meta name="description" content="Reset the password for your AP-LEAD Region XI portal account.">
-    <title>Reset password | AP-LEAD Region XI</title>
+    <meta name="description" content="Reset the password for your AP-LEAD <?= html_escape($brand['name']); ?> portal account.">
+    <title>Reset password | AP-LEAD <?= html_escape($brand['name']); ?></title>
     <link rel="icon" href="<?= base_url('assets/images/favicon.ico'); ?>">
     <style>
         :root {
@@ -421,15 +422,15 @@ $reset_errors = validation_errors();
 <body>
     <div class="government-bar">
         <div class="container">
-            <p>Department of Education &middot; Regional Office XI</p>
+            <p>Department of Education &middot; <?= html_escape($brand['office']); ?></p>
         </div>
     </div>
 
     <header class="site-header">
         <div class="container masthead">
-            <a class="brand" href="<?= base_url('homepage'); ?>" aria-label="AP-LEAD Region XI home">
-                <img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="Department of Education Region XI seal" width="62" height="62" decoding="async">
-                <span class="brand-copy"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD &middot; Regional Office XI</span></span>
+            <a class="brand" href="<?= base_url('homepage'); ?>" aria-label="AP-LEAD <?= html_escape($brand['name']); ?> home">
+                <img src="<?= base_url($brand['logo']); ?>" alt="<?= html_escape($brand['logo_alt']); ?>" width="62" height="62" decoding="async">
+                <span class="brand-copy"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD &middot; <?= html_escape($brand['office']); ?></span></span>
             </a>
             <a class="header-link" href="<?= base_url('homepage'); ?>">&larr; Back to home</a>
         </div>
@@ -470,8 +471,8 @@ $reset_errors = validation_errors();
 
     <footer class="site-footer">
         <div class="container">
-            <span>&copy; <?= date('Y'); ?> Department of Education Regional Office XI. All rights reserved.</span>
-            <span>Region XI - Davao Region</span>
+            <span>&copy; <?= date('Y'); ?> Department of Education <?= html_escape($brand['office']); ?>. All rights reserved.</span>
+            <span><?= html_escape($brand['place']); ?></span>
         </div>
     </footer>
 

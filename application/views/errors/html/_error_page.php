@@ -42,7 +42,10 @@ $error_icon = in_array($error_status, array(401, 403), true) ? 'lock'
 	: ($error_status === 429 || $error_status === 503 ? 'clock' : 'alert'));
 
 $error_base_url = function_exists('config_item') ? (string) config_item('base_url') : '';
-$error_seal = $error_base_url !== '' ? rtrim($error_base_url, '/') . '/assets/r11-logo.jpg' : '';
+// Before the models load, or with the database down, the site's scope is unknown.
+$error_brand = function_exists('site_brand') ? site_brand() : array('known' => false, 'is_division' => false, 'office' => '', 'logo' => '');
+$error_seal = $error_base_url !== '' && $error_brand['known'] ? rtrim($error_base_url, '/') . '/' . $error_brand['logo'] : '';
+$error_office = $error_brand['known'] ? $error_brand['office'] : '';
 $error_e = function ($value) {
 	return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 };
@@ -87,8 +90,8 @@ $error_e = function ($value) {
 <body>
 	<main class="error-shell">
 		<header class="error-brand">
-			<?php if ($error_seal !== ''): ?><img src="<?= $error_e($error_seal); ?>" alt="" width="44" height="44"><?php endif; ?>
-			<span><small>Department of Education</small><strong>AP-LEAD · Regional Office XI</strong></span>
+			<?php if ($error_seal !== ''): ?><img src="<?= $error_e($error_seal); ?>" alt="" width="44" height="44"<?= $error_brand['is_division'] ? ' style="border-radius:10px;object-fit:contain;"' : ''; ?>><?php endif; ?>
+			<span><small>Department of Education</small><strong>AP-LEAD<?= $error_office !== '' ? ' · ' . $error_e($error_office) : ''; ?></strong></span>
 		</header>
 		<section class="error-card" aria-labelledby="error-title">
 			<div class="error-mark" aria-hidden="true">
@@ -101,7 +104,7 @@ $error_e = function ($value) {
 				<?php if ($error_hint !== ''): ?><p class="error-hint"><?= $error_e($error_hint); ?></p><?php endif; ?>
 			</div>
 		</section>
-		<p class="error-footer">© <?= date('Y'); ?> Department of Education Regional Office XI</p>
+		<p class="error-footer">© <?= date('Y'); ?> Department of Education<?= $error_office !== '' ? ' ' . $error_e($error_office) : ''; ?></p>
 	</main>
 </body>
 </html>

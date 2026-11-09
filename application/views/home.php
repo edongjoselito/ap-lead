@@ -1,56 +1,19 @@
 <?php
 $division_list = isset($divisions) && is_array($divisions) ? $divisions : array();
 $division_count = count($division_list);
-$region_name = !empty($region->description) ? $region->description : 'Region XI - Davao Region';
+$brand = site_brand();
+$is_division = $brand['is_division'];
+$region_name = $is_division ? $brand['place'] : (!empty($region->description) ? $region->description : $brand['place']);
+// The stat counts the offices this site connects: divisions in a region, districts in a division.
+$network_count = $is_division ? (int) $district_count : $division_count;
 $login_failed = $this->session->flashdata('failed');
 $page_success = $this->session->flashdata('success');
 $signup_success = $this->session->flashdata('signup_success');
 $login_validation_errors = validation_errors();
 $open_login_modal = !empty($signup_success) || !empty($login_failed) || !empty($login_validation_errors);
 
-/*
- * People directory (governance section).
- * To add or change someone: drop the photo in assets/images/sdo/ (or /developers)
- * and update the matching row below. Leave 'photo' blank — or point it at a file
- * that does not exist yet — and the card automatically falls back to a placeholder.
- */
-$sdo_consultants = array(
-    array('name' => 'Rosemarie T. Realino, PhD',  'division' => 'SDO Davao City',       'key' => 'Davao City',       'abbr' => 'DAVAO CITY',       'photo' => 'assets/images/sdo/SDO-DAVAO CITY-REALINO,-ROSEMARIE-T.,PhD.png'),
-    array('name' => 'Grace D. Pontillas, EdD',    'division' => 'SDO Davao de Oro',     'key' => 'Davao de Oro',     'abbr' => 'DAVAO DE ORO',     'photo' => 'assets/images/sdo/SDO-DAVAO-DE-ORO- Grace-D.-Pontillas,Ed.png'),
-    array('name' => 'Grace Santa T. Daclan',      'division' => 'SDO Davao del Norte',  'key' => 'Davao del Norte',  'abbr' => 'DAVAO DEL NORTE',  'photo' => 'assets/images/sdo/sdo-davao-del-norte.png'),
-    array('name' => 'Leonora Liza D. Dacillo',    'division' => 'SDO Davao del Sur',    'key' => 'Davao del Sur',    'abbr' => 'DAVAO DEL SUR',    'photo' => 'assets/images/sdo/SDO-DAVAO-DEL-SUR-Leonora-Liza-D.Dacillo.png'),
-    array('name' => 'Jonathan C. Araneta',        'division' => 'SDO Davao Occidental', 'key' => 'Davao Occidental', 'abbr' => 'DAVAO OCCIDENTAL', 'photo' => 'assets/images/sdo/sdo-davao-occi.png'),
-    array('name' => 'Alan D. Limbadan, PhD',      'division' => 'SDO Davao Oriental',   'key' => 'Davao Oriental',   'abbr' => 'DAVAO ORIENTAL',   'photo' => 'assets/images/sdo/SDO-DavOr-Alan-D.-Limbadan,PhD.png'),
-    array('name' => 'Atty. Rodel L. Pagayon, MT', 'division' => 'SDO Digos City',       'key' => 'Digos City',       'abbr' => 'DIGOS CITY',       'photo' => 'assets/images/sdo/DIGOS-CITY-ATTY.RODEL-L.-PAGAYON,MT.png'),
-    array('name' => 'Marichu M. Celestial, EdD',  'division' => 'SDO IGaCoS',           'key' => 'IGACOS',           'abbr' => 'IGACOS',           'photo' => 'assets/images/sdo/SDO-IGaCoS-Marichu-M.-Celestial,-EdD.png'),
-    array('name' => 'Marilyn G. Pajaro',          'division' => 'SDO City of Mati',     'key' => 'City of Mati',     'abbr' => 'CITY OF MATI',     'photo' => 'assets/images/sdo/sdo-mati-city.png'),
-    array('name' => 'John Visillas',              'division' => 'SDO Panabo City',      'key' => 'Panabo City',      'abbr' => 'PANABO CITY',      'photo' => 'assets/images/sdo/SDO-PANABOCITY-JohnVisillas.png'),
-    array('name' => 'Leila L. Ibita',             'division' => 'SDO Tagum City',       'key' => 'Tagum City',       'abbr' => 'TAGUM CITY',       'photo' => 'assets/images/sdo/sdo-tagum.png'),
-);
-
-// Leadership portraits reuse the role assignments in the site's existing authors directory.
-$top_management = array(
-    array('name' => 'Dr. Maria Ines C. Asuncion', 'role' => 'Regional Director', 'abbr' => 'RD', 'photo' => 'assets/images/sdo/regional-director-portrait.png'),
-    array('name' => 'Rebonfamil R. Baguio', 'role' => 'Assistant Regional Director', 'abbr' => 'ARD', 'photo' => 'assets/images/authors/ard.jpg'),
-    array('name' => 'Mary Jeanne B. Aldeguer, EdD', 'role' => 'CLMD Chief', 'abbr' => 'CLMD', 'photo' => 'assets/images/sdo/Mary-Jeanne-B-Aldeguer-CLMD.png'),
-    array('name' => 'Danilo R. Dohinog, EdD', 'role' => 'Regional Supervisor', 'abbr' => 'LEAD', 'photo' => 'assets/images/sdo/regional-supervisor.png'),
-);
-
-$ap_developers = array(
-    array('name' => 'Alan D. Limbadan, PhD',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/LIMBADAN,Alan.png', 'facebook' => 'https://www.facebook.com/bhong.lim.94'),
-    array('name' => 'Joselito Q. Edong, MIT', 'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,JOSELITO-Q.png', 'facebook' => 'https://www.facebook.com/joselito.edong'),
-    array('name' => 'Clark Steven T. Edong',  'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,CLARK-STEVEN-T.png', 'facebook' => 'https://www.facebook.com/debugged.me'),
-    array('name' => 'Tyrone T. Edong',        'division' => 'System Developer', 'key' => '', 'photo' => 'assets/images/sdo/developers/EDONG,TYRONE-T.png', 'facebook' => 'https://www.facebook.com/tyrone.edong.37'),
-);
-
-// Optional per-person crop nudge: source photos are framed differently (tight square headshots
-// vs wider three-quarter portraits), so allow tuning without editing the image files.
-$person_focus = function ($person) {
-    return !empty($person['focus']) ? (string) $person['focus'] : 'center 12%';
-};
-
 // Filenames contain spaces and commas, so every path segment is encoded before it becomes a URL.
-$person_photo_url = function ($relative_path) {
+$asset_url = function ($relative_path) {
     $relative_path = trim((string) $relative_path);
     if ($relative_path === '' || !is_file(FCPATH . $relative_path)) {
         return '';
@@ -59,16 +22,14 @@ $person_photo_url = function ($relative_path) {
 };
 
 /*
- * The supplied portraits are full resolution - several over 1.5MB at ~1250px wide - but they display
- * at roughly 190px, so the browser was decoding a multi-megabyte bitmap per card only to shrink it.
- * This caches a display-sized copy under assets/images/sdo/thumbs/ and serves that instead.
+ * Caches a display-sized copy of an image under assets/images/sdo/thumbs/ and serves that instead.
  *
- * The cache key includes the source file's modification time, so replacing a photo regenerates its
- * thumbnail on the next request - dropping in a new file still just works. Anything that cannot be
- * resized (GD missing, unreadable file, already small enough) falls back to the original URL.
+ * The cache key includes the source file's modification time, so replacing the file regenerates its
+ * thumbnail on the next request. Anything that cannot be resized (GD missing, unreadable file,
+ * already small enough) falls back to the original URL.
  */
-$person_display_url = function ($relative_path, $target_width = 440) use ($person_photo_url) {
-    $original_url = $person_photo_url($relative_path);
+$thumbnail_url = function ($relative_path, $target_width = 440) use ($asset_url) {
+    $original_url = $asset_url($relative_path);
     if ($original_url === '') {
         return '';
     }
@@ -90,8 +51,8 @@ $person_display_url = function ($relative_path, $target_width = 440) use ($perso
         return $original_url;
     }
 
-    // Keyed as <path+width>-<mtime> so a replaced photo misses the cache, and so the superseded
-    // thumbnails for that same photo can be found and cleared instead of accumulating.
+    // Keyed as <path+width>-<mtime> so a replaced file misses the cache, and so the superseded
+    // thumbnails for that same file can be found and cleared instead of accumulating.
     $cache_stem = md5($relative_path . '|' . $target_width);
     $cache_name = $cache_stem . '-' . filemtime($source) . '.jpg';
     $cache_path = $cache_dir . $cache_name;
@@ -117,7 +78,7 @@ $person_display_url = function ($relative_path, $target_width = 440) use ($perso
 
         $target_height = (int) round($source_height * ($target_width / $source_width));
         $thumb = imagecreatetruecolor($target_width, $target_height);
-        // These are portraits, so flattening any PNG transparency onto white matches the card.
+        // Flatten any PNG transparency onto white, since the output is a JPEG.
         imagefilledrectangle($thumb, 0, 0, $target_width, $target_height, imagecolorallocate($thumb, 255, 255, 255));
         imagecopyresampled($thumb, $source_image, 0, 0, 0, 0, $target_width, $target_height, $source_width, $source_height);
         $written = @imagejpeg($thumb, $cache_path, 82);
@@ -131,18 +92,11 @@ $person_display_url = function ($relative_path, $target_width = 440) use ($perso
     return base_url($cache_relative . $cache_name);
 };
 
-// Consultant badges reuse the division's own logo once one is uploaded, and fall back to its name.
-$division_logo_lookup = array();
-foreach ($division_list as $division_row) {
-    $division_logo_lookup[strtolower(trim((string) $division_row->description))] = !empty($division_row->homepage_logo)
-        ? (string) $division_row->homepage_logo
-        : '';
-}
-
 // The regional seal is a 495px source shown at 62px or less, so every placement shares one small copy.
-$seal_url = $person_display_url('assets/r11-logo.jpg', 160);
+// An uploaded logo keeps its original file, because the thumbnail would flatten PNG transparency.
+$seal_url = $is_division ? base_url($brand['logo']) : $thumbnail_url($brand['logo'], 160);
 if ($seal_url === '') {
-    $seal_url = base_url('assets/r11-logo.jpg');
+    $seal_url = base_url($brand['logo']);
 }
 ?>
 <!doctype html>
@@ -152,8 +106,8 @@ if ($seal_url === '') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#123f6d">
-    <meta name="description" content="AP-LEAD Region XI turns Araling Panlipunan learning data into targeted action for better learner outcomes.">
-    <title>AP-LEAD Region XI | Department of Education</title>
+    <meta name="description" content="AP-LEAD <?= html_escape($brand['name']); ?> turns Araling Panlipunan learning data into targeted action for better learner outcomes.">
+    <title>AP-LEAD <?= html_escape($brand['name']); ?> | Department of Education</title>
     <link rel="icon" href="<?= base_url('assets/images/favicon.ico'); ?>">
     <style>
         :root {
@@ -1604,272 +1558,6 @@ if ($seal_url === '') {
             transition-delay: .3s;
         }
 
-
-        .people-directory {
-            margin-top: 64px;
-        }
-
-        .people-block+.people-block {
-            margin-top: 54px;
-        }
-
-        .people-block-head {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 18px;
-            margin-bottom: 26px;
-        }
-
-        .people-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .people-title-icon {
-            flex: 0 0 auto;
-            width: 38px;
-            height: 38px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            border-radius: 9px;
-            background: linear-gradient(145deg, var(--blue-800), var(--blue-950));
-            box-shadow: 0 6px 16px rgba(8, 43, 76, .22);
-        }
-
-        .developers-block .people-title-icon {
-            background: linear-gradient(145deg, #d9930f, var(--gold-500));
-            box-shadow: 0 6px 16px rgba(240, 170, 32, .32);
-        }
-
-        .people-title h3 {
-            margin: 0;
-            color: var(--blue-950);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 24px;
-            line-height: 1.2;
-            letter-spacing: -.015em;
-        }
-
-        .people-title h3::after {
-            content: "";
-            display: block;
-            width: 42px;
-            height: 3px;
-            margin-top: 8px;
-            border-radius: 3px;
-            background: var(--gold-500);
-        }
-
-        .people-rule {
-            flex: 1 1 auto;
-            height: 1px;
-            margin-bottom: 9px;
-            background: linear-gradient(90deg, #c7dae8, rgba(199, 218, 232, 0));
-        }
-
-        .people-grid {
-            display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .people-grid.developers-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            width: min(100%, 830px);
-            margin-inline: auto;
-        }
-
-        /* The card is the reveal target; the frame inside carries hover, so the two never fight
-           over `transform` and the entrance can safely replay every time the card re-enters view. */
-        .person-card {
-            position: relative;
-        }
-
-        .person-frame {
-            position: relative;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: #fff;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(8, 43, 76, .05);
-            transition: transform .3s cubic-bezier(.22, .61, .36, 1), box-shadow .3s ease, border-color .3s ease;
-        }
-
-        .person-card:hover .person-frame {
-            transform: translateY(-6px);
-            border-color: #a9c4d9;
-            box-shadow: 0 18px 38px rgba(8, 43, 76, .16);
-        }
-
-        .person-photo {
-            position: relative;
-            aspect-ratio: 3 / 4;
-            overflow: hidden;
-            background: linear-gradient(165deg, var(--blue-100), #f7fbfd);
-        }
-
-        .person-photo img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: cover;
-            filter: saturate(.86) contrast(1.05);
-            transition: transform .55s cubic-bezier(.22, .61, .36, 1), filter .45s ease;
-        }
-
-        .person-card:hover .person-photo img {
-            transform: scale(1.06);
-            filter: saturate(1) contrast(1);
-        }
-
-        /* Portraits arrive with very different backdrops, so a shared scrim grounds every card the same way. */
-        .person-photo::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            background: linear-gradient(175deg, rgba(8, 43, 76, .05) 0 42%, rgba(8, 43, 76, .34) 100%);
-            pointer-events: none;
-            transition: opacity .35s ease;
-        }
-
-        .person-card:hover .person-photo::before {
-            opacity: .55;
-        }
-
-        .person-badge {
-            position: absolute;
-            z-index: 2;
-            left: 8px;
-            bottom: 8px;
-            max-width: calc(100% - 16px);
-            height: 22px;
-            display: grid;
-            place-items: center;
-            padding: 0 8px;
-            overflow: hidden;
-            white-space: nowrap;
-            color: var(--blue-900);
-            border-radius: 6px;
-            background: rgba(255, 255, 255, .93);
-            box-shadow: 0 3px 10px rgba(8, 43, 76, .26);
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: .06em;
-        }
-
-        .developers-grid .person-badge {
-            width: 26px;
-            padding: 0;
-            color: #b07c07;
-        }
-
-        .person-badge img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .person-placeholder {
-            position: relative;
-            z-index: 0;
-            width: 100%;
-            height: 100%;
-            display: grid;
-            place-items: center;
-            color: #adc0cf;
-            background: repeating-linear-gradient(135deg, #f5f9fc 0 9px, #eef4f9 9px 18px);
-        }
-
-        .person-info {
-            position: relative;
-            flex: 1 1 auto;
-            padding: 14px 10px 16px;
-        }
-
-        .person-info::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 0;
-            height: 3px;
-            background: var(--gold-500);
-            transform: translateX(-50%);
-            transition: width .35s cubic-bezier(.22, .61, .36, 1);
-        }
-
-        .person-card:hover .person-info::before {
-            width: 100%;
-        }
-
-        .person-info strong {
-            display: flex;
-            min-height: 2.7em;
-            align-items: center;
-            justify-content: center;
-            color: var(--blue-950);
-            font-size: 13px;
-            line-height: 1.35;
-        }
-
-        .developers-grid .person-info strong a {
-            text-decoration: none;
-        }
-
-        .person-info span {
-            display: block;
-            margin-top: 6px;
-            color: #8392a1;
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: .07em;
-            text-transform: uppercase;
-        }
-
-        .person-card.is-vacant .person-frame {
-            border-style: dashed;
-            box-shadow: none;
-            background: #fcfdfe;
-        }
-
-        .person-card.is-vacant:hover .person-frame {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 24px rgba(8, 43, 76, .08);
-        }
-
-        .person-card.is-vacant .person-photo::before {
-            display: none;
-        }
-
-        .person-card.is-vacant .person-badge {
-            color: #94a5b3;
-            background: rgba(255, 255, 255, .9);
-            box-shadow: 0 2px 6px rgba(8, 43, 76, .12);
-        }
-
-        .person-card.is-vacant .person-info strong {
-            color: #93a3b1;
-            font-weight: 700;
-            font-style: italic;
-        }
-
-        .developers-grid .person-frame::after {
-            content: "";
-            position: absolute;
-            z-index: 3;
-            inset: 0 0 auto;
-            height: 3px;
-            background: linear-gradient(90deg, var(--gold-500), #f6c65f);
-        }
-
         /* Entrance in three beats: the card frame fades up, the portrait develops in behind it, then
            the name plate follows. Every beat is opacity-only apart from a 16px lift on the card itself:
            no zoom, blur, or clip wipe. Scaling a grid of faces was what caused motion discomfort, and
@@ -1881,27 +1569,6 @@ if ($seal_url === '') {
         .has-js .reveal:not(.is-visible) {
             opacity: 0;
             transform: translateY(16px);
-        }
-
-        .has-js .reveal .person-photo img,
-        .has-js .reveal .person-placeholder,
-        .has-js .reveal .person-badge {
-            transition: opacity .9s ease calc(var(--reveal-delay, 0ms) + 120ms), transform .55s cubic-bezier(.22, .61, .36, 1) 0s, filter .45s ease 0s;
-        }
-
-        .has-js .reveal:not(.is-visible) .person-photo img,
-        .has-js .reveal:not(.is-visible) .person-placeholder,
-        .has-js .reveal:not(.is-visible) .person-badge {
-            opacity: 0;
-        }
-
-        .has-js .reveal .person-info {
-            transition: opacity .6s ease calc(var(--reveal-delay, 0ms) + 230ms), transform .6s cubic-bezier(.16, 1, .3, 1) calc(var(--reveal-delay, 0ms) + 230ms);
-        }
-
-        .has-js .reveal:not(.is-visible) .person-info {
-            opacity: 0;
-            transform: translateY(8px);
         }
 
         .cta {
@@ -2038,238 +1705,6 @@ if ($seal_url === '') {
             outline-offset: 3px;
         }
 
-        /* Leadership gets larger cards for hierarchy; consultants wrap as a centred flex row so the
-           11-card grid never leaves a lopsided last row. */
-        .top-management-block .people-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 20px;
-            width: min(100%, 1000px);
-            margin-inline: auto;
-        }
-
-        .top-management-block .person-info strong {
-            font-size: 15px;
-        }
-
-        .top-management-block .person-info span {
-            font-size: 10px;
-        }
-
-        .consultants-block .people-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .consultants-block .person-card {
-            flex: 0 0 calc((100% - 80px) / 6);
-        }
-
-        .person-info span {
-            color: #66788a;
-            font-size: 9.5px;
-        }
-
-        /* Portrait viewer: card photos open a larger copy with name, role, and previous/next controls. */
-        .person-photo[role="button"] {
-            cursor: zoom-in;
-        }
-
-        .person-photo[role="button"]:focus-visible {
-            outline: 3px solid var(--gold-500);
-            outline-offset: -3px;
-        }
-
-        .person-zoom {
-            position: absolute;
-            z-index: 2;
-            top: 8px;
-            right: 8px;
-            width: 30px;
-            height: 30px;
-            display: grid;
-            place-items: center;
-            color: var(--blue-900);
-            border-radius: 50%;
-            background: rgba(255, 255, 255, .93);
-            box-shadow: 0 3px 10px rgba(8, 43, 76, .26);
-            opacity: 0;
-            transform: scale(.8);
-            transition: opacity .25s ease, transform .25s var(--ease-out);
-            pointer-events: none;
-        }
-
-        .person-card:hover .person-zoom,
-        .person-photo:focus-visible .person-zoom {
-            opacity: 1;
-            transform: none;
-        }
-
-        @media (hover: none) {
-            .person-zoom {
-                opacity: .95;
-                transform: none;
-            }
-        }
-
-        .photo-viewer {
-            position: fixed;
-            inset: 0;
-            z-index: 600;
-            display: grid;
-            place-items: center;
-            padding: 72px 84px;
-            background: rgba(4, 20, 36, .88);
-            -webkit-backdrop-filter: blur(6px);
-            backdrop-filter: blur(6px);
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity .25s ease, visibility .25s;
-        }
-
-        .photo-viewer[aria-hidden="false"] {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-        }
-
-        .photo-viewer-dialog {
-            width: 100%;
-            display: grid;
-            place-items: center;
-        }
-
-        .photo-viewer-figure {
-            width: min(460px, 100%);
-            margin: 0;
-            overflow: hidden;
-            border-radius: 18px;
-            background: #fff;
-            box-shadow: 0 40px 90px rgba(0, 0, 0, .45);
-            transform: translateY(16px) scale(.97);
-            transition: transform .3s var(--ease-out);
-        }
-
-        .photo-viewer[aria-hidden="false"] .photo-viewer-figure {
-            transform: none;
-        }
-
-        .photo-viewer-figure img {
-            width: 100%;
-            height: auto;
-            max-height: calc(100vh - 250px);
-            display: block;
-            object-fit: contain;
-            background: var(--blue-100);
-        }
-
-        .photo-viewer-figure figcaption {
-            padding: 16px 20px 18px;
-            text-align: center;
-        }
-
-        .photo-viewer-figure strong {
-            display: block;
-            color: var(--blue-950);
-            font-size: 18px;
-            line-height: 1.3;
-        }
-
-        .photo-viewer-figure span {
-            display: block;
-            margin-top: 5px;
-            color: #66788a;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-        }
-
-        .photo-viewer-btn {
-            position: fixed;
-            z-index: 1;
-            width: 46px;
-            height: 46px;
-            display: grid;
-            place-items: center;
-            padding: 0;
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, .28);
-            border-radius: 50%;
-            background: rgba(255, 255, 255, .1);
-            cursor: pointer;
-            transition: background .2s ease, transform .2s var(--ease-out);
-        }
-
-        .photo-viewer-btn:hover {
-            background: rgba(255, 255, 255, .22);
-        }
-
-        .photo-viewer-close {
-            top: 18px;
-            right: 18px;
-        }
-
-        .photo-viewer-prev,
-        .photo-viewer-next {
-            top: 50%;
-            margin-top: -23px;
-        }
-
-        .photo-viewer-prev {
-            left: 20px;
-        }
-
-        .photo-viewer-next {
-            right: 20px;
-        }
-
-        .photo-viewer-prev:hover {
-            transform: translateX(-3px);
-        }
-
-        .photo-viewer-next:hover {
-            transform: translateX(3px);
-        }
-
-        .photo-viewer-count {
-            position: fixed;
-            top: 30px;
-            left: 50%;
-            margin: 0;
-            color: rgba(255, 255, 255, .75);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: .08em;
-            transform: translateX(-50%);
-        }
-
-        @media (max-width: 540px) {
-            .photo-viewer {
-                padding: 70px 16px 92px;
-            }
-
-            .photo-viewer-figure img {
-                max-height: calc(100vh - 262px);
-            }
-
-            .photo-viewer-prev,
-            .photo-viewer-next {
-                top: auto;
-                bottom: 24px;
-                margin-top: 0;
-            }
-
-            .photo-viewer-prev {
-                left: calc(50% - 58px);
-            }
-
-            .photo-viewer-next {
-                right: calc(50% - 58px);
-            }
-        }
-
         @media (max-width: 1040px) {
             .brand-copy small {
                 display: none;
@@ -2299,14 +1734,6 @@ if ($seal_url === '') {
 
             .stat {
                 padding-inline: 22px;
-            }
-
-            .people-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-
-            .consultants-block .person-card {
-                flex-basis: calc((100% - 48px) / 4);
             }
         }
 
@@ -2435,26 +1862,6 @@ if ($seal_url === '') {
 
             .step-marker {
                 margin-bottom: 0;
-            }
-
-            .people-grid,
-            .people-grid.developers-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .top-management-block .people-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                width: min(100%, 520px);
-            }
-
-            .consultants-block .person-card {
-                flex-basis: calc((100% - 32px) / 3);
-            }
-
-            .people-block-head {
-                align-items: flex-start;
-                flex-direction: column;
-                gap: 7px;
             }
 
             .cta-card {
@@ -2598,24 +2005,6 @@ if ($seal_url === '') {
                 padding: 20px;
             }
 
-            .people-directory {
-                margin-top: 46px;
-            }
-
-            .people-block+.people-block {
-                margin-top: 40px;
-            }
-
-            .people-grid,
-            .people-grid.developers-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 11px;
-            }
-
-            .consultants-block .person-card {
-                flex-basis: calc((100% - 11px) / 2);
-            }
-
             .cta {
                 padding-bottom: 70px;
             }
@@ -2654,10 +2043,6 @@ if ($seal_url === '') {
 
             .has-js .reveal,
             .has-js .reveal:not(.is-visible),
-            .has-js .reveal:not(.is-visible) .person-photo img,
-            .has-js .reveal:not(.is-visible) .person-placeholder,
-            .has-js .reveal:not(.is-visible) .person-badge,
-            .has-js .reveal:not(.is-visible) .person-info,
             .has-js .steps.reveal:not(.is-visible) .step {
                 opacity: 1;
                 transform: none;
@@ -2667,34 +2052,38 @@ if ($seal_url === '') {
             .steps::after {
                 transform: none !important;
             }
-
-            .person-card:hover .person-photo img {
-                transform: none;
-            }
         }
     </style>
     <script>
         document.documentElement.className += ' has-js';
     </script>
+<?php if ($is_division) : ?>
+    <style>
+        /* A division's logo can be any shape, not only round. */
+        .brand img, .footer-brand img, .impact-seal { border-radius: 12px; object-fit: contain; background: #fff; }
+        /* A division's name can be too long for one line. */
+        .hero-accent { white-space: normal; overflow-wrap: anywhere; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+    </style>
+    <?php endif; ?>
 </head>
 
 <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="government-bar">
         <div class="container">
-            <p class="utility-text">Department of Education · Regional Office XI</p>
+            <p class="utility-text">Department of Education · <?= html_escape($brand['office']); ?></p>
         </div>
     </div>
     <header class="site-header">
         <div class="container masthead">
-            <a class="brand" href="<?= base_url('homepage'); ?>" aria-label="AP-LEAD Region XI home">
-                <img src="<?= html_escape($seal_url); ?>" alt="Department of Education Region XI seal" width="62" height="62" decoding="async">
-                <span class="brand-copy"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · Regional Office XI</span></span>
+            <a class="brand" href="<?= base_url('homepage'); ?>" aria-label="AP-LEAD <?= html_escape($brand['name']); ?> home">
+                <img src="<?= html_escape($seal_url); ?>" alt="<?= html_escape($brand['logo_alt']); ?>" width="62" height="62" decoding="async">
+                <span class="brand-copy"><small>Republic of the Philippines</small><strong>Department of Education</strong><span>AP-LEAD · <?= html_escape($brand['office']); ?></span></span>
             </a>
             <button class="menu-toggle" id="menuToggle" type="button" aria-controls="siteNav" aria-expanded="false" aria-label="Open navigation menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M4 7h16M4 12h16M4 17h16" />
                 </svg></button>
-            <nav class="site-nav" id="siteNav" aria-label="Main navigation"><a href="#about">About</a><a href="#process">Data-to-action</a><a href="#governance">Governance</a><a href="<?= base_url('signup'); ?>">School Account Signup</a><a class="nav-login" href="#portal" data-open-login>Sign in</a></nav>
+            <nav class="site-nav" id="siteNav" aria-label="Main navigation"><a href="#about">About</a><a href="#process">Data-to-action</a><a href="<?= base_url('signup'); ?>">School Account Signup</a><a class="nav-login" href="#portal" data-open-login>Sign in</a></nav>
         </div>
     </header>
     <?php if (!empty($page_success)) : ?><div class="page-message" role="status"><?= html_escape($page_success); ?></div><?php endif; ?>
@@ -2705,8 +2094,8 @@ if ($seal_url === '') {
             <span class="hero-orb hero-orb-b" aria-hidden="true"></span>
             <div class="container hero-grid">
                 <div class="hero-copy">
-                    <div class="eyebrow">Araling Panlipunan · Region XI</div>
-                    <h1 id="hero-title">AP-LEAD <span class="hero-accent">REGION XI</span></h1>
+                    <div class="eyebrow">Araling Panlipunan · <?= html_escape($brand['name']); ?></div>
+                    <h1 id="hero-title">AP-LEAD <span class="hero-accent"><?= html_escape(strtoupper($brand['name'])); ?></span></h1>
                     <p class="hero-tagline">Turning learning data into targeted action for better AP outcomes.</p>
                     <p class="hero-lead">An online system that tracks learners’ progress, identifies least learned competencies, and turns the evidence into timely, targeted instructional support in Araling Panlipunan.</p>
                     <div class="hero-actions">
@@ -2716,7 +2105,7 @@ if ($seal_url === '') {
                     <p class="public-note"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
                             <path d="m9 12 2 2 4-4" />
-                        </svg>An official learning monitoring initiative of DepEd Regional Office XI</p>
+                        </svg>An official learning monitoring initiative of DepEd <?= html_escape($brand['office']); ?></p>
                 </div>
                 <div class="hero-visual">
                     <div class="hero-chip hero-chip-a" aria-hidden="true">
@@ -2727,7 +2116,7 @@ if ($seal_url === '') {
                         <span>Least learned competencies<small>Flagged for focused support</small></span>
                     </div>
                     <aside class="impact-panel" aria-label="AP-LEAD data-to-action overview">
-                        <div class="impact-top"><span>Regional learning intelligence</span><img class="impact-seal" src="<?= html_escape($seal_url); ?>" alt="" width="58" height="58" decoding="async"></div>
+                        <div class="impact-top"><span><?= $is_division ? 'Division' : 'Regional'; ?> learning intelligence</span><img class="impact-seal" src="<?= html_escape($seal_url); ?>" alt="" width="58" height="58" decoding="async"></div>
                         <h2>Learning evidence in motion</h2>
                         <p>A shared system for timely, focused, and accountable instructional support.</p>
                         <div class="impact-flow" aria-hidden="true">
@@ -2743,7 +2132,7 @@ if ($seal_url === '') {
                                 <div><strong>03</strong><span>Respond</span></div>
                             </div>
                         </div>
-                        <div class="impact-footer"><span>One regional network</span><strong><?= (int) $division_count; ?> SDOs connected</strong></div>
+                        <div class="impact-footer"><span>One <?= $is_division ? 'division' : 'regional'; ?> network</span><strong><?= (int) $network_count; ?> <?= $is_division ? 'districts' : 'SDOs'; ?> connected</strong></div>
                     </aside>
                     <div class="hero-chip hero-chip-b" aria-hidden="true">
                         <span class="hero-chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -2763,13 +2152,13 @@ if ($seal_url === '') {
                         <span class="stat-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M3 21h18M6 18V9m4 9V9m4 9V9m4 9V9M4 6l8-4 8 4v3H4V6Z" />
                             </svg></span>
-                        <div><strong><span class="sr-only"><?= (int) $division_count; ?></span><span data-count="<?= (int) $division_count; ?>" aria-hidden="true"><?= (int) $division_count; ?></span></strong><span>Schools Division Offices connected across Region XI</span></div>
+                        <div><strong><span class="sr-only"><?= (int) $network_count; ?></span><span data-count="<?= (int) $network_count; ?>" aria-hidden="true"><?= (int) $network_count; ?></span></strong><span><?= $is_division ? 'Districts' : 'Schools Division Offices'; ?> connected across <?= html_escape($brand['name']); ?></span></div>
                     </div>
                     <div class="stat">
                         <span class="stat-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M4 19V9m6 10V5m6 14v-7m4 7H2" />
                             </svg></span>
-                        <div><strong>1</strong><span>Shared regional view of AP learning evidence</span></div>
+                        <div><strong>1</strong><span>Shared <?= $is_division ? 'division' : 'regional'; ?> view of AP learning evidence</span></div>
                     </div>
                     <div class="stat">
                         <span class="stat-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -2791,8 +2180,8 @@ if ($seal_url === '') {
                 <div>
                     <div class="section-heading reveal reveal-once">
                         <p class="kicker">What AP-LEAD does</p>
-                        <h2>From classroom evidence to focused regional support</h2>
-                        <p>AP-LEAD tracks learner progress and identifies least learned competencies in Araling Panlipunan. The data guides Schools Division Offices and the Regional Office in providing targeted, data-driven technical assistance, interventions, and recommendations.</p>
+                        <h2>From classroom evidence to focused <?= $is_division ? 'division' : 'regional'; ?> support</h2>
+                        <p>AP-LEAD tracks learner progress and identifies least learned competencies in Araling Panlipunan. The data guides <?= $is_division ? 'the Schools Division Office and its districts' : 'Schools Division Offices and the Regional Office'; ?> in providing targeted, data-driven technical assistance, interventions, and recommendations.</p>
                     </div>
                     <div class="principles reveal reveal-once">
                         <article class="principle">
@@ -2811,7 +2200,7 @@ if ($seal_url === '') {
                                 </svg></div>
                             <div>
                                 <h3>Targeted, data-driven assistance</h3>
-                                <p>SDOs and the Regional Office can focus technical assistance and interventions where they are most needed.</p>
+                                <p><?= $is_division ? 'The SDO and its districts' : 'SDOs and the Regional Office'; ?> can focus technical assistance and interventions where they are most needed.</p>
                             </div>
                         </article>
                         <article class="principle">
@@ -2856,7 +2245,7 @@ if ($seal_url === '') {
                         <div class="step-card">
                             <p class="step-label">Step 02</p>
                             <h3>Understand the pattern</h3>
-                            <p>Division and regional views help leaders identify shared needs, local differences, and areas of priority.</p>
+                            <p><?= $is_division ? 'District and division' : 'Division and regional'; ?> views help leaders identify shared needs, local differences, and areas of priority.</p>
                         </div>
                     </article>
                     <article class="step">
@@ -2874,135 +2263,12 @@ if ($seal_url === '') {
             </div>
         </section>
 
-        <section class="section section-soft" id="governance">
-            <div class="container">
-                <div class="section-heading center">
-                    <p class="kicker">Program governance</p>
-                    <h2>Regional leadership with division-level support</h2>
-                    <p>Meet the regional leaders, division consultants, and developers supporting AP-LEAD.</p>
-                </div>
-                <div class="people-directory">
-                    <section class="people-block top-management-block" aria-labelledby="top-management-title">
-                        <div class="people-block-head">
-                            <div class="people-title">
-                                <span class="people-title-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                                        <path d="M17 20a5 5 0 0 0-10 0" />
-                                        <circle cx="12" cy="8" r="3.4" />
-                                        <path d="M3 20a4 4 0 0 1 3.2-3.9M21 20a4 4 0 0 0-3.2-3.9" />
-                                    </svg></span>
-                                <h3 id="top-management-title">Top Management</h3>
-                            </div>
-                            <span class="people-rule" aria-hidden="true"></span>
-                        </div>
-                        <div class="people-grid">
-                            <?php foreach ($top_management as $leader): $leader_photo = $person_display_url($leader['photo'], 600); ?>
-                                <article class="person-card reveal<?= ($leader['name'] === '' || $leader_photo === '') ? ' is-vacant' : ''; ?>">
-                                    <div class="person-frame">
-                                        <div class="person-photo">
-                                            <?php if ($leader_photo !== ''): ?>
-                                                <img src="<?= html_escape($leader_photo); ?>" data-full="<?= html_escape($person_display_url($leader['photo'], 800)); ?>" alt="<?= html_escape($leader['name']); ?>" style="object-position: center 12%;" loading="lazy" decoding="async">
-                                            <?php else: ?>
-                                                <span class="person-placeholder" role="img" aria-label="<?= html_escape($leader['role']); ?> photo pending"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-                                                        <path d="M20 21a8 8 0 0 0-16 0" />
-                                                        <circle cx="12" cy="7" r="4" />
-                                                    </svg></span>
-                                            <?php endif; ?>
-                                            <span class="person-badge" aria-hidden="true"><?= html_escape($leader['abbr']); ?></span>
-                                        </div>
-                                        <div class="person-info"><strong><?= $leader['name'] !== '' ? html_escape($leader['name']) : 'To be announced'; ?></strong><span><?= html_escape($leader['role']); ?></span></div>
-                                    </div>
-                                </article>
-                            <?php endforeach; ?>
-                        </div>
-                    </section>
-                    <div class="people-block consultants-block">
-                        <div class="people-block-head reveal">
-                            <div class="people-title">
-                                <span class="people-title-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                                        <path d="M17 20a5 5 0 0 0-10 0" />
-                                        <circle cx="12" cy="8" r="3.4" />
-                                        <path d="M3 20a4 4 0 0 1 3.2-3.9M21 20a4 4 0 0 0-3.2-3.9" />
-                                    </svg></span>
-                                <h3>SDO Consultants</h3>
-                            </div>
-                            <span class="people-rule" aria-hidden="true"></span>
-                        </div>
-                        <div class="people-grid">
-                            <?php foreach ($sdo_consultants as $consultant_index => $consultant) : ?>
-                                <?php
-                                $consultant_photo = $person_display_url($consultant['photo']);
-                                $consultant_name = trim((string) $consultant['name']);
-                                $consultant_vacant = ($consultant_name === '' || $consultant_photo === '');
-                                $badge_logo_path = isset($division_logo_lookup[strtolower($consultant['key'])]) ? $division_logo_lookup[strtolower($consultant['key'])] : '';
-                                $badge_logo = $person_photo_url($badge_logo_path);
-                                ?>
-                                <article class="person-card reveal<?= $consultant_vacant ? ' is-vacant' : ''; ?>">
-                                    <div class="person-frame">
-                                        <div class="person-photo">
-                                            <?php if ($consultant_photo !== '') : ?>
-                                                <img style="object-position: <?= html_escape($person_focus($consultant)); ?>;" src="<?= html_escape($consultant_photo); ?>" data-full="<?= html_escape($person_display_url($consultant['photo'], 800)); ?>" alt="<?= html_escape($consultant_name); ?>, AP-LEAD consultant for <?= html_escape($consultant['division']); ?>" loading="lazy" decoding="async">
-                                            <?php else : ?>
-                                                <span class="person-placeholder" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-                                                        <path d="M20 21a8 8 0 0 0-16 0" />
-                                                        <circle cx="12" cy="7" r="4" />
-                                                    </svg></span>
-                                            <?php endif; ?>
-                                            <span class="person-badge" aria-hidden="true"><?php if ($badge_logo !== '') : ?><img src="<?= html_escape($badge_logo); ?>" alt="" loading="lazy"><?php else : ?><?= html_escape($consultant['abbr']); ?><?php endif; ?></span>
-                                        </div>
-                                        <div class="person-info"><strong><?= $consultant_name !== '' ? html_escape($consultant_name) : 'To be announced'; ?></strong><span><?= html_escape($consultant['division']); ?></span></div>
-                                    </div>
-                                </article>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <div class="people-block developers-block">
-                        <div class="people-block-head reveal">
-                            <div class="people-title">
-                                <span class="people-title-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="m8 17-5-5 5-5m8 10 5-5-5-5m-2-3-4 16" />
-                                    </svg></span>
-                                <h3>Development Team</h3>
-                            </div>
-                            <span class="people-rule" aria-hidden="true"></span>
-                        </div>
-                        <div class="people-grid developers-grid">
-                            <?php foreach ($ap_developers as $developer_index => $developer) : ?>
-                                <?php
-                                $developer_photo = $person_display_url($developer['photo']);
-                                $developer_name = trim((string) $developer['name']);
-                                ?>
-                                <article class="person-card reveal<?= ($developer_name === '' || $developer_photo === '') ? ' is-vacant' : ''; ?>">
-                                    <div class="person-frame">
-                                        <div class="person-photo">
-                                            <?php if ($developer_photo !== '') : ?>
-                                                <img style="object-position: <?= html_escape($person_focus($developer)); ?>;" src="<?= html_escape($developer_photo); ?>" data-full="<?= html_escape($person_display_url($developer['photo'], 800)); ?>" alt="<?= html_escape($developer_name); ?>, AP-LEAD system developer" loading="lazy" decoding="async">
-                                            <?php else : ?>
-                                                <span class="person-placeholder" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-                                                        <path d="M20 21a8 8 0 0 0-16 0" />
-                                                        <circle cx="12" cy="7" r="4" />
-                                                    </svg></span>
-                                            <?php endif; ?>
-                                            <span class="person-badge" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                                                    <path d="m8 17-5-5 5-5m8 10 5-5-5-5" />
-                                                </svg></span>
-                                        </div>
-                                        <div class="person-info"><strong><a href="<?= html_escape($developer['facebook']); ?>" target="_blank" rel="noopener noreferrer"><?= $developer_name !== '' ? html_escape($developer_name) : 'To be announced'; ?></a></strong><span><?= html_escape($developer['division']); ?></span></div>
-                                    </div>
-                                </article>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <section class="cta">
             <div class="container">
                 <div class="cta-card reveal reveal-once">
                     <div>
                         <h2>Ready to turn learning evidence into action?</h2>
-                        <p>Authorized school, division, and regional personnel may access the AP-LEAD portal.</p>
+                        <p>Authorized school, <?= $is_division ? 'district, and division' : 'division, and regional'; ?> personnel may access the AP-LEAD portal.</p>
                     </div>
                     <a class="button button-gold" href="#portal" data-open-login>Proceed to sign in <span class="button-arrow" aria-hidden="true">→</span></a>
                 </div>
@@ -3014,39 +2280,20 @@ if ($seal_url === '') {
         <div class="container">
             <div class="footer-grid">
                 <div>
-                    <div class="footer-brand"><img src="<?= html_escape($seal_url); ?>" alt="Department of Education Region XI seal" width="60" height="60" loading="lazy" decoding="async">
-                        <div><strong>AP-LEAD Region XI</strong><span>Department of Education · Regional Office XI</span></div>
+                    <div class="footer-brand"><img src="<?= html_escape($seal_url); ?>" alt="<?= html_escape($brand['logo_alt']); ?>" width="60" height="60" loading="lazy" decoding="async">
+                        <div><strong>AP-LEAD <?= html_escape($brand['name']); ?></strong><span>Department of Education · <?= html_escape($brand['office']); ?></span></div>
                     </div>
-                    <p class="footer-copy">AP-LEAD supports the responsible use of Araling Panlipunan learning data for informed decisions, focused assistance, and improved learner outcomes across the Davao Region.</p>
+                    <p class="footer-copy">AP-LEAD supports the responsible use of Araling Panlipunan learning data for informed decisions, focused assistance, and improved learner outcomes across <?= html_escape($brand['area']); ?>.</p>
                 </div>
-                <nav class="footer-links" aria-label="Footer navigation"><strong>Quick links</strong><a href="#about">About AP-LEAD</a><a href="#process">Data-to-action cycle</a><a href="#governance">Program governance</a><a href="#portal" data-open-login>Portal access</a></nav>
+                <nav class="footer-links" aria-label="Footer navigation"><strong>Quick links</strong><a href="#about">About AP-LEAD</a><a href="#process">Data-to-action cycle</a><a href="#portal" data-open-login>Portal access</a></nav>
             </div>
-            <div class="copyright"><span>© <?= date('Y'); ?> Department of Education Regional Office XI. All rights reserved.</span><span><?= html_escape($region_name); ?></span></div>
+            <div class="copyright"><span>© <?= date('Y'); ?> Department of Education <?= html_escape($brand['office']); ?>. All rights reserved.</span><span><?= html_escape($region_name); ?></span></div>
         </div>
     </footer>
 
     <button class="to-top" id="toTop" type="button" aria-label="Back to top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
             <path d="m6 15 6-6 6 6" />
         </svg></button>
-
-    <div class="photo-viewer" id="photoViewer" aria-hidden="true">
-        <div class="photo-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="photoViewerName">
-            <p class="photo-viewer-count" id="photoViewerCount" aria-live="polite"></p>
-            <button class="photo-viewer-btn photo-viewer-close" id="photoViewerClose" type="button" aria-label="Close photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                    <path d="m6 6 12 12M18 6 6 18" />
-                </svg></button>
-            <button class="photo-viewer-btn photo-viewer-prev" id="photoViewerPrev" type="button" aria-label="Previous photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                    <path d="m15 18-6-6 6-6" />
-                </svg></button>
-            <figure class="photo-viewer-figure">
-                <img id="photoViewerImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
-                <figcaption><strong id="photoViewerName"></strong><span id="photoViewerRole"></span></figcaption>
-            </figure>
-            <button class="photo-viewer-btn photo-viewer-next" id="photoViewerNext" type="button" aria-label="Next photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                    <path d="m9 18 6-6-6-6" />
-                </svg></button>
-        </div>
-    </div>
 
     <div class="portal-overlay" id="portalModal" aria-hidden="<?= $open_login_modal ? 'false' : 'true'; ?>">
         <div class="portal-dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
@@ -3369,111 +2616,6 @@ if ($seal_url === '') {
                 });
             }
 
-            // Portrait viewer: every card with a photo opens a larger copy; arrows, keys, and swipes step through them.
-            var viewer = document.getElementById('photoViewer'),
-                viewerDialog = viewer ? viewer.querySelector('.photo-viewer-dialog') : null,
-                viewerImg = document.getElementById('photoViewerImg'),
-                viewerName = document.getElementById('photoViewerName'),
-                viewerRole = document.getElementById('photoViewerRole'),
-                viewerCount = document.getElementById('photoViewerCount'),
-                viewerClose = document.getElementById('photoViewerClose'),
-                viewerPrev = document.getElementById('photoViewerPrev'),
-                viewerNext = document.getElementById('photoViewerNext'),
-                viewerIndex = 0,
-                viewerTrigger = null;
-            var portraits = [].slice.call(document.querySelectorAll('.person-photo img[data-full]')).map(function(img) {
-                var card = img.closest('.person-card'),
-                    name = card.querySelector('.person-info strong'),
-                    role = card.querySelector('.person-info span');
-                return {
-                    img: img,
-                    frame: img.closest('.person-photo'),
-                    full: img.getAttribute('data-full') || img.src,
-                    name: name ? name.textContent.trim() : '',
-                    role: role ? role.textContent.trim() : ''
-                };
-            });
-
-            function showPortrait(index) {
-                viewerIndex = (index + portraits.length) % portraits.length;
-                var person = portraits[viewerIndex];
-                viewerImg.src = person.full;
-                viewerImg.alt = person.name;
-                viewerImg.style.objectPosition = person.img.style.objectPosition || 'center 12%';
-                viewerName.textContent = person.name;
-                viewerRole.textContent = person.role;
-                viewerCount.textContent = (viewerIndex + 1) + ' / ' + portraits.length;
-            }
-
-            function openViewer(index, trigger) {
-                viewerTrigger = trigger;
-                showPortrait(index);
-                viewer.setAttribute('aria-hidden', 'false');
-                document.body.classList.add('modal-open');
-                // Wait for the fade-in to start: a still-hidden dialog cannot take focus.
-                window.setTimeout(function() {
-                    viewerClose.focus();
-                }, 60);
-            }
-
-            function closeViewer() {
-                viewer.setAttribute('aria-hidden', 'true');
-                if (!modal || modal.getAttribute('aria-hidden') !== 'false') document.body.classList.remove('modal-open');
-                if (viewerTrigger) viewerTrigger.focus();
-            }
-            if (viewer && portraits.length) {
-                portraits.forEach(function(person, index) {
-                    var frame = person.frame;
-                    frame.setAttribute('role', 'button');
-                    frame.setAttribute('tabindex', '0');
-                    frame.setAttribute('aria-label', 'View larger photo of ' + person.name);
-                    frame.insertAdjacentHTML('beforeend', '<span class="person-zoom" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M11 8v6M8 11h6"/></svg></span>');
-                    frame.addEventListener('click', function() {
-                        openViewer(index, frame);
-                    });
-                    frame.addEventListener('keydown', function(event) {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            openViewer(index, frame);
-                        }
-                    });
-                });
-                viewerClose.addEventListener('click', closeViewer);
-                viewerPrev.addEventListener('click', function() {
-                    showPortrait(viewerIndex - 1);
-                });
-                viewerNext.addEventListener('click', function() {
-                    showPortrait(viewerIndex + 1);
-                });
-                viewer.addEventListener('click', function(event) {
-                    if (event.target === viewer || event.target === viewerDialog) closeViewer();
-                });
-                document.addEventListener('keydown', function(event) {
-                    if (viewer.getAttribute('aria-hidden') !== 'false') return;
-                    if (event.key === 'Escape') closeViewer();
-                    else if (event.key === 'ArrowLeft') showPortrait(viewerIndex - 1);
-                    else if (event.key === 'ArrowRight') showPortrait(viewerIndex + 1);
-                    else if (event.key === 'Tab') {
-                        var controls = [viewerClose, viewerPrev, viewerNext],
-                            position = controls.indexOf(document.activeElement);
-                        event.preventDefault();
-                        controls[(position + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
-                    }
-                });
-                var touchStartX = null;
-                viewer.addEventListener('touchstart', function(event) {
-                    touchStartX = event.touches[0].clientX;
-                }, {
-                    passive: true
-                });
-                viewer.addEventListener('touchend', function(event) {
-                    if (touchStartX === null) return;
-                    var deltaX = event.changedTouches[0].clientX - touchStartX;
-                    if (Math.abs(deltaX) > 50) showPortrait(viewerIndex + (deltaX < 0 ? 1 : -1));
-                    touchStartX = null;
-                });
-            }
-
             var revealItems = [].slice.call(document.querySelectorAll('.reveal'));
             if (!revealItems.length) return;
 
@@ -3487,8 +2629,7 @@ if ($seal_url === '') {
             } else {
                 // Two thresholds give the toggle hysteresis: an item appears once it is meaningfully on
                 // screen and only resets after it has left completely, so edge-of-viewport scrolling
-                // cannot make it flicker. People cards stay observed so their reveal repeats in both
-                // directions; section content marked .reveal-once animates the first time only.
+                // cannot make it flicker. Content marked .reveal-once animates the first time only.
                 var revealObserver = new IntersectionObserver(function(entries) {
                     var entering = [],
                         minTop = Infinity,

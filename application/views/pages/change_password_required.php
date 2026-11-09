@@ -1,10 +1,11 @@
 <!doctype html>
+<?php $brand = site_brand(); ?>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Set a new password | AP-LEAD Region XI</title>
+    <title>Set a new password | AP-LEAD <?= html_escape($brand['name']); ?></title>
     <link rel="icon" href="<?= base_url('assets/images/favicon.ico'); ?>">
     <link href="<?= base_url('assets/css/bootstrap.min.css'); ?>" rel="stylesheet">
     <style>
@@ -49,8 +50,8 @@
 <body>
     <main class="password-card">
         <div class="brand">
-            <img src="<?= base_url('assets/r11-logo.jpg'); ?>" alt="DepEd Region XI logo">
-            <div><strong>AP-LEAD Region XI</strong><span>Least Learned Competencies Monitoring</span></div>
+            <img src="<?= base_url($brand['logo']); ?>" alt="<?= html_escape($brand['logo_alt']); ?>">
+            <div><strong>AP-LEAD <?= html_escape($brand['name']); ?></strong><span>Least Learned Competencies Monitoring</span></div>
         </div>
 
         <h1>Create your new password</h1>

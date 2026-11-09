@@ -343,6 +343,7 @@
                                 </ul>
                             </li>
                             <li><a href="<?= base_url(); ?>pages/userlist" class="waves-effect"><i class="mdi mdi-account-supervisor"></i><span> Manage Users </span></a></li>
+                            <li><a href="<?= base_url(); ?>Pages/site_settings" class="waves-effect"><i class="mdi mdi-tune"></i><span> Site Settings </span></a></li>
                         <?php } ?>
 
                         <?php if ($this->session->position == 'ict') { ?>

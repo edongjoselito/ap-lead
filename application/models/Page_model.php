@@ -1128,6 +1128,71 @@ public function homepage_divisions($region_id){
         ->result();
 }
 
+/**
+ * Site scope. Falls back to the regional defaults until an
+ * admin first saves them, and never raises a database error: error pages read
+ * this too, and a failure here must not trigger another error page.
+ */
+public function site_settings(){
+    $settings = array('deployment_mode' => 'region', 'division_id' => 0, 'division' => null);
+
+    $debug = $this->db->db_debug;
+    $this->db->db_debug = false;
+    if ($this->db->table_exists('site_settings')) {
+        $rows = $this->db->get('site_settings');
+        foreach ($rows ? $rows->result() : array() as $row) {
+            if (array_key_exists($row->setting_key, $settings) && $row->setting_key !== 'division') {
+                $settings[$row->setting_key] = $row->setting_value;
+            }
+        }
+        if ((int) $settings['division_id'] > 0) {
+            $division = $this->db->where('id', (int) $settings['division_id'])->get('division');
+            $settings['division'] = $division ? $division->row() : null;
+        }
+    }
+    $this->db->db_debug = $debug;
+
+    return $settings;
+}
+
+public function save_site_settings($deployment_mode, $division_id){
+    $created = $this->db->query("CREATE TABLE IF NOT EXISTS `site_settings` (
+        `setting_key` VARCHAR(64) NOT NULL,
+        `setting_value` VARCHAR(255) NOT NULL,
+        PRIMARY KEY (`setting_key`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    if (!$created) return false;
+
+    $this->db->trans_start();
+    foreach (array(
+        'deployment_mode' => $deployment_mode,
+        'division_id' => (int) $division_id,
+    ) as $key => $value) {
+        $this->db->replace('site_settings', array('setting_key' => $key, 'setting_value' => $value));
+    }
+    $this->db->trans_complete();
+
+    return $this->db->trans_status();
+}
+
+/** Every division, with its region name, for the site scope picker. */
+public function site_settings_divisions(){
+    $this->ensure_division_setup_schema();
+
+    return $this->db
+        ->select('division.id, division.description, division.homepage_logo, region.description AS region_name')
+        ->from('division')
+        ->join('region', 'region.id = division.region_id', 'left')
+        ->order_by('region.id', 'ASC')
+        ->order_by('division.description', 'ASC')
+        ->get()
+        ->result();
+}
+
+public function set_division_logo($division_id, $homepage_logo){
+    return $this->db->where('id', (int) $division_id)->update('division', array('homepage_logo' => $homepage_logo));
+}
+
 public function division_school_count($division_id){
     return (int) $this->db
         ->where('division_id', $division_id)
